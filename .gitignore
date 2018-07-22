@@ -1,3 +1,5 @@
 .stack-work/
 aphrograph.cabal
-*~
+.idea/
+.vscode/
+out/
