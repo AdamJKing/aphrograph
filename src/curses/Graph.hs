@@ -1,4 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Graph
     ( normalise
@@ -9,7 +13,9 @@ where
 
 import           Data.Text                      ( Text(..) )
 import           Control.Monad
+import           Control.Monad.Log
 import           Control.Monad.Writer
+import           Data.Text.Prettyprint.Doc
 import           Control.Monad.IO.Class
 import           Data.Foldable
 import           UI.NCurses
@@ -18,15 +24,16 @@ import           Data.Hourglass                 ( Elapsed(..)
                                                 , Seconds(..)
                                                 )
 
-update :: (Integer, Integer) -> Update String
-update (x, y) = do
-    moveCursor x y
-    drawGlyph glyphDiamond
-    return $ "drawing at " ++ show x ++ ", " ++ show y
+update :: (Integer, Integer) -> (Update (), String)
+update (x, y) = (update, message)
+  where
+    update  = moveCursor x y >> drawGlyph glyphDiamond
+    message = "drawing at " ++ show x ++ ", " ++ show y
 
-
-drawGraph :: [DataPoint] -> WriterT [String] Update ()
-drawGraph = mapM_ (lift . update) . toGraphableData
+drawGraph :: [DataPoint] -> (Update (), String)
+drawGraph [] = update (0, 0)
+drawGraph dps = (foldl1 (>>) updates, unlines logs)
+    where (updates, logs) =  unzip . map update . toGraphableData $ dps
 
 normaliseErr :: (Show a) => a -> (a, a) -> String
 normaliseErr i a =
