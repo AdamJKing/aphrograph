@@ -3,3 +3,4 @@ aphrograph.cabal
 .idea/
 .vscode/
 out/
+*.log

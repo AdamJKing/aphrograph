@@ -1,21 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Graph
     ( normalise
-    , normaliseList
     , drawGraph
     )
 where
 
 import           Data.Text                      ( Text(..) )
 import           Control.Monad
+import           Control.Arrow
+import           Control.Monad.State
 import           Control.Monad.Log
-import           Control.Monad.Writer
-import           Data.Text.Prettyprint.Doc
 import           Control.Monad.IO.Class
 import           Data.Foldable
 import           UI.NCurses
@@ -24,16 +19,22 @@ import           Data.Hourglass                 ( Elapsed(..)
                                                 , Seconds(..)
                                                 )
 
-update :: (Integer, Integer) -> (Update (), String)
-update (x, y) = (update, message)
+genUpdate :: (Integer, Integer) -> (Update (), String)
+genUpdate (x, y) = (update, message)
   where
-    update  = moveCursor x y >> drawGlyph glyphDiamond
     message = "drawing at " ++ show x ++ ", " ++ show y
+    update  = moveCursor x y >> drawGlyph glyphDiamond
 
-drawGraph :: [DataPoint] -> (Update (), String)
-drawGraph [] = update (0, 0)
-drawGraph dps = (foldl1 (>>) updates, unlines logs)
-    where (updates, logs) =  unzip . map update . toGraphableData $ dps
+drawGraph :: (Integer, Integer) -> [DataPoint] -> [(Update (), String)]
+drawGraph _               []  = mempty
+drawGraph (width, height) dps = genUpdate <$> normalised
+  where
+    toFloat    = fromInteger :: Integer -> Float
+    (xs, ys)   = unzip $ map toGraphableData dps
+    normalised = zip
+        (round <$> normaliseRange (map toFloat xs) (1, toFloat (width - 1)))
+        (round <$> normaliseRange ys (1, fromInteger (height - 1)))
+
 
 normaliseErr :: (Show a) => a -> (a, a) -> String
 normaliseErr i a =
@@ -57,13 +58,10 @@ normalise a b i
     max' (x, y) = max x y
     min' (x, y) = min x y
 
-normaliseList :: (Show a, Ord a, Fractional a) => (a, a) -> (a, a) -> [a] -> [a]
-normaliseList r l = fmap $ normalise (lMin, lMax) r
-  where
-    lMin = minimum l
-    lMax = maximum l
+toGraphableData :: DataPoint -> (Integer, Float)
+toGraphableData = (fromIntegral . timeFrom . time) &&& value
+    where timeFrom (Elapsed (Seconds t)) = t
 
-toGraphableData :: [DataPoint] -> [(Integer, Integer)]
-toGraphableData [] = []
-toGraphableData (DataPoint { value = v, time = Elapsed (Seconds t) } : ds) =
-    (round v, fromIntegral t) : toGraphableData ds
+normaliseRange :: (Show n, Fractional n, Ord n) => [n] -> (n, n) -> [n]
+normaliseRange ns (smallest, largest) =
+    normalise (minimum ns, maximum ns) (smallest, largest) <$> ns

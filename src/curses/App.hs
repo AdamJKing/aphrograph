@@ -64,11 +64,13 @@ liftCurses = LoggingCurses <$> lift
 updateFrame :: LoggingCurses ()
 updateFrame = do
     liftCurses $ setEcho False
-    window  <- liftCurses defaultWindow
-    metrics <- liftIO . getMetricsForPast . toSeconds $ Minutes 10
-    let (update, logs) = drawGraph metrics
-    logMessage . pretty $ logs
-    liftCurses . updateWindow window $ update
+    window          <- liftCurses defaultWindow
+    metrics         <- liftIO . getMetricsForPast . toSeconds $ Minutes 10
+    (width, height) <- liftCurses $ updateWindow window windowSize
+    logMessage . pretty $ "width: " ++ show width ++ ", height: " ++ show height
+    let (updates, logs) = unzip $ drawGraph (width, height) metrics
+    mapM_ (logMessage . pretty) logs
+    liftCurses $ mapM_ (updateWindow window) updates
     liftCurses render
     liftCurses $ waitFor
         window

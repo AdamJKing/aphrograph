@@ -80,7 +80,7 @@ parseMetricTimeSeries rawJson =
 
 getMetricsForPast :: Seconds -> IO [DataPoint]
 getMetricsForPast timeSpan = do
-  resp          <- getWith defaultArgs "http://localhost:80/render"
+  resp          <- getWith defaultArgs "http://localhost/render?format=json&target=randomWalk(\"test\")&from=-100hr"
   (Elapsed now) <- timeCurrent
   let datapoints = parseMetricTimeSeries (resp ^. responseBody)
   return $ getValuesInTimeRange (Elapsed (now - timeSpan), Elapsed now) datapoints
