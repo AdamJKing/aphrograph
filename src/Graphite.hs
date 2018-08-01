@@ -65,8 +65,8 @@ instance FromJSON DataPoint where
 defaultArgs = defaults & params .~ [format, target, from]
  where
   format = ("format", "json")
-  target = ("target", "stats.statsd.graphiteStats.flush_time")
-  from   = ("from", "-10min")
+  target = ("target", "randomWalk(\"test\")")
+  from   = ("from", "-100hr")
 
 getValuesInTimeRange :: (Elapsed, Elapsed) -> [DataPoint] -> [DataPoint]
 getValuesInTimeRange (a, b) = filter (isInRange . time)
@@ -80,7 +80,8 @@ parseMetricTimeSeries rawJson =
 
 getMetricsForPast :: Seconds -> IO [DataPoint]
 getMetricsForPast timeSpan = do
-  resp          <- getWith defaultArgs "http://localhost/render?format=json&target=randomWalk(\"test\")&from=-100hr"
+  resp          <- getWith defaultArgs "http://localhost/render"
   (Elapsed now) <- timeCurrent
   let datapoints = parseMetricTimeSeries (resp ^. responseBody)
-  return $ getValuesInTimeRange (Elapsed (now - timeSpan), Elapsed now) datapoints
+  return
+    $ getValuesInTimeRange (Elapsed (now - timeSpan), Elapsed now) datapoints

@@ -17,7 +17,7 @@ import           Data.Text.Prettyprint.Doc
 import           Control.Monad.Catch
 import           Control.Exception.Base         ( throwIO )
 import           Time.Types                     ( toSeconds
-                                                , Minutes(..)
+                                                , Hours(..)
                                                 )
 
 newtype LoggingCurses a = LoggingCurses (LoggingT (Doc String) Curses a)
@@ -53,7 +53,7 @@ instance MonadMask Curses where
 
 runLoggingCurses :: LoggingCurses a -> IO a
 runLoggingCurses (LoggingCurses lc) =
-    withFile "aphrograph.log" AppendMode $ \logfile ->
+    withFile "aphrograph.log" WriteMode $ \logfile ->
         runCurses
             . withFDHandler defaultBatchingOptions logfile 0.4 80
             $ \logger -> runLoggingT lc logger
@@ -65,10 +65,11 @@ updateFrame :: LoggingCurses ()
 updateFrame = do
     liftCurses $ setEcho False
     window          <- liftCurses defaultWindow
-    metrics         <- liftIO . getMetricsForPast . toSeconds $ Minutes 10
+    metrics         <- liftIO . getMetricsForPast . toSeconds $ Hours 100
     (width, height) <- liftCurses $ updateWindow window windowSize
     logMessage . pretty $ "width: " ++ show width ++ ", height: " ++ show height
     let (updates, logs) = unzip $ drawGraph (width, height) metrics
+    logMessage . pretty $ "Number of updates: " ++ show (length updates)
     mapM_ (logMessage . pretty) logs
     liftCurses $ mapM_ (updateWindow window) updates
     liftCurses render
