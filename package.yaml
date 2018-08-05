@@ -27,7 +27,7 @@ dependencies:
 - lens-aeson
 - lens
 - mtl
-- transformers-base
+- transformers
 - bytestring
 - vector
 - scientific
@@ -35,6 +35,7 @@ dependencies:
 - logging-effect
 - prettyprinter
 - text
+- monad-loops
 - monad-control
 - exceptions
 
