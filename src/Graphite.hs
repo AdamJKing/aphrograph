@@ -1,8 +1,8 @@
-{-# LANGUAGE DeriveAnyClass    #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass     #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE NamedFieldPuns     #-}
+{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE NamedFieldPuns #-}
 
 module Graphite
   ( getMetricsForPast
@@ -13,30 +13,31 @@ module Graphite
 where
 
 import           Control.Lens
-import           Data.Aeson                     ( FromJSON(..)
+import           Data.Aeson                     ( Array
+                                                , FromJSON(..)
                                                 , Value(..)
-                                                , Array
                                                 , eitherDecode
                                                 , withScientific
                                                 )
-import           Data.ByteString.Lazy.Char8     ( unpack )
 import           Data.ByteString.Lazy           ( ByteString(..) )
+import           Data.ByteString.Lazy.Char8     ( unpack )
+import           Data.Hourglass                 ( timeDiff )
 import           Data.Maybe                     ( fromMaybe )
+import           Data.Scientific                ( toBoundedInteger )
+import qualified Data.Text                     as T
 import qualified Data.Vector                   as V
                                                 ( toList )
 import           GHC.Generics
 import           Network.Wreq
 import           Network.Wreq.Lens
-import           Time.Types                     ( Elapsed(..)
-                                                , Seconds(..)
-                                                , Minutes(..)
-                                                , TimeInterval
-                                                , toSeconds
-                                                , fromSeconds
-                                                )
-import           Data.Hourglass                 ( timeDiff )
 import           Time.System                    ( timeCurrent )
-import           Data.Scientific                ( toBoundedInteger )
+import           Time.Types                     ( Elapsed(..)
+                                                , Minutes(..)
+                                                , Seconds(..)
+                                                , TimeInterval
+                                                , fromSeconds
+                                                , toSeconds
+                                                )
 
 data DataPoint = DataPoint
   { value :: Float
@@ -52,20 +53,22 @@ data MetricResponse = MetricResponse
   } deriving (Show, Generic, FromJSON)
 
 deriving instance Generic Seconds
+
 deriving instance FromJSON Seconds
 
 deriving instance Generic Elapsed
+
 deriving instance FromJSON Elapsed
 
 instance FromJSON DataPoint where
-  parseJSON (Array arr) = case V.toList arr of
+  parseJSON (Array arr) =
+    case V.toList arr of
       [Null, t] -> DataPoint 0.0 <$> parseJSON t
-      [v, t] -> DataPoint <$> parseJSON v <*> parseJSON t
+      [v, t]    -> DataPoint <$> parseJSON v <*> parseJSON t
 
-defaultArgs = defaults & params .~ [format, target, from]
+defaultArgs = set params [format, from] defaults
  where
   format = ("format", "json")
-  target = ("target", "randomWalk(\"test\")")
   from   = ("from", "-100hr")
 
 getValuesInTimeRange :: (Elapsed, Elapsed) -> [DataPoint] -> [DataPoint]
@@ -78,10 +81,11 @@ parseMetricTimeSeries rawJson =
     Right (mr : _) -> datapoints mr
     Left  err      -> []
 
-getMetricsForPast :: Seconds -> IO [DataPoint]
-getMetricsForPast timeSpan = do
-  resp          <- getWith defaultArgs "http://localhost/render"
+getMetricsForPast :: TimeInterval t => T.Text -> t -> IO [DataPoint]
+getMetricsForPast target timeSpan = do
+  let args = over params (++ [("target", target)]) defaultArgs
+  response      <- getWith args "http://localhost/render"
   (Elapsed now) <- timeCurrent
-  let datapoints = parseMetricTimeSeries (resp ^. responseBody)
-  return
-    $ getValuesInTimeRange (Elapsed (now - timeSpan), Elapsed now) datapoints
+  let datapoints = parseMetricTimeSeries (view responseBody response)
+  let timespan   = (Elapsed (now - toSeconds timeSpan), Elapsed now)
+  return $ getValuesInTimeRange timespan datapoints

@@ -49,7 +49,7 @@ normaliseErr i a =
 normalise :: (Ord a, Show a, Fractional a) => (a, a) -> (a, a) -> a -> a
 normalise a b i
     | (max' a < i) || (min' a > i) = error $ normaliseErr i a
-    | max' a == min' a = error $ "Arg was not a range " ++ show a
+    | max' a == min' a = max' a
     | a == b = i
     | otherwise = (i - min' a)
     * ((max' b - min' b) / (max' a - min' a))

@@ -38,6 +38,7 @@ dependencies:
 - monad-loops
 - monad-control
 - exceptions
+- pcre-heavy
 
 library:
   source-dirs: [

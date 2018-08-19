@@ -1,9 +1,9 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module App
-    ( runLoggingCurses
-    , updateFrame
-    )
+  ( runLoggingCurses
+  , updateFrame
+  )
 where
 
 import           Data.Traversable
@@ -27,24 +27,25 @@ import           Time.Types                     ( toSeconds
                                                 , Hours(..)
                                                 )
 import           Data.Text.Prettyprint.Doc
+import           System.Environment
 
-updateFrame :: LoggingCurses ()
-updateFrame = do
-    window          <- liftCurses $ setEcho False >> defaultWindow
-    metrics         <- liftIO . getMetricsForPast . toSeconds $ Hours 100
-    (width, height) <- liftCurses $ updateWindow window windowSize
-    logMessage . pretty $ "width: " ++ show width ++ ", height: " ++ show height
-    let (updates, logs) = unzip $ drawGraph (width, height) metrics
-    logMessage . pretty $ "Number of updates: " ++ show (length updates)
-    mapM_ (logMessage . pretty) logs
-    liftCurses . updateWindow window $ sequence updates
-    liftCurses $ render >> waitForClose window
+updateFrame :: [DataPoint] -> LoggingCurses ()
+updateFrame metrics = do
+  window          <- liftCurses $ setEcho False >> defaultWindow
+  (width, height) <- liftCurses $ updateWindow window windowSize
+  logMessage . pretty $ "width: " ++ show width ++ ", height: " ++ show height
+  let (updates, logs) = unzip $ drawGraph (width, height) metrics
+  logMessage . pretty $ "Number of updates: " ++ show (length updates)
+  mapM_ (logMessage . pretty) logs
+  liftCurses . updateWindow window $ sequence updates
+  liftCurses $ render >> waitForClose window
 
 waitForClose :: Window -> Curses ()
 waitForClose window = waitFor window $ EventCharacter 'q'
 
 waitFor :: Window -> Event -> Curses ()
-waitFor window event = void . iterateUntil . (==) event $ waitForEvent
-     where timeout = Nothing
-           waitForEvent = untilJust $ getEvent window timeout
+waitFor window event = void . iterateUntil (event ==) $ waitForEvent
+ where
+  timeout      = Nothing
+  waitForEvent = untilJust $ getEvent window timeout
 

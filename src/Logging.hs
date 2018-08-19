@@ -31,10 +31,10 @@ newtype LoggingCurses a = LoggingCurses (LoggingT (Doc String) Curses a)
 
 runLoggingCurses :: LoggingCurses a -> IO a
 runLoggingCurses (LoggingCurses lc) =
-    withFile "aphrograph.log" WriteMode $ \logfile ->
-        runCurses
-            . withFDHandler defaultBatchingOptions logfile 0.4 80
-            $ \logger -> runLoggingT lc logger
+  withFile "aphrograph.log" WriteMode $ \logfile ->
+    runCurses
+      . withFDHandler defaultBatchingOptions logfile 0.4 80
+      $ \logger -> runLoggingT lc logger
 
 liftCurses :: Curses a -> LoggingCurses a
 liftCurses = LoggingCurses <$> lift

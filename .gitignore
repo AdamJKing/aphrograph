@@ -4,3 +4,5 @@ aphrograph.cabal
 .vscode/
 out/
 *.log
+*.iml
+.idea

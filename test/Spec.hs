@@ -13,6 +13,8 @@ import           Control.Monad
 import           Test.Hspec.Runner
 import           Test.Hspec
 import           Test.QuickCheck
+import           Args
+import           Time.Types
 import           Test.QuickCheck.Gen
 import           Data.Hourglass
 import           Test.QuickCheck.Arbitrary
@@ -41,36 +43,43 @@ type Range a = (Positive a, Positive a)
 
 generateRange :: (Ord a, Num a, Arbitrary a) => Gen (Range a)
 generateRange = do
-    Positive x <- arbitrary
-    Positive y <- arbitrary
-    return (Positive x, Positive (x + y))
+  Positive x <- arbitrary
+  Positive y <- arbitrary
+  return (Positive x, Positive (x + y))
 
-genTestData :: (Arbitrary a, Random a, Ord a, Fractional a) => Gen (Range a, Positive a)
+genTestData
+  :: (Arbitrary a, Random a, Ord a, Fractional a) => Gen (Range a, Positive a)
 genTestData = do
-    r1 @ (Positive i, Positive j) <- generateRange
-    x <- choose (i, j)
-    return (r1, Positive x)
+  r1@(Positive i, Positive j) <- generateRange
+  x                           <- choose (i, j)
+  return (r1, Positive x)
 
 main :: IO ()
 main = hspec $ do
-    describe "Graphite.getValuesInTimeRange"
-        $ it "should detect values in the range"
-        $ forAll
-              arbitrary
-              (\(Ordered ts) -> do
-                  a <- choose (time . last $ ts, time . head $ ts)
-                  b <- choose (a, time (head ts))
-                  return
-                      . all (\DataPoint { time = t } -> a <= t && t <= b)
-                      $ getValuesInTimeRange (a, b) ts
-              )
-    describe "Graph.normalise" $ do
-        it "has no effect when normalising to the same range"
-            . forAll (genTestData :: Gen (Range Double, Positive Double))
-            $ \((Positive a, Positive b), Positive i) -> normalise (a, b) (a, b) i === i
-        it
-                "produces a value x times larger when the second range is x times larger"
-            . forAll (genTestData :: Gen (Range Double, Positive Double))
-            $ \((Positive a, Positive b), Positive v) -> do
-                Positive f <- resize 500 $ arbitrary :: Gen (Positive Double)
-                return $ (floor $ normalise (a, b) (a * f, b * f) v) === floor (v * f)
+  describe "Graphite.getValuesInTimeRange"
+    $ it "should detect values in the range"
+    $ forAll
+        arbitrary
+        (\(Ordered ts) -> do
+          a <- choose (time . last $ ts, time . head $ ts)
+          b <- choose (a, time (head ts))
+          return
+            . all (\DataPoint { time = t } -> a <= t && t <= b)
+            $ getValuesInTimeRange (a, b) ts
+        )
+  describe "Graph.normalise" $ do
+    it "has no effect when normalising to the same range"
+      . forAll (genTestData :: Gen (Range Double, Positive Double))
+      $ \((Positive a, Positive b), Positive i) ->
+          normalise (a, b) (a, b) i === i
+    it "produces a value x times larger when the second range is x times larger"
+      . forAll (genTestData :: Gen (Range Double, Positive Double))
+      $ \((Positive a, Positive b), Positive v) -> do
+          Positive f <- resize 500 $ arbitrary :: Gen (Positive Double)
+          return $ (floor $ normalise (a, b) (a * f, b * f) v) === floor (v * f)
+  describe "Main.parseTime" $ do
+    it "parses seconds" $ (parseTime "30s") === Just (Seconds 30)
+    it "parses minutes" $ (parseTime "60m") === Just (Seconds 3600)
+    it "parses seconds" $ (parseTime "24h") === Just (Seconds 86400)
+    it "parses seconds" $ (parseTime "7d") === Just (Seconds 604800)
+    it "returns left on errors" $ (parseTime "gibberish") === Nothing
