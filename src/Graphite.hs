@@ -1,8 +1,10 @@
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
-{-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Graphite
   ( getMetricsForPast
@@ -12,6 +14,12 @@ module Graphite
   )
 where
 
+import           Data.String
+import           Data.Text.Prettyprint.Doc
+import           Data.Decimal
+import           Control.Monad.Log
+import           Streaming
+import qualified Streaming.Prelude             as S
 import           Control.Lens
 import           Data.Aeson                     ( Array
                                                 , FromJSON(..)
@@ -40,7 +48,7 @@ import           Time.Types                     ( Elapsed(..)
                                                 )
 
 data DataPoint = DataPoint
-  { value :: Float
+  { value :: Decimal
   , time  :: Elapsed
   } deriving (Show, Eq)
 
@@ -60,6 +68,9 @@ deriving instance Generic Elapsed
 
 deriving instance FromJSON Elapsed
 
+instance (FromJSON i, Integral i, Read i) => FromJSON (DecimalRaw i) where
+  parseJSON json = read <$> parseJSON json
+
 instance FromJSON DataPoint where
   parseJSON (Array arr) =
     case V.toList arr of
@@ -68,8 +79,8 @@ instance FromJSON DataPoint where
 
 defaultArgs = set params [format, from] defaults
  where
-  format = ("format", "json")
-  from   = ("from", "-100hr")
+  format = (T.pack "format", T.pack "json")
+  from   = (T.pack "from", T.pack "-100hr")
 
 getValuesInTimeRange :: (Elapsed, Elapsed) -> [DataPoint] -> [DataPoint]
 getValuesInTimeRange (a, b) = filter (isInRange . time)
@@ -81,11 +92,16 @@ parseMetricTimeSeries rawJson =
     Right (mr : _) -> datapoints mr
     Left  err      -> []
 
-getMetricsForPast :: TimeInterval t => T.Text -> t -> IO [DataPoint]
+getMetricsForPast
+  :: (MonadLog (Doc String) m, TimeInterval t, MonadIO m)
+  => T.Text
+  -> t
+  -> m [DataPoint]
 getMetricsForPast target timeSpan = do
-  let args = over params (++ [("target", target)]) defaultArgs
-  response      <- getWith args "http://localhost/render"
-  (Elapsed now) <- timeCurrent
+  let args = over params (++ [(T.pack "target", target)]) defaultArgs
+  response      <- liftIO $ getWith args "http://localhost/render"
+  (Elapsed now) <- liftIO timeCurrent
   let datapoints = parseMetricTimeSeries (view responseBody response)
   let timespan   = (Elapsed (now - toSeconds timeSpan), Elapsed now)
+  logMessage $ pretty "Making a call to graphite."
   return $ getValuesInTimeRange timespan datapoints

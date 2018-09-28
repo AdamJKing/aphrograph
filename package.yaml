@@ -28,6 +28,7 @@ dependencies:
 - lens
 - mtl
 - transformers
+- transformers-base
 - bytestring
 - vector
 - scientific
@@ -39,6 +40,8 @@ dependencies:
 - monad-control
 - exceptions
 - pcre-heavy
+- streaming
+- Decimal
 
 library:
   source-dirs: [

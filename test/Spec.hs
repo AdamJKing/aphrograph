@@ -1,8 +1,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Main where
 
+import           Data.Decimal
+import           ErrorHandlingSpec
 import           System.Random
 import           Data.List                      ( sort )
 import           Control.Lens                   ( over
@@ -31,6 +35,9 @@ instance Arbitrary Seconds where
 
 deriving instance Arbitrary Elapsed
 
+instance Arbitrary Decimal where
+  arbitrary = Decimal <$> arbitrary <*> arbitrary
+
 instance Arbitrary DataPoint where
     arbitrary = DataPoint <$> arbitrary <*> arbitrary
     shrink DataPoint{value=v, time=t} = DataPoint <$> shrink v <*> shrink t
@@ -56,6 +63,7 @@ genTestData = do
 
 main :: IO ()
 main = hspec $ do
+  describe "Error Handling" ErrorHandlingSpec.spec
   describe "Graphite.getValuesInTimeRange"
     $ it "should detect values in the range"
     $ forAll

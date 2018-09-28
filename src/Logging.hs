@@ -1,5 +1,8 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Logging where
 
@@ -20,6 +23,18 @@ import           Control.Monad.Trans.Class      ( lift )
 import           Time.Types                     ( toSeconds
                                                 , Hours(..)
                                                 )
+import           Streaming
+import qualified Streaming.Prelude             as S
+
+newtype LoggingCursesStream a r = LoggingCursesStream (Stream (Of a) (LoggingT (Doc String) Curses) r)
+    deriving ( Applicative
+             , Functor
+             , Monad
+             , MonadIO
+             )
+
+instance (Functor f, MonadLog message m) => MonadLog message (Stream f m) where
+  logMessageFree foldMap = lift $ logMessageFree foldMap
 
 newtype LoggingCurses a = LoggingCurses (LoggingT (Doc String) Curses a)
     deriving ( Applicative

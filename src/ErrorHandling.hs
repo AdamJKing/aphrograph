@@ -1,12 +1,12 @@
 module ErrorHandling where
 
-import           Control.Exception.Base         ( throwIO )
+import           Debug.Trace
+import           Control.Exception.Base  hiding ( catch
+                                                , mask
+                                                )
 import           Control.Monad.IO.Class         ( liftIO )
 import           Control.Monad                  ( unless )
-import           UI.NCurses                     ( Curses
-                                                , throwCurses
-                                                , catchCurses
-                                                )
+import           UI.NCurses
 import           Control.Monad.Catch            ( ExitCase(..)
                                                 , fromException
                                                 , toException
@@ -17,19 +17,22 @@ import           Control.Monad.Catch            ( ExitCase(..)
 
 
 instance MonadThrow Curses where
-    throwM e = case fromException $ toException e of
-        Just cursesEx -> throwCurses cursesEx
-        Nothing -> liftIO $ throwIO e
+    throwM = liftIO . throwM
 
 instance MonadCatch Curses where
-    catch dangerous errorHandler = catchCurses dangerous $
-     \e -> case fromException $ toException e of
-        Just cursesEx -> errorHandler cursesEx
-        Nothing -> throwM $ toException e
+    catch curses handler = catchCurses curses handler'
+        where handler' e = case fromException (toException e) of
+                                Just e' -> handler e'
+                                Nothing -> throwM e
 
 instance MonadMask Curses where
-    mask restore = restore id
-    uninterruptibleMask restore = restore id
+
+    mask action = action restore
+        where restore act = act
+
+    uninterruptibleMask action = action restore
+        where restore act = act
+
     generalBracket acquire release use = mask $ \unmasked -> do
         resource <- acquire
         b <- unmasked (use resource) `catch` \e -> do
