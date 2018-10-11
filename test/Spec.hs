@@ -5,8 +5,8 @@
 
 module Main where
 
-import           Data.Decimal
-import           ErrorHandlingSpec
+import           Data.Scientific
+import qualified GraphiteSpec                   ( spec )
 import           System.Random
 import           Data.List                      ( sort )
 import           Control.Lens                   ( over
@@ -22,9 +22,9 @@ import           Time.Types
 import           Test.QuickCheck.Gen
 import           Data.Hourglass
 import           Test.QuickCheck.Arbitrary
+import           Normalisation
 
 import           Graphite
-import           Graph
 
 instance Arbitrary Seconds where
     arbitrary = do
@@ -35,8 +35,8 @@ instance Arbitrary Seconds where
 
 deriving instance Arbitrary Elapsed
 
-instance Arbitrary Decimal where
-  arbitrary = Decimal <$> arbitrary <*> arbitrary
+instance Arbitrary Scientific where
+  arbitrary = scientific <$> arbitrary <*> arbitrary
 
 instance Arbitrary DataPoint where
     arbitrary = DataPoint <$> arbitrary <*> arbitrary
@@ -63,7 +63,7 @@ genTestData = do
 
 main :: IO ()
 main = hspec $ do
-  describe "Error Handling" ErrorHandlingSpec.spec
+  describe "Graphite" GraphiteSpec.spec
   describe "Graphite.getValuesInTimeRange"
     $ it "should detect values in the range"
     $ forAll
@@ -79,15 +79,16 @@ main = hspec $ do
     it "has no effect when normalising to the same range"
       . forAll (genTestData :: Gen (Range Double, Positive Double))
       $ \((Positive a, Positive b), Positive i) ->
-          normalise (a, b) (a, b) i === i
+          normaliseFractional (a, b) (a, b) i === i
     it "produces a value x times larger when the second range is x times larger"
       . forAll (genTestData :: Gen (Range Double, Positive Double))
       $ \((Positive a, Positive b), Positive v) -> do
-          Positive f <- resize 500 $ arbitrary :: Gen (Positive Double)
-          return $ (floor $ normalise (a, b) (a * f, b * f) v) === floor (v * f)
+          Positive f <- resize 500 arbitrary :: Gen (Positive Double)
+          return $ floor (normaliseFractional (a, b) (a * f, b * f) v) === floor
+            (v * f)
   describe "Main.parseTime" $ do
-    it "parses seconds" $ (parseTime "30s") === Just (Seconds 30)
-    it "parses minutes" $ (parseTime "60m") === Just (Seconds 3600)
-    it "parses seconds" $ (parseTime "24h") === Just (Seconds 86400)
-    it "parses seconds" $ (parseTime "7d") === Just (Seconds 604800)
-    it "returns left on errors" $ (parseTime "gibberish") === Nothing
+    it "parses seconds" $ parseTime "30s" === Just (Seconds 30)
+    it "parses minutes" $ parseTime "60m" === Just (Seconds 3600)
+    it "parses seconds" $ parseTime "24h" === Just (Seconds 86400)
+    it "parses seconds" $ parseTime "7d" === Just (Seconds 604800)
+    it "returns left on errors" $ parseTime "gibberish" === Nothing

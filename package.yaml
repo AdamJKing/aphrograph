@@ -21,7 +21,9 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- ncurses
+- array
+- brick
+- vty
 - wreq
 - aeson
 - lens-aeson
@@ -41,12 +43,12 @@ dependencies:
 - exceptions
 - pcre-heavy
 - streaming
-- Decimal
+- scientific
 
 library:
   source-dirs: [
       src
-    , src/curses
+    , src/brick
   ]
 
 executables:

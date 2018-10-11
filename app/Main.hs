@@ -1,59 +1,58 @@
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Main where
 
-import           Debug.Trace
-import           Control.Monad
-import           System.IO
-import           UI.NCurses
-import           ErrorHandling
-import           Control.Monad.Catch
-import           Control.Monad.Trans.Class      ( lift )
-import           Data.Text.Prettyprint.Doc
+import           Events
+import           Control.Monad                  ( void )
+import qualified Graphics.Vty                  as Vty
+import           Brick.AttrMap
+import           Graphics.Vty.Attributes
 
+import           Control.Monad.IO.Class
+import           Display
+import           Brick.Main                    as Brick
+import           Brick.Types
+import           System.IO                      ( withFile
+                                                , IOMode(WriteMode)
+                                                )
+import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Log
-import           Data.Typeable
-import           Data.Int
-import           App
-import           Logging
-import           Control.Monad.Writer
 import           Data.Text                      ( Text
                                                 , pack
                                                 )
-import           Graph
-import           Graphite
-import           System.Environment
+import           Graphite                       ( DataPoint
+                                                , getMetricsForPast
+                                                )
+import           System.Environment             ( getArgs )
 import           Time.Types
-import qualified UI.NCurses                    as NC
-import           Args
-import           Display
+import qualified Args
+import           Data.Text.Prettyprint.Doc      ( pretty
+                                                , Doc
+                                                )
+import qualified Brick.BChan                   as Brick
+
 
 main :: IO ()
 main = do
-  args <- getArgs
-  let [targetArg, timeArg] = args
-  let Just parsedTime      = parseTime timeArg
-  withFileLogging runCurses $ app targetArg parsedTime
- where
-  withFileLogging runner action =
-    withFile "aphrograph.log" WriteMode $ \logfile ->
-      runner . withFDHandler defaultBatchingOptions logfile 0.4 80 $ runLoggingT
-        action
+  eventQueue <- Brick.newBChan 10
+  args       <- Args.getAppArgs
+  let getVty = Vty.userConfig >>= Vty.mkVty
+  withFile "aphrograph.log" WriteMode
+    $ \logfile ->
+        withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
+          points <- runLoggingT
+            (getMetricsForPast (pack (Args._target args)) (Args._time args))
+            handler
+          void
+            $ Brick.customMain getVty (Just eventQueue) (mkApp handler) points
 
+mkApp :: Handler IO (Doc String) -> App [DataPoint] LoggingEvent ()
+mkApp handler = App
+  { appDraw         = return . renderGraphWidget
+  , appChooseCursor = \_ -> const Nothing
+  , appHandleEvent  = loggedEventHandler handler
+  , appStartEvent   = return
+  , appAttrMap      = \_ -> attrMap defAttr []
+  }
 
-app :: (TimeInterval t) => String -> t -> LoggingT (Doc String) NC.Curses ()
-app target parsedTime = do
-  logMessage $ pretty "Starting app."
-  display <- createDisplay
-  step target parsedTime display
-
-step
-  :: (TimeInterval t)
-  => String
-  -> t
-  -> DisplayT (LoggingT (Doc String) NC.Curses) [DataPoint]
-  -> LoggingT (Doc String) NC.Curses ()
-step target time display = do
-  logMessage $ pretty "Performing single step."
-  snapshot <- getMetricsForPast (pack target) time
-  updateDisplay snapshot display

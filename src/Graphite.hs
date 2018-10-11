@@ -16,7 +16,6 @@ where
 
 import           Data.String
 import           Data.Text.Prettyprint.Doc
-import           Data.Decimal
 import           Control.Monad.Log
 import           Streaming
 import qualified Streaming.Prelude             as S
@@ -31,7 +30,7 @@ import           Data.ByteString.Lazy           ( ByteString(..) )
 import           Data.ByteString.Lazy.Char8     ( unpack )
 import           Data.Hourglass                 ( timeDiff )
 import           Data.Maybe                     ( fromMaybe )
-import           Data.Scientific                ( toBoundedInteger )
+import           Data.Scientific                
 import qualified Data.Text                     as T
 import qualified Data.Vector                   as V
                                                 ( toList )
@@ -48,7 +47,7 @@ import           Time.Types                     ( Elapsed(..)
                                                 )
 
 data DataPoint = DataPoint
-  { value :: Decimal
+  { value :: Scientific
   , time  :: Elapsed
   } deriving (Show, Eq)
 
@@ -67,9 +66,6 @@ deriving instance FromJSON Seconds
 deriving instance Generic Elapsed
 
 deriving instance FromJSON Elapsed
-
-instance (FromJSON i, Integral i, Read i) => FromJSON (DecimalRaw i) where
-  parseJSON json = read <$> parseJSON json
 
 instance FromJSON DataPoint where
   parseJSON (Array arr) =
@@ -98,10 +94,12 @@ getMetricsForPast
   -> t
   -> m [DataPoint]
 getMetricsForPast target timeSpan = do
+  logMessage $ pretty "Making a call to graphite."
   let args = over params (++ [(T.pack "target", target)]) defaultArgs
   response      <- liftIO $ getWith args "http://localhost/render"
   (Elapsed now) <- liftIO timeCurrent
   let datapoints = parseMetricTimeSeries (view responseBody response)
   let timespan   = (Elapsed (now - toSeconds timeSpan), Elapsed now)
-  logMessage $ pretty "Making a call to graphite."
+  logMessage . pretty $ "Size of returned data was: " ++ show
+    (length datapoints)
   return $ getValuesInTimeRange timespan datapoints
