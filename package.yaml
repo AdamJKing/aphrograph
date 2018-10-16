@@ -45,12 +45,6 @@ dependencies:
 - streaming
 - scientific
 
-library:
-  source-dirs: [
-      src
-    , src/brick
-  ]
-
 executables:
   aphrograph-exe:
     main:                Main.hs
