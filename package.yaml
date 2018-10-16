@@ -42,8 +42,14 @@ dependencies:
 - monad-control
 - exceptions
 - pcre-heavy
-- streaming
 - scientific
+
+ghc-options:
+  - -Wall
+  - -Werror
+
+library:
+  source-dirs: [ "src/", "src/brick" ]
 
 executables:
   aphrograph-exe:

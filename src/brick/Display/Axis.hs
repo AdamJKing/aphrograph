@@ -1,9 +1,6 @@
 module Display.Axis where
 
 import           Normalisation
-import           Data.Ord
-import           Data.List
-import           Labels
 import           Graphite
 import           Data.Hourglass
 

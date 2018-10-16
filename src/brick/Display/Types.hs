@@ -1,3 +1,5 @@
 module Display.Types where
 
-data Dimensions i = Dimensions { width :: i, height :: i }
+import Data.Monoid
+
+data Dimensions i = Dimensions { width :: Sum i, height :: Sum i }

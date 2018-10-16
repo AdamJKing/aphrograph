@@ -6,7 +6,6 @@ import           Control.Monad.IO.Class
 import           Data.Int
 import           Data.Hourglass.Types
 import           Text.Regex.PCRE.Heavy
-import           Time.Types
 import qualified System.Environment            as Env
 
 data AppArgs = AppArgs {
@@ -33,4 +32,5 @@ parseTime str = case scan [re|([0-9]+)([smhd])|] str of
     "m" -> Just . toSeconds $ Minutes (read time :: Int64)
     "h" -> Just . toSeconds $ Hours (read time :: Int64)
     "d" -> Just . toSeconds $ Hours (read time :: Int64) * 24
+    _   -> Nothing
   _ -> Nothing

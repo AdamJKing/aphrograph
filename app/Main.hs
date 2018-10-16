@@ -9,27 +9,18 @@ import qualified Graphics.Vty                  as Vty
 import           Brick.AttrMap
 import           Graphics.Vty.Attributes
 
-import           Control.Monad.IO.Class
 import           Display
 import           Brick.Main                    as Brick
-import           Brick.Types
 import           System.IO                      ( withFile
                                                 , IOMode(WriteMode)
                                                 )
-import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Log
-import           Data.Text                      ( Text
-                                                , pack
-                                                )
+import           Data.Text                      ( pack )
 import           Graphite                       ( DataPoint
                                                 , getMetricsForPast
                                                 )
-import           System.Environment             ( getArgs )
-import           Time.Types
 import qualified Args
-import           Data.Text.Prettyprint.Doc      ( pretty
-                                                , Doc
-                                                )
+import           Data.Text.Prettyprint.Doc      ( Doc )
 import qualified Brick.BChan                   as Brick
 
 

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveAnyClass     #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
@@ -14,23 +15,13 @@ module Graphite
   )
 where
 
-import           Data.String
+import           Control.Monad.IO.Class
 import           Data.Text.Prettyprint.Doc
 import           Control.Monad.Log
-import           Streaming
-import qualified Streaming.Prelude             as S
 import           Control.Lens
-import           Data.Aeson                     ( Array
-                                                , FromJSON(..)
-                                                , Value(..)
-                                                , eitherDecode
-                                                , withScientific
-                                                )
-import           Data.ByteString.Lazy           ( ByteString(..) )
-import           Data.ByteString.Lazy.Char8     ( unpack )
-import           Data.Hourglass                 ( timeDiff )
-import           Data.Maybe                     ( fromMaybe )
-import           Data.Scientific                
+import           Data.Aeson                    as JSON
+import           Data.ByteString.Lazy           ( ByteString )
+import           Data.Scientific
 import qualified Data.Text                     as T
 import qualified Data.Vector                   as V
                                                 ( toList )
@@ -39,12 +30,11 @@ import           Network.Wreq
 import           Network.Wreq.Lens
 import           Time.System                    ( timeCurrent )
 import           Time.Types                     ( Elapsed(..)
-                                                , Minutes(..)
                                                 , Seconds(..)
                                                 , TimeInterval
-                                                , fromSeconds
                                                 , toSeconds
                                                 )
+
 
 data DataPoint = DataPoint
   { value :: Scientific
@@ -57,26 +47,29 @@ instance Ord DataPoint where
 data MetricResponse = MetricResponse
   { target     :: String
   , datapoints :: [DataPoint]
-  } deriving (Show, Generic, FromJSON)
+  } deriving (Show, Generic, JSON.FromJSON)
 
 deriving instance Generic Seconds
 
-deriving instance FromJSON Seconds
+deriving instance JSON.FromJSON Seconds
 
 deriving instance Generic Elapsed
 
-deriving instance FromJSON Elapsed
+deriving instance JSON.FromJSON Elapsed
 
-instance FromJSON DataPoint where
-  parseJSON (Array arr) =
+instance JSON.FromJSON DataPoint where
+  parseJSON (JSON.Array arr) =
     case V.toList arr of
-      [Null, t] -> DataPoint 0.0 <$> parseJSON t
+      [JSON.Null, t] -> DataPoint 0.0 <$> parseJSON t
       [v, t]    -> DataPoint <$> parseJSON v <*> parseJSON t
+      _ -> fail "Couldn't parse datapoint"
+  parseJSON _ = fail "Couldn't parse datapoint"
 
-defaultArgs = set params [format, from] defaults
+defaultArgs :: Network.Wreq.Lens.Options
+defaultArgs = set params [format, timespan] defaults
  where
-  format = (T.pack "format", T.pack "json")
-  from   = (T.pack "from", T.pack "-100hr")
+  format   = (T.pack "format", T.pack "json")
+  timespan = (T.pack "from", T.pack "-100hr")
 
 getValuesInTimeRange :: (Elapsed, Elapsed) -> [DataPoint] -> [DataPoint]
 getValuesInTimeRange (a, b) = filter (isInRange . time)
@@ -86,7 +79,7 @@ parseMetricTimeSeries :: ByteString -> [DataPoint]
 parseMetricTimeSeries rawJson =
   case (eitherDecode rawJson :: Either String [MetricResponse]) of
     Right (mr : _) -> datapoints mr
-    Left  err      -> []
+    _              -> []
 
 getMetricsForPast
   :: (MonadLog (Doc String) m, TimeInterval t, MonadIO m)

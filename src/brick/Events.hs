@@ -4,17 +4,8 @@ module Events where
 
 import qualified Brick.Main                    as Brick
 import qualified Brick.Types                   as Brick
-import           System.IO                      ( withFile
-                                                , IOMode(WriteMode)
-                                                )
-import           Control.Monad.Trans.Class      ( lift )
 import           Control.Monad.Log
-import           Data.Text                      ( Text
-                                                , pack
-                                                )
 import qualified Graphite                       ( DataPoint )
-import           System.Environment             ( getArgs )
-import           Time.Types
 import qualified Data.Text.Prettyprint.Doc     as PP
 import qualified Control.Monad.IO.Class        as IO
 
