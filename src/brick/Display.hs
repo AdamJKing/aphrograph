@@ -1,34 +1,48 @@
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module Display where
 
-import           Data.Monoid                    ( Sum(..) )
-import           Data.Array.IArray
-import           Control.Lens.Getter
-import           Control.Lens.Setter
-import           Data.Bool
 import qualified Graphics.Vty                  as Vty
-import qualified Display.Graph                 as Graph
-import           Brick.Types                   as Brick
-import           Graphite
+import           Normalisation
+import           Display.Graph
 import           Display.Types
+import           Data.Hourglass
+import           Control.Monad.Log
+import           Data.Text.Prettyprint.Doc
+                                         hiding ( width )
 
-renderGraphWidget :: [DataPoint] -> Brick.Widget ()
-renderGraphWidget data' = Brick.Widget Greedy Greedy $ do
-  ctx <- getContext
-  let (w, h) = (view availWidthL ctx, view availHeightL ctx)
-  let dim = Dimensions {width = Sum $ toInteger w, height = Sum $ toInteger h}
-  let draw =
-        toImage $ Graph.toDisplayData (Graph.makeGraphable data' dim) dim
-  return $ set imageL draw emptyResult
+normaliseGraph
+    :: (MonadLog (Doc String) m)
+    => Graph Seconds Double
+    -> Dimensions Integer
+    -> m (Graph Integer Integer)
+normaliseGraph graph Dimensions {..} = do
+    g <- mapPointsM
+        (\(x, y) -> do
+            let distributedX = getOrThrow $ scaleSpecial x
+            let distributedY = getOrThrow $ scale y yBounds (0, height)
+            logMessage . pretty $ show (distributedX, distributedY)
+            return (distributedX, distributedY)
+        )
+        graph
+    logMessage . pretty $ show g
+    return g
+  where
+    xBounds = boundsX graph
+    yBounds = boundsY graph
+    scaleSpecial x = case scale x xBounds (0, width) of
+        Left BadOriginRange -> scale x (0, x + 10) (0, width)
+        other               -> other
+    getOrThrow = either (error . show) id
 
-toImage :: Graph.DisplayData -> Vty.Image
-toImage (Graph.DisplayData graph) =
-  let ((xMin, xMax), (yMin, yMax)) = bounds graph
-  in  Vty.vertCat
-      $   rowToImage
-      <$> [ row
-          | x <- [xMin .. xMax]
-          , let row = [ graph ! (x, y) | y <- [yMin .. yMax] ]
-          ]
-
-rowToImage :: [Bool] -> Vty.Image
-rowToImage row = Vty.horizCat $ Vty.char mempty . bool ' ' 'X' <$> row
+toImage
+    :: (Ord x, Ord y, Num x, Num y, Enum x, Enum y) => Graph x y -> Vty.Image
+toImage NoData = Vty.string mempty "No Data"
+toImage graph  = Vty.vertCat [ mkRow y | y <- [yMin .. yMax] ]
+  where
+    mkRow y = Vty.horizCat [ renderChar x y | x <- [xMin .. xMax] ]
+    (xMin, xMax) = boundsX graph
+    (yMin, yMax) = boundsY graph
+    renderChar i j | (i, j) `member` graph = Vty.char mempty 'X'
+                   | otherwise             = Vty.char mempty ' '

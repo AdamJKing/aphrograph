@@ -1,36 +1,36 @@
-{-# LANGUAGE QuasiQuotes, FlexibleContexts #-}
-
 module Args where
 
-import           Control.Monad.IO.Class
-import           Data.Int
+import           Data.Char
 import           Data.Hourglass.Types
-import           Text.Regex.PCRE.Heavy
-import qualified System.Environment            as Env
 
 data AppArgs = AppArgs {
   _time :: Seconds
   , _target :: String
-}
+} deriving (Show, Eq)
 
-getAppArgs :: (MonadIO m) => m AppArgs
-getAppArgs = liftIO Env.getArgs >>= extract
- where
-  extract [target, time] = do
-    t <- case parseTime time of
-      Just t  -> return t
-      Nothing -> printUsage
-    return $ AppArgs {_time = t, _target = target}
-  extract _ = printUsage
-  printUsage = error "Usage: aphrograph $TARGET $TIME"
+class ArgumentParser arg where
+  parseArg :: String -> Either String arg
+
+instance ArgumentParser Seconds where
+  parseArg input = case parseTime' input "" "" of
+    (time, "d") -> Right . toSeconds . Hours $ read time * 24
+    (time, "h") -> Right . toSeconds . Hours $ read time
+    (time, "m") -> Right . toSeconds . Minutes $ read time
+    (time, "s") -> Right . Seconds $ read time
+    _           -> Left $ "Invalid time. (" ++ input ++ ")"
+    where
+      parseTime' :: String -> String -> String -> (String, String)
+      parseTime' "" time unit = (time, unit)
+      parseTime' (a : as) time unit | isDigit a  = parseTime' as (time ++ [a]) unit
+                                    | isLetter a = parseTime' as time (unit ++ [a])
+                                    | otherwise  = ("", "")
 
 
-parseTime :: String -> Maybe Seconds
-parseTime str = case scan [re|([0-9]+)([smhd])|] str of
-  [(_, [time, unit])] -> case unit of
-    "s" -> Just $ Seconds (read time :: Int64)
-    "m" -> Just . toSeconds $ Minutes (read time :: Int64)
-    "h" -> Just . toSeconds $ Hours (read time :: Int64)
-    "d" -> Just . toSeconds $ Hours (read time :: Int64) * 24
-    _   -> Nothing
-  _ -> Nothing
+parseAppArgs :: [String] -> Either String AppArgs
+parseAppArgs [targetS, timeS] = do
+  time <- parseArg timeS
+  return $ AppArgs { _time = time, _target = targetS }
+parseAppArgs _ = Left usageMessage
+
+usageMessage :: String
+usageMessage = "aphrograph-exe $TARGET $TIME"

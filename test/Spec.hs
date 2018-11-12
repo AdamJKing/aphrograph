@@ -3,55 +3,41 @@
 
 module Main where
 
-import           Data.Scientific
-import qualified GraphiteSpec                   ( spec )
-import           System.Random
-import           Data.List                      ( sort )
-import           Control.Lens                   ( over
-                                                , _1
-                                                )
-import           Data.Int                       ( Int64 )
-import           Control.Monad
+import           Data.List                     as List
 import           Test.Hspec.Runner
 import           Test.Hspec
 import           Test.QuickCheck
-import           Args
-import           Time.Types
-import           Test.QuickCheck.Gen
-import           Data.Hourglass
-import           Test.QuickCheck.Arbitrary
-import           Normalisation
-
+import           ArbitraryInstances
 import           Graphite
+import qualified GraphSpec                      ( spec )
+import qualified GraphiteSpec                   ( spec )
+import qualified ArgsSpec                       ( spec )
+import qualified NormalisationSpec              ( spec )
 
 main :: IO ()
 main = hspec $ do
-  describe "Graphite" GraphiteSpec.spec
+  describe "Graph"         GraphSpec.spec
+  describe "Graphite"      GraphiteSpec.spec
+  describe "Args"          ArgsSpec.spec
+  describe "Normalisation" NormalisationSpec.spec
   describe "Graphite.getValuesInTimeRange"
     $ it "should detect values in the range"
     $ forAll
-        arbitrary
-        (\(Ordered ts) -> do
-          a <- choose (time . last $ ts, time . head $ ts)
-          b <- choose (a, time (head ts))
-          return
-            . all (\DataPoint { time = t } -> a <= t && t <= b)
-            $ getValuesInTimeRange (a, b) ts
+        (          arbitrary
+        `suchThat` (\(Ordered ns) -> nub ns == ns)
+        `suchThat` (\(Ordered ns) -> not (null ns) && (length ns > 1))
         )
-  describe "Graph.normalise" $ do
-    it "has no effect when normalising to the same range"
-      . forAll (genTestData :: Gen (Range Double, Positive Double))
-      $ \((Positive a, Positive b), Positive i) ->
-          normaliseFractional (a, b) (a, b) i === i
-    it "produces a value x times larger when the second range is x times larger"
-      . forAll (genTestData :: Gen (Range Double, Positive Double))
-      $ \((Positive a, Positive b), Positive v) -> do
-          Positive f <- resize 500 arbitrary :: Gen (Positive Double)
-          return $ floor (normaliseFractional (a, b) (a * f, b * f) v) === floor
-            (v * f)
-  describe "Main.parseTime" $ do
-    it "parses seconds" $ parseTime "30s" === Just (Seconds 30)
-    it "parses minutes" $ parseTime "60m" === Just (Seconds 3600)
-    it "parses seconds" $ parseTime "24h" === Just (Seconds 86400)
-    it "parses seconds" $ parseTime "7d" === Just (Seconds 604800)
-    it "returns left on errors" $ parseTime "gibberish" === Nothing
+    $ \(Ordered ts) -> do
+        let ots = List.sort ts
+        p1 <- choose (0, length ts - 2)
+        p2 <- choose (p1 + 1, length ts - 1)
+        let (SimpleDataPoint a) = ots !! p1
+        let (SimpleDataPoint b) = ots !! p2
+        let ts'                 = (\(SimpleDataPoint dp) -> dp) <$> ts
+        let real = getValuesInTimeRange (time a, time b) ts'
+        let expected = (\(SimpleDataPoint dp) -> dp)
+              <$> take (p2 - p1 + 1) (drop p1 ts)
+        return
+          .   counterexample ("from (" ++ show p1 ++ ") to (" ++ show p2 ++ ")")
+          $   real
+          === expected

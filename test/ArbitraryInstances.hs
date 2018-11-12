@@ -1,67 +1,101 @@
-{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module ArbitraryInstances where
 
-import           Data.Scientific
-import qualified GraphiteSpec                   ( spec )
+import           Display.Graph
+import           Data.Bifunctor
 import           System.Random
-import           Data.List                      ( sort )
-import           Control.Lens                   ( over
-                                                , _1
-                                                )
-import           Data.Int                       ( Int64 )
-import           Control.Monad
-import           Test.Hspec.Runner
-import           Test.Hspec
 import           Test.QuickCheck
-import           Args
+import           Display.Types
 import           Time.Types
-import           Test.QuickCheck.Gen
-import           Data.Hourglass
-import           Test.QuickCheck.Arbitrary
-import           Normalisation
-
 import           Graphite
 
-instance Arbitrary Seconds where
-    arbitrary = do
+instance Arbitrary SimpleSeconds where
+    arbitrary = SimpleSeconds <$> do
         Positive x <- arbitrary
         return $ Seconds x
 
-    shrink (Seconds s) = Seconds <$> shrink s
+    shrink (SimpleSeconds (Seconds s)) = SimpleSeconds . Seconds <$> shrink s
 
-deriving instance Arbitrary Elapsed
+instance Arbitrary SimpleElapsed where
+    arbitrary = SimpleElapsed <$> do
+        (SimpleSeconds seconds) <- arbitrary
+        return $ Elapsed seconds
 
-instance Arbitrary Scientific where
-  arbitrary = scientific <$> arbitrary <*> arbitrary
-  shrink = shrinkDecimal
+newtype SimpleSeconds = SimpleSeconds {
+    getSeconds :: Seconds
+} deriving (Eq, Show, Num, Ord)
 
-instance Arbitrary DataPoint where
-    arbitrary = DataPoint <$> arbitrary <*> arbitrary
-    shrink DataPoint{value=v, time=t} = DataPoint <$> shrink v <*> shrink t
+newtype SimpleElapsed = SimpleElapsed Elapsed deriving (Eq, Show)
+newtype SimpleDataPoint = SimpleDataPoint DataPoint deriving (Eq, Show, Ord)
+newtype SimpleGraph = SimpleGraph (Graph Int Int) deriving (Show, Eq)
 
-instance Random Elapsed where
-    randomR (Elapsed (Seconds a), Elapsed (Seconds b)) = over _1 (Elapsed . Seconds) . randomR (a, b)
-    random = over _1 (Elapsed . Seconds) . random
+instance Arbitrary SimpleDataPoint where
+    arbitrary = SimpleDataPoint <$> do
+        s <- arbitrary
+        (SimpleElapsed e) <- arbitrary
+        return $ DataPoint s e
 
-instance Arbitrary Dimensions where
-    arbitrary = Dimensions <$> arbitrary <*> arbitrary
-    shrink Dimensions{..} = Dimensions <$> shrink width `zip` shrink height
+    shrink (SimpleDataPoint DataPoint{value=v, time=t}) = do
+        v' <- shrink v
+        (SimpleElapsed t') <-  shrink (SimpleElapsed t)
+        return . SimpleDataPoint $  DataPoint v' t'
 
-type Range a = (Positive a, Positive a)
+instance Random SimpleSeconds where
+    randomR rng gen = first (SimpleSeconds . Seconds . abs) $ randomR (asInt rng) gen
+        where asInt (SimpleSeconds (Seconds lower), SimpleSeconds (Seconds higher)) = (lower, higher)
 
-generateRange :: (Ord a, Num a, Arbitrary a) => Gen (Range a)
-generateRange = do
-  Positive x <- arbitrary
-  Positive y <- arbitrary
-  return (Positive x, Positive (x + y))
+    random gen = first (SimpleSeconds . Seconds . abs) $ random gen
+
+instance Random SimpleElapsed where
+    randomR rng gen = first (SimpleElapsed . Elapsed . get) $ randomR (asSeconds rng) gen
+        where
+            get (SimpleSeconds s) = s
+            asSeconds (SimpleElapsed (Elapsed lower), SimpleElapsed (Elapsed higher)) = (SimpleSeconds lower, SimpleSeconds higher)
+
+    random gen = first (SimpleElapsed . Elapsed . get) $ random gen
+            where get (SimpleSeconds s) = s
+
+newtype SimpleDimensions = SimpleDimensions (Dimensions Int)
+
+instance Arbitrary SimpleDimensions where
+    arbitrary = SimpleDimensions <$> (Dimensions <$> arbitrary <*> arbitrary)
+    shrink (SimpleDimensions Dimensions{..}) = do
+        w <- shrink width
+        h <- shrink height
+        return . SimpleDimensions $ Dimensions w h
+
+instance Arbitrary SimpleGraph where
+    arbitrary = do
+        (NonEmpty xs) <- arbitrary
+        (InfiniteList ys _) <- arbitrary
+        return . SimpleGraph . mkGraph $ xs `zip` ys
+
+    shrink (SimpleGraph graph) = SimpleGraph . mkGraph <$> shrink (assocs graph)
+
+data Range i = Range {
+    lower :: i,
+    higher :: i
+} deriving (Show, Eq)
+
+tuple :: Range n -> (n, n)
+tuple Range {..} = (lower, higher)
+
+instance (Ord a, Arbitrary a) => Arbitrary (Range a) where
+    arbitrary = do
+        x <- arbitrary
+        y <- arbitrary `suchThat` (/=) x
+        return $ Range { lower = min x y, higher = max x y }
 
 genTestData
-  :: (Arbitrary a, Random a, Ord a, Fractional a) => Gen (Range a, Positive a)
+    :: (Arbitrary a, Random a, Ord a, Num a) => Gen (Range a, Positive a)
 genTestData = do
-  r1@(Positive i, Positive j) <- generateRange
-  x                           <- choose (i, j)
-  return (r1, Positive x)
+    r@Range {..} <- arbitrary
+    x            <- choose (lower, higher)
+    return (r, Positive x)

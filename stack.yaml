@@ -4,4 +4,4 @@ ghc-options:
 packages:
 - .
 extra-deps: []
-resolver: lts-12.10
+resolver: lts-12.17

@@ -1,23 +1,23 @@
 module Display.Axis where
 
-import           Normalisation
-import           Graphite
-import           Data.Hourglass
+-- data Axis = VerticalAxis | HorizontalAxis
 
-toVerticalAxis :: [DataPoint] -> Integer -> [Integer]
-toVerticalAxis data' height = map
-  (toInteger . normaliseIntegral toRange fromRange)
-  points
- where
-  points    = [ t | DataPoint { time = Elapsed (Seconds t) } <- data' ]
-  toRange   = (0, fromInteger height)
-  fromRange = rangeFrom points
+-- class AxisTransformer axis 
 
-toHorizontalAxis :: [DataPoint] -> Integer -> [Integer]
-toHorizontalAxis data' height = map
-  (round . normaliseFractional toRange fromRange)
-  points
- where
-  points    = [ v | DataPoint { value = v } <- data' ]
-  toRange   = (0, fromInteger height)
-  fromRange = rangeFrom points
+-- toVerticalAxis :: [DataPoint] -> Integer -> [Integer]
+-- toVerticalAxis data' _height = map
+--   (toInteger . normaliseIntegral toRange fromRange)
+--   points
+--  where
+--   points    = [ t | DataPoint { time = Elapsed (Seconds t) } <- data' ]
+--   toRange   = (0, fromInteger _height)
+--   fromRange = rangeFrom points
+
+-- toHorizontalAxis :: [DataPoint] -> Integer -> [Integer]
+-- toHorizontalAxis data' _height = map
+--   (round . normaliseFractional toRange fromRange)
+--   points
+--  where
+--   points    = [ v | DataPoint { value = v } <- data' ]
+--   toRange   = (0, fromInteger _height)
+--   fromRange = rangeFrom points

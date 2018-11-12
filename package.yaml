@@ -1,71 +1,13 @@
-name:                aphrograph
-version:             0.1.0.0
-github:              "githubuser/aphrograph"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2018 Author name here"
-
-extra-source-files:
-- README.md
-- ChangeLog.md
-
-# Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
-
-# To avoid duplicated efforts in documentation and dealing with the
-# complications of embedding Haddock markup inside cabal files, it is
-# common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/aphrograph#readme>
-
-dependencies:
-- base >= 4.7 && < 5
-- array
-- brick
-- vty
-- wreq
-- aeson
-- lens-aeson
-- lens
-- mtl
-- transformers
-- transformers-base
-- bytestring
-- vector
-- scientific
-- hourglass
-- logging-effect
-- prettyprinter
-- text
-- monad-loops
-- monad-control
-- exceptions
-- pcre-heavy
-- scientific
-
-ghc-options:
-  - -Wall
-  - -Werror
-
 library:
-  source-dirs: [ "src/", "src/brick" ]
-
-executables:
-  aphrograph-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - aphrograph
-
+  source-dirs:
+  - src/
+  - src/brick
+  default-extensions:
+  - RecordWildCards
 tests:
   aphrograph-test:
-    main:                Spec.hs
-    source-dirs:         test
+    source-dirs: test
+    main: Spec.hs
     ghc-options:
     - -threaded
     - -rtsopts
@@ -75,3 +17,54 @@ tests:
     - hspec
     - QuickCheck
     - random
+    default-extensions:
+    - RecordWildCards
+
+ghc-options:
+- -Wall
+- -Werror
+
+dependencies:
+- base >= 4.7 && < 5
+- containers
+- array
+- brick
+- vty
+- wreq
+- aeson
+- lens-aeson
+- lens
+- mtl
+- transformers
+- sorted-list
+- transformers-base
+- bytestring
+- vector
+- hourglass
+- logging-effect
+- prettyprinter
+- text
+- interpolate
+- monad-loops
+- monad-control
+- exceptions
+- Decimal
+name: aphrograph
+version: 0.1.0.0
+extra-source-files:
+- README.md
+- ChangeLog.md
+author: Author name here
+github: githubuser/aphrograph
+license: BSD3
+executables:
+  aphrograph-exe:
+    source-dirs: app
+    main: Main.hs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - aphrograph
+description: Please see the README on GitHub at <https://github.com/githubuser/aphrograph#readme>

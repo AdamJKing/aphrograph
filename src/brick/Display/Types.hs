@@ -1,5 +1,6 @@
 module Display.Types where
 
-import Data.Monoid
+data Dimensions i = Dimensions { width :: i, height :: i } deriving (Eq, Show)
 
-data Dimensions i = Dimensions { width :: Sum i, height :: Sum i }
+dim :: (i, i) -> Dimensions i
+dim (w, h) = Dimensions { width = w, height = h }
