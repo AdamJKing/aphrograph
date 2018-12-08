@@ -10,3 +10,4 @@
 * Make Graphite URL configurable
 * improve graphite tests
 * explore ways to combine the two "Graph.bounds" tests
+* Enable units in days

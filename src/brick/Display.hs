@@ -46,3 +46,7 @@ toImage graph  = Vty.vertCat [ mkRow y | y <- [yMin .. yMax] ]
     (yMin, yMax) = boundsY graph
     renderChar i j | (i, j) `member` graph = Vty.char mempty 'X'
                    | otherwise             = Vty.char mempty ' '
+
+toVerticalAxis :: Graph x y -> Vty.Image
+toVerticalAxis NoData = Vty.string mempty "   "
+toVerticalAxis _      = Vty.emptyImage

@@ -11,6 +11,7 @@ import           ArbitraryInstances
 import           Graphite
 import qualified GraphSpec                      ( spec )
 import qualified GraphiteSpec                   ( spec )
+import qualified LabelsSpec                     ( spec )
 import qualified ArgsSpec                       ( spec )
 import qualified NormalisationSpec              ( spec )
 
@@ -19,6 +20,7 @@ main = hspec $ do
   describe "Graph"         GraphSpec.spec
   describe "Graphite"      GraphiteSpec.spec
   describe "Args"          ArgsSpec.spec
+  describe "Labels"        LabelsSpec.spec
   describe "Normalisation" NormalisationSpec.spec
   describe "Graphite.getValuesInTimeRange"
     $ it "should detect values in the range"

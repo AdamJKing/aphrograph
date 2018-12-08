@@ -4,4 +4,4 @@ ghc-options:
 packages:
 - .
 extra-deps: []
-resolver: lts-12.17
+resolver: nightly-2018-12-08
