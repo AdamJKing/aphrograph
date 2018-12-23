@@ -8,6 +8,8 @@
 
 module ArbitraryInstances where
 
+import           Labels
+import           Data.Decimal
 import           Display.Graph
 import           Data.Bifunctor
 import           System.Random
@@ -32,52 +34,87 @@ newtype SimpleSeconds = SimpleSeconds {
     getSeconds :: Seconds
 } deriving (Eq, Show, Num, Ord)
 
-newtype SimpleElapsed = SimpleElapsed Elapsed deriving (Eq, Show)
+newtype SimpleElapsed = SimpleElapsed {
+    getElapsed :: Elapsed
+} deriving (Eq, Show, Num, Ord)
+
 newtype SimpleDataPoint = SimpleDataPoint DataPoint deriving (Eq, Show, Ord)
 newtype SimpleGraph = SimpleGraph (Graph Int Int) deriving (Show, Eq)
 
+newtype TestDiscreteValue = TestDiscrete (DiscreteValue Int) deriving (Show, Eq)
+
+instance Arbitrary TestDiscreteValue where
+    arbitrary = TestDiscrete . Discrete <$> arbitrary
+
+newtype NonZeroTestDiscreteValue = NonZeroTestDiscrete (DiscreteValue Int) deriving (Show, Eq)
+
+instance Arbitrary NonZeroTestDiscreteValue where
+    arbitrary = NonZeroTestDiscrete . Discrete <$> (arbitrary `suchThat` (> 0))
+
+newtype TestDecimal = TestDecimal Decimal deriving (Show, Eq, Num)
+
+instance Arbitrary TestDecimal where
+    arbitrary = do
+        (Positive a) <- arbitrary
+        b            <- choose (0, 10)
+        return . TestDecimal $ Decimal a b
+
+
+newtype NonZeroTestDecimal = NonZeroTestDecimal Decimal deriving (Show, Eq)
+
+instance Arbitrary NonZeroTestDecimal where
+    arbitrary = do
+        (NonZero (TestDecimal d)) <- arbitrary
+        return . NonZeroTestDecimal $ d
+
 instance Arbitrary SimpleDataPoint where
     arbitrary = SimpleDataPoint <$> do
-        s <- arbitrary
+        s                 <- arbitrary
         (SimpleElapsed e) <- arbitrary
         return $ DataPoint s e
 
-    shrink (SimpleDataPoint DataPoint{value=v, time=t}) = do
-        v' <- shrink v
-        (SimpleElapsed t') <-  shrink (SimpleElapsed t)
-        return . SimpleDataPoint $  DataPoint v' t'
+    shrink (SimpleDataPoint DataPoint { value = v, time = t }) = do
+        v'                 <- shrink v
+        (SimpleElapsed t') <- shrink (SimpleElapsed t)
+        return . SimpleDataPoint $ DataPoint v' t'
 
 instance Random SimpleSeconds where
-    randomR rng gen = first (SimpleSeconds . Seconds . abs) $ randomR (asInt rng) gen
-        where asInt (SimpleSeconds (Seconds lower), SimpleSeconds (Seconds higher)) = (lower, higher)
+    randomR rng gen = first (SimpleSeconds . Seconds . abs)
+        $ randomR (asInt rng) gen
+      where
+        asInt (SimpleSeconds (Seconds lower), SimpleSeconds (Seconds higher)) =
+            (lower, higher)
 
     random gen = first (SimpleSeconds . Seconds . abs) $ random gen
 
 instance Random SimpleElapsed where
-    randomR rng gen = first (SimpleElapsed . Elapsed . get) $ randomR (asSeconds rng) gen
-        where
-            get (SimpleSeconds s) = s
-            asSeconds (SimpleElapsed (Elapsed lower), SimpleElapsed (Elapsed higher)) = (SimpleSeconds lower, SimpleSeconds higher)
+    randomR rng gen = first (SimpleElapsed . Elapsed . get)
+        $ randomR (asSeconds rng) gen
+      where
+        get (SimpleSeconds s) = s
+        asSeconds (SimpleElapsed (Elapsed lower), SimpleElapsed (Elapsed higher))
+            = (SimpleSeconds lower, SimpleSeconds higher)
 
     random gen = first (SimpleElapsed . Elapsed . get) $ random gen
-            where get (SimpleSeconds s) = s
+        where get (SimpleSeconds s) = s
 
 newtype SimpleDimensions = SimpleDimensions (Dimensions Int)
 
 instance Arbitrary SimpleDimensions where
     arbitrary = SimpleDimensions <$> (Dimensions <$> arbitrary <*> arbitrary)
-    shrink (SimpleDimensions Dimensions{..}) = do
+    shrink (SimpleDimensions Dimensions {..}) = do
         w <- shrink width
         h <- shrink height
         return . SimpleDimensions $ Dimensions w h
 
 instance Arbitrary SimpleGraph where
     arbitrary = do
-        (NonEmpty xs) <- arbitrary
+        (NonEmpty xs      ) <- arbitrary
         (InfiniteList ys _) <- arbitrary
         return . SimpleGraph . mkGraph $ xs `zip` ys
 
-    shrink (SimpleGraph graph) = SimpleGraph . mkGraph <$> shrink (assocs graph)
+    shrink (SimpleGraph graph) =
+        SimpleGraph . mkGraph <$> shrink (assocs graph)
 
 data Range i = Range {
     lower :: i,

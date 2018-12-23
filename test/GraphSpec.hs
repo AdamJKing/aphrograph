@@ -8,7 +8,7 @@ import           Data.List
 import           Normalisation                  ( NormalisationFailure(..) )
 import           CommonProperties
 import           Test.Hspec                    as HS
-import           Data.Hourglass
+
 import           Test.QuickCheck
 import           Graphite
 import           ArbitraryInstances
@@ -19,8 +19,7 @@ spec = describe "Graph" $ do
         . describe "extract"
         . it "extracts graphable data from a type"
         . property
-        $ \(SimpleDataPoint dp) ->
-              let (t, v) = extract dp in (Elapsed t, v) === (time dp, value dp)
+        $ \(SimpleDataPoint dp) -> extract dp === (time dp, value dp)
 
     describe "boundsX"
         . it "correctly gets the bounds (Integers)"
@@ -62,8 +61,8 @@ spec = describe "Graph" $ do
         . property
         $ \Range { lower = l, higher = h } Range { lower = l', higher = h' } ->
               do
-                  (SimpleSeconds v) <- choose (l, h)
-                  let (sl, sh) = (getSeconds l, getSeconds h)
+                  (SimpleElapsed v) <- choose (l, h)
+                  let (sl, sh) = (getElapsed l, getElapsed h)
                   let outcome :: Either NormalisationFailure Integer
                       outcome = Graph.scale v (sl, sh) (l', h')
                   return $ ofEither (\a -> (l' <= a) && (a <= h')) outcome

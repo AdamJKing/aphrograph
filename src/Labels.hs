@@ -1,41 +1,85 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
 
 module Labels where
 
-class Label a where
-    label :: Int -> [a] -> [String]
+import           Data.String
+import           Data.Foldable                 as F
+import           Data.Sequence                 as Seq
+                                         hiding ( length )
+import           Data.Decimal
+import           Data.Monoid                    ( Sum(..)
+                                                , getSum
+                                                )
+import           Data.Fixed                     ( mod' )
 
-newtype Discrete a = Discrete { getDiscrete :: a }
-    deriving (Eq, Ord, Enum, Show)
+-- choosing the "unit" )is a different challenge
 
-newtype Continuous a = Continuous { getContinuous :: a }
-    deriving (Eq, Ord)
+class LabellingStrategy a where
+    generateLabels :: Int -> (a, a) -> [String]
 
-instance (Integral a, Show a, Num a) => Label (Discrete a) where
-    label maxWidth xs = show <$> label' 1
+    organiseLabels :: Int -> (a, a) -> String
+    organiseLabels 0  _ = ""
+    organiseLabels maxWidth range =
+        let labels    = generateLabels maxWidth range
+            labelSize = (maxWidth - F.length labels) `div` F.length labels
+            space (fromList -> x)
+                | F.length x > labelSize = error (fromString "Not enough space to display labels accurately " ++ show (F.length x) ++ " " ++ show labelSize)
+                | otherwise =  ' ' :<| (emptyStringOf (labelSize - F.length x) >< x)
+            in toList $ foldMap space labels
+
+newtype DiscreteValue n = Discrete n deriving (Show, Eq, Num, Ord, Real, Enum, Integral)
+
+instance LabellingStrategy Decimal where
+
+    generateLabels _        (_    , 0    ) = return "0"
+    generateLabels maxWidth (small, large) = toList $ findLabels 10
       where
-        label' i =
-            let labels      = [minimum xs .. maximum xs]
-                displayable = getDiscrete <$> every i labels
-            in  if totalPosibleLength displayable > maxWidth
-                    then label' (i + 1)
-                    else displayable
+        findLabels 0 = error "Cannot generate labels"
+        findLabels n
+            | (large - small) `mod'` i == 0
+            = let
+                  values =
+                      fromFunction (n + 1) $ (small +) . (i *) . fromIntegral
+                  largestDecimalPlace = maximum (decimalPlaces <$> values)
+                  labels =
+                      show
+                          .   roundTo (fromIntegral largestDecimalPlace)
+                          <$> values
+                  fullLength = getSum $ foldMap (Sum . (+ 1) . length) labels
+              in
+                  if fullLength > maxWidth then findLabels (n - 1) else labels
+            | otherwise
+            = findLabels $ n - 1
+            where i = (large - small) / fromIntegral n
 
-        every n (i : is) = i : every n (drop n is)
-        every _ []       = []
+instance (Show a, Enum a, Ord a, Integral a) => LabellingStrategy (DiscreteValue a) where
 
-instance (RealFrac a, Ord a, Show a) => Label (Continuous a) where
-    label maxWidth xs =
-        let (Continuous mn) = minimum xs
-            (Continuous mx) = maximum xs
-            label' x =
-                let f      = (mx - mn) / fromInteger x
-                    labels = [ mn + (f * fromInteger i) | i <- [0 .. x] ]
-                in  if totalPosibleLength labels > fromIntegral maxWidth
-                        then label' (x - 1)
-                        else labels
-        in  show <$> label' (toInteger $ length xs)
+    generateLabels _        (_             , Discrete 0    ) = return "0"
+    generateLabels maxWidth (Discrete small, Discrete large) = toList
+        $ findLabels 10
+      where
+        findLabels 0 = error "Cannot generate labels"
+        findLabels n
+            | (large - small) `mod` fromIntegral n == 0
+            = let
+                  step = (large - small) `div` fromIntegral n
+                  labels =
+                      fromFunction (n + 1)
+                          $ show
+                          . (small +)
+                          . (step *)
+                          . fromIntegral
+                  fullLength = getSum $ foldMap (Sum . (+ 1) . length) labels
+              in
+                  if fullLength > maxWidth then findLabels (n - 1) else labels
+            | otherwise
+            = findLabels $ n - 1
 
-totalPosibleLength :: (Foldable t, Functor t, Show a) => t a -> Int
-totalPosibleLength xs =
-    length . foldl (\a b -> a ++ " " ++ b) "" $ fmap show xs
+emptyStringOf :: Int -> Seq Char
+emptyStringOf i = Seq.replicate i ' '
+
+-- account for places < e
+

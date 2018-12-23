@@ -1,15 +1,14 @@
-{-# LANGUAGE LambdaCase #-}
 
 module Events where
 
 import qualified Brick.Main                    as Brick
 import qualified Brick.Types                   as Brick
-import qualified Control.Monad.IO.Class        as IO
+
 import           Control.Monad.Trans.Class
 import           Control.Lens
 import           Display.Types
 import           Data.Text.Prettyprint.Doc
-import           Data.Maybe
+
 import           Data.Text                      ( pack )
 import           Graphite                       ( getMetricsForPast )
 import           Args
@@ -18,45 +17,26 @@ import           Display.Graph                 as Graph
 import           Control.Monad.Log
 import           Display
 
-data GraphRefreshEvent = GraphRefresh
+data AppEvent = GraphRefresh
 
-produceGraphRefresh
-  :: AppArgs
-  -> Handler IO (Doc String)
-  -> Brick.EventM Components (Graph Integer Integer)
-produceGraphRefresh args handler = runLoggingT
-  (do
-    vp     <- lift $ Brick.lookupViewport GraphView
-    points <- getMetricsForPast (pack (_target args)) (_time args)
+type AppEventHandler
+  =  AppState
+  -> Brick.BrickEvent AppComponent AppEvent
+  -> LoggingT (Doc String) (Brick.EventM AppComponent) (Brick.Next AppState)
 
-    let graph = mkGraph $ extract <$> points
+mkEventHandler :: AppArgs -> AppEventHandler
+mkEventHandler AppArgs {..} state (Brick.AppEvent GraphRefresh) = do
+  logMessage . pretty $ "Handling Graph Update!"
+  maybeGraphView <- lift $ Brick.lookupViewport GraphView
+  case maybeGraphView of
+    Nothing -> lift $ Brick.continue state
+    Just vp -> do
+      latestData <- getMetricsForPast (pack _target) _time
+      let graph = mkGraph $ extract <$> latestData
+      logMessage . pretty $ "Graph Size: " ++ show (size graph)
+      let targetSize = dim $ view Brick.vpSize vp
+      let uiData     = normaliseGraph graph targetSize
+      -- let uiLabels   = generateLabels (width targetSize) uiData
+      lift $ Brick.continue $ AppState { appData = graph, ui_appData = uiData }
 
-    logMessage . pretty $ "Graph Size: " ++ show (size graph)
-    logMessage . pretty $ show vp
-
-    let targetSize =
-          dim $ over each toInteger (view Brick.vpSize $ fromJust vp)
-
-    logMessage . pretty $ show targetSize
-
-    normalisedGraph <- normaliseGraph graph targetSize
-
-    logMessage . pretty $ "Normalised Graph Size: " ++ show
-      (size normalisedGraph)
-
-    return normalisedGraph
-  )
-  eventLogHandler
-  where eventLogHandler = IO.liftIO . handler
-
-eventHandler
-  :: Handler IO (Doc String)
-  -> AppArgs
-  -> (  Graph Integer Integer
-     -> Brick.BrickEvent Components GraphRefreshEvent
-     -> Brick.EventM Components (Brick.Next (Graph Integer Integer))
-     )
-eventHandler handler args state = \case
-  Brick.AppEvent GraphRefresh ->
-    produceGraphRefresh args handler >>= Brick.continue
-  e -> Brick.resizeOrQuit state e
+mkEventHandler AppArgs {..} state e = lift $ Brick.resizeOrQuit state e

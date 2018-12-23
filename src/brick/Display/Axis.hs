@@ -1,23 +1,14 @@
 module Display.Axis where
 
--- data Axis = VerticalAxis | HorizontalAxis
+import           Labels
+import qualified Graphics.Vty                  as Vty
+import           Display.Graph
+import           Control.Lens
 
--- class AxisTransformer axis 
-
--- toVerticalAxis :: [DataPoint] -> Integer -> [Integer]
--- toVerticalAxis data' _height = map
---   (toInteger . normaliseIntegral toRange fromRange)
---   points
---  where
---   points    = [ t | DataPoint { time = Elapsed (Seconds t) } <- data' ]
---   toRange   = (0, fromInteger _height)
---   fromRange = rangeFrom points
-
--- toHorizontalAxis :: [DataPoint] -> Integer -> [Integer]
--- toHorizontalAxis data' _height = map
---   (round . normaliseFractional toRange fromRange)
---   points
---  where
---   points    = [ v | DataPoint { value = v } <- data' ]
---   toRange   = (0, fromInteger _height)
---   fromRange = rangeFrom points
+toHorizontalAxis :: (Show x, Integral x) => Int -> Graph x y -> Vty.Image
+toHorizontalAxis width NoData =
+    Vty.string mempty $ "No Data" ++ replicate (width - 7) ' '
+toHorizontalAxis width graph = Vty.string mempty . organiseLabels width $ over
+    each
+    Discrete
+    (boundsX graph)

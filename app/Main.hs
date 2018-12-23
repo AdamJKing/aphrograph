@@ -4,8 +4,10 @@
 module Main where
 
 import           App
+
 import           Events
-import           Display.Graph                 as Graph
+
+import           Display.Types
 import           Display.Widgets
 import qualified Graphics.Vty                  as Vty
 import           Brick.AttrMap
@@ -22,9 +24,11 @@ import           System.IO                      ( withFile
                                                 , IOMode(WriteMode)
                                                 )
 import           Control.Monad.Log
+import           Control.Monad.IO.Class
 import qualified Args
 import           Data.Text.Prettyprint.Doc
 import qualified Brick.BChan                   as Brick
+import qualified Brick.Widgets.Core            as Brick
 import qualified System.Environment            as Env
 
 main :: IO ()
@@ -47,16 +51,20 @@ main = do
           void $ Brick.customMain getVty
                                   (Just eventQueue)
                                   (mkApp handler args)
-                                  NoData
+                                  emptyState
 
 mkApp
   :: Handler IO (Doc String)
   -> Args.AppArgs
-  -> App (Graph Integer Integer) GraphRefreshEvent Components
+  -> App AppState AppEvent AppComponent
 mkApp handler args = App
-  { appDraw         = return . graphWidget
+  { appDraw         =
+    \state ->
+      [Brick.vBox [graphWidget (ui_appData state), horizontalAxisWidget state]]
   , appChooseCursor = \_ -> const Nothing
-  , appHandleEvent  = eventHandler handler args
+  , appHandleEvent  = \state e ->
+                        let handle = mkEventHandler args
+                        in  runLoggingT (handle state e) (liftIO . handler)
   , appStartEvent   = return
   , appAttrMap      = \_ -> attrMap defAttr []
   }

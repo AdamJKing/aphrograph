@@ -8,26 +8,17 @@ import           Normalisation
 import           Display.Graph
 import           Display.Types
 import           Data.Hourglass
-import           Control.Monad.Log
-import           Data.Text.Prettyprint.Doc
-                                         hiding ( width )
+
 
 normaliseGraph
-    :: (MonadLog (Doc String) m)
-    => Graph Seconds Double
-    -> Dimensions Integer
-    -> m (Graph Integer Integer)
-normaliseGraph graph Dimensions {..} = do
-    g <- mapPointsM
-        (\(x, y) -> do
-            let distributedX = getOrThrow $ scaleSpecial x
-            let distributedY = getOrThrow $ scale y yBounds (0, height)
-            logMessage . pretty $ show (distributedX, distributedY)
-            return (distributedX, distributedY)
-        )
-        graph
-    logMessage . pretty $ show g
-    return g
+    :: (Integral n, Show n) => Graph Elapsed Double -> Dimensions n -> Graph n n
+normaliseGraph graph Dimensions {..} = mapPoints
+    (\(x, y) ->
+        let distributedX = getOrThrow $ scaleSpecial x
+            distributedY = getOrThrow $ scale y yBounds (0, height)
+        in  (distributedX, distributedY)
+    )
+    graph
   where
     xBounds = boundsX graph
     yBounds = boundsY graph
@@ -46,7 +37,3 @@ toImage graph  = Vty.vertCat [ mkRow y | y <- [yMin .. yMax] ]
     (yMin, yMax) = boundsY graph
     renderChar i j | (i, j) `member` graph = Vty.char mempty 'X'
                    | otherwise             = Vty.char mempty ' '
-
-toVerticalAxis :: Graph x y -> Vty.Image
-toVerticalAxis NoData = Vty.string mempty "   "
-toVerticalAxis _      = Vty.emptyImage

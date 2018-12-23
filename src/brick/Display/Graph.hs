@@ -12,6 +12,7 @@ module Display.Graph
   , size
   , toMap
   , assocs
+  , mapX
   , mapPoints
   , mapPointsM
   , mkGraph
@@ -31,8 +32,8 @@ import           Data.List                      ( sortBy
                                                 )
 import           Data.Function                  ( on )
 import qualified Data.Map                      as M
-import           Control.Monad.Log
-import           Data.Text.Prettyprint.Doc
+
+
 import           Graphite
 
 data Graph x y = NoData | Graph (M.Map x y) deriving (Show, Eq)
@@ -47,15 +48,15 @@ instance (Integral n) => Scaled Double n where
   scale v from to = round <$> normalise from to' v
     where to' = over each fromIntegral to
 
-instance (Integral n) => Scaled Seconds n where
-  scale v from to = round <$> normalise from' to' (toRational v)
-    where
-      get (Seconds i) = i
-      from' = over each (toRational . get) from
-      to' = over each toRational to
+instance (Integral n) => Scaled Elapsed n where
+  scale v from to = round <$> normalise from' to' (toRational $ get v)
+   where
+    get (Elapsed (Seconds i)) = i
+    from' = over each (toRational . get) from
+    to'   = over each toRational to
 
-instance Graphable DataPoint Seconds Double where
-  extract DataPoint {value=v, time=(Elapsed t)} = (t, v)
+instance Graphable DataPoint Elapsed Double where
+  extract DataPoint { value = v, time = t } = (t, v)
 
 boundsX :: (Num x, Ord x) => Graph x y -> (x, x)
 boundsX NoData        = (0, 0)
@@ -79,27 +80,21 @@ member :: (Ord x, Ord y) => (x, y) -> Graph x y -> Bool
 member _      NoData        = False
 member (x, y) (Graph _data) = M.member x _data && (_data M.! x) == y
 
+mapX :: (Ord x', Ord y) => (x -> x') -> Graph x y -> Graph x' y
+mapX f = mapPoints (\(x, y) -> (f x, y))
+
 mapPoints
   :: (Ord x', Ord y') => ((x, y) -> (x', y')) -> Graph x y -> Graph x' y'
 mapPoints _ NoData        = NoData
 mapPoints f (Graph _data) = mkGraph $ f <$> M.toList _data
 
 mapPointsM
-  :: (MonadLog (Doc String) m, Show x, Show y, Show x', Show y', Ord x', Ord y')
+  :: (Monad m, Ord x', Ord y')
   => ((x, y) -> m (x', y'))
   -> Graph x y
   -> m (Graph x' y')
 mapPointsM _ NoData        = pure NoData
-mapPointsM f (Graph _data) = do
-  k <- f `mapM` M.toList _data
-
-  logMessage . pretty $ "The transformed list: " ++ show k
-
-  let a = mkGraph k
-
-  logMessage . pretty $ "The the mkGraph list: " ++ show a
-
-  return a
+mapPointsM f (Graph _data) = mkGraph <$> f `mapM` M.toList _data
 
 toMap :: (Ord x, Ord y) => Graph x y -> M.Map x y
 toMap NoData        = mempty

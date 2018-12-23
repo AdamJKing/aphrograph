@@ -11,3 +11,4 @@
 * improve graphite tests
 * explore ways to combine the two "Graph.bounds" tests
 * Enable units in days
+* Enable intermediary units for two discrete labels (discrete -> continuous)
