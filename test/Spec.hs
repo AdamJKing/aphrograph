@@ -3,7 +3,7 @@
 
 module Main where
 
-import           Data.List                     as List
+import           Data.List               hiding ( sort )
 import           Test.Hspec.Runner
 import           Test.Hspec
 import           Test.QuickCheck
@@ -26,11 +26,11 @@ main = hspec $ do
     $ it "should detect values in the range"
     $ forAll
         (          arbitrary
-        `suchThat` (\(Ordered ns) -> nub ns == ns)
+        `suchThat` (\(Ordered ns) -> ordNub ns == ns)
         `suchThat` (\(Ordered ns) -> not (null ns) && (length ns > 1))
         )
     $ \(Ordered ts) -> do
-        let ots = List.sort ts
+        let ots = sort ts
         p1 <- choose (0, length ts - 2)
         p2 <- choose (p1 + 1, length ts - 1)
         let (SimpleDataPoint a) = ots !! p1

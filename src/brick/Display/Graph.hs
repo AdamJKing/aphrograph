@@ -23,18 +23,16 @@ module Display.Graph
 where
 
 import           Normalisation
-import           Data.Hourglass
+import           Data.Hourglass          hiding ( Time )
 import           Control.Lens            hiding ( from
                                                 , to
-                                                )
-import           Data.List                      ( sortBy
-                                                , sort
                                                 )
 import           Data.Function                  ( on )
 import qualified Data.Map                      as M
 
 
 import           Graphite
+import qualified Relude.Unsafe                 as Unsafe
 
 data Graph x y = NoData | Graph (M.Map x y) deriving (Show, Eq)
 
@@ -44,29 +42,29 @@ class Graphable n x y where
 class (Ord n, Ord n') => Scaled n n' where
   scale :: n -> (n, n) -> (n', n') -> Either NormalisationFailure n'
 
-instance (Integral n) => Scaled Double n where
+instance (Integral n) => Scaled Value n where
   scale v from to = round <$> normalise from to' v
     where to' = over each fromIntegral to
 
-instance (Integral n) => Scaled Elapsed n where
-  scale v from to = round <$> normalise from' to' (toRational $ get v)
+instance (Integral n) => Scaled Time n where
+  scale v from to = round <$> normalise from' to' (toRational $ getAsInt v)
    where
-    get (Elapsed (Seconds i)) = i
-    from' = over each (toRational . get) from
+    getAsInt (Time (Elapsed (Seconds i))) = i
+    from' = over each (toRational . getAsInt) from
     to'   = over each toRational to
 
-instance Graphable DataPoint Elapsed Double where
+instance Graphable DataPoint Time Value where
   extract DataPoint { value = v, time = t } = (t, v)
 
 boundsX :: (Num x, Ord x) => Graph x y -> (x, x)
 boundsX NoData        = (0, 0)
 boundsX (Graph _data) = getBounds $ M.keys _data
-  where getBounds ns = (head ns, last ns)
+  where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 boundsY :: (Num y, Ord y) => Graph x y -> (y, y)
 boundsY NoData        = (0, 0)
 boundsY (Graph _data) = getBounds . sort . M.elems $ _data
-  where getBounds ns = (head ns, last ns)
+  where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 mkGraph :: (Ord x, Ord y) => [(x, y)] -> Graph x y
 mkGraph [] = NoData

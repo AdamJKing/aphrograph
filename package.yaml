@@ -2,8 +2,7 @@ library:
   source-dirs:
   - src/
   - src/brick
-  default-extensions:
-  - RecordWildCards
+
 tests:
   aphrograph-test:
     source-dirs: test
@@ -17,16 +16,24 @@ tests:
     - hspec
     - QuickCheck
     - random
-    default-extensions:
-    - RecordWildCards
+
+default-extensions:
+- RecordWildCards
+- OverloadedStrings
 
 ghc-options:
 - -Wall
 - -Werror
 
 dependencies:
-- base >= 4.7 && < 5
+- base-noprelude
 - containers
+- text
+- comonad
+- scientific
+- transformers
+- fmt
+- relude
 - array
 - brick
 - vty
@@ -34,29 +41,26 @@ dependencies:
 - aeson
 - lens-aeson
 - lens
-- mtl
-- transformers
-- sorted-list
-- transformers-base
-- bytestring
-- vector
 - hourglass
 - logging-effect
 - prettyprinter
-- text
 - interpolate
 - monad-loops
 - monad-control
 - exceptions
 - Decimal
+
 name: aphrograph
 version: 0.1.0.0
+
 extra-source-files:
 - README.md
 - ChangeLog.md
+
 author: Author name here
 github: githubuser/aphrograph
 license: BSD3
+
 executables:
   aphrograph-exe:
     source-dirs: app
@@ -67,4 +71,5 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - aphrograph
+
 description: Please see the README on GitHub at <https://github.com/githubuser/aphrograph#readme>

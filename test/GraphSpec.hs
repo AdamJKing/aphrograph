@@ -4,7 +4,7 @@
 module GraphSpec where
 
 import           Display.Graph                 as Graph
-import           Data.List
+
 import           Normalisation                  ( NormalisationFailure(..) )
 import           CommonProperties
 import           Test.Hspec                    as HS
@@ -12,6 +12,12 @@ import           Test.Hspec                    as HS
 import           Test.QuickCheck
 import           Graphite
 import           ArbitraryInstances
+import           Relude.Unsafe                 as Unsafe
+import           Test.Types
+import           Relude.Extra.Newtype
+import           Data.List                      ( maximum
+                                                , minimum
+                                                )
 
 spec :: HS.Spec
 spec = describe "Graph" $ do
@@ -45,27 +51,24 @@ spec = describe "Graph" $ do
         . describe "scaling a value"
         . it "scales to a value in the target range"
         . property
-        $ \(from :: Range Double) (to :: Range Integer) -> do
-              v <- choose (lower from, higher from)
-              let
-                  outcome = Graph.scale v
-                                        (lower from, higher from)
-                                        (lower to  , higher to)
+        $ \(from :: Range TestValue) (to :: Range Integer) -> do
+              (TestValue v) <- choose (lower from, higher from)
+              let outcome = Graph.scale v
+                                        (un $ lower from, un $ higher from)
+                                        (lower to       , higher to)
               return . counterexample (show (v, outcome)) $ ofEither
                   (\a -> (lower to <= a) && a <= higher to)
                   outcome
 
-    describe "Scaled (Seconds to Integer)"
+    describe "Scaled (Time to Integer)"
         . describe "scaling a value"
         . it "scales to a value in the target range"
         . property
-        $ \Range { lower = l, higher = h } Range { lower = l', higher = h' } ->
-              do
-                  (SimpleElapsed v) <- choose (l, h)
-                  let (sl, sh) = (getElapsed l, getElapsed h)
-                  let outcome :: Either NormalisationFailure Integer
-                      outcome = Graph.scale v (sl, sh) (l', h')
-                  return $ ofEither (\a -> (l' <= a) && (a <= h')) outcome
+        $ \(Range l h) (Range l' h') -> do
+              (TestTime v) <- choose (l, h) :: Gen TestTime
+              let outcome :: Either NormalisationFailure Integer
+                  outcome = Graph.scale v (un l, un h) (l', h')
+              return $ ofEither (\a -> (l' <= a) && (a <= h')) outcome
 
     describe "mapPoints"
         . it "mapping with identity doesn't change the map"
@@ -74,7 +77,7 @@ spec = describe "Graph" $ do
 
     describe "mapPoints" . it "condenses duplicates correctly" . property $ do
         (SimpleGraph graph) <- arbitrary
-        dupPoint            <- head <$> shuffle (assocs graph)
+        dupPoint            <- Unsafe.head <$> shuffle (assocs graph)
         let outcome  = mapPoints (const dupPoint) graph
         let expected = mkGraph [dupPoint]
         return $ outcome `shouldBe` expected

@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
 module GraphiteSpec where
 
 import qualified Data.Aeson                    as Aeson

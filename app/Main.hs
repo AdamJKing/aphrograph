@@ -13,18 +13,12 @@ import qualified Graphics.Vty                  as Vty
 import           Brick.AttrMap
 import           Graphics.Vty.Attributes
 
-import           Control.Monad                  ( void
-                                                , forever
-                                                )
+import           Control.Monad                  ( void )
 import           Control.Concurrent             ( threadDelay
                                                 , forkIO
                                                 )
 import           Brick.Main                    as Brick
-import           System.IO                      ( withFile
-                                                , IOMode(WriteMode)
-                                                )
 import           Control.Monad.Log
-import           Control.Monad.IO.Class
 import qualified Args
 import           Data.Text.Prettyprint.Doc
 import qualified Brick.BChan                   as Brick
@@ -34,10 +28,10 @@ import qualified System.Environment            as Env
 main :: IO ()
 main = do
   eventQueue <- Brick.newBChan 10
-  maybeArgs  <- Args.parseAppArgs <$> Env.getArgs
+  maybeArgs  <- Args.parseAppArgs . fmap toText <$> Env.getArgs
 
   case maybeArgs of
-    Left  err  -> putStrLn err
+    Left  err  -> putStrLn $ toString err
     Right args -> do
       let getVty = Vty.userConfig >>= Vty.mkVty
 
@@ -47,24 +41,23 @@ main = do
             Brick.writeBChan eventQueue GraphRefresh
             threadDelay 30000000
 
-          runLoggingT (logMessage . pretty $ show args) handler
+          let handler' = handler . pretty . toString
           void $ Brick.customMain getVty
                                   (Just eventQueue)
-                                  (mkApp handler args)
+                                  (mkApp handler' args)
                                   emptyState
 
-mkApp
-  :: Handler IO (Doc String)
-  -> Args.AppArgs
-  -> App AppState AppEvent AppComponent
+mkApp :: Handler IO Text -> Args.AppArgs -> App AppState AppEvent AppComponent
 mkApp handler args = App
   { appDraw         =
-    \state ->
-      [Brick.vBox [graphWidget (ui_appData state), horizontalAxisWidget state]]
+    \appState ->
+      [ Brick.vBox
+          [graphWidget (ui_appData appState), horizontalAxisWidget appState]
+      ]
   , appChooseCursor = \_ -> const Nothing
-  , appHandleEvent  = \state e ->
+  , appHandleEvent  = \appState e ->
                         let handle = mkEventHandler args
-                        in  runLoggingT (handle state e) (liftIO . handler)
+                        in  runLoggingT (handle appState e) (liftIO . handler)
   , appStartEvent   = return
   , appAttrMap      = \_ -> attrMap defAttr []
   }

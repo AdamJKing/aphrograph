@@ -5,6 +5,10 @@ module Normalisation
   )
 where
 
+import           Data.List                      ( minimum
+                                                , maximum
+                                                )
+
 data NormalisationFailure = BadOriginRange | BadTargetRange | BadValue deriving (Show, Eq)
 
 rangeFrom :: (Ord n) => [n] -> (n, n)

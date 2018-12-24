@@ -1,36 +1,35 @@
 module Args where
 
 import           Data.Char
+import           Control.Arrow
+import           Fmt
 import           Data.Hourglass.Types
+import           Data.Text                     as T
+import           Relude.Extra.Tuple
 
 data AppArgs = AppArgs {
   _time :: Seconds
-  , _target :: String
+  , _target :: Text
 } deriving (Show, Eq)
 
 class ArgumentParser arg where
-  parseArg :: String -> Either String arg
+  parseArg :: Text -> Either Text arg
 
 instance ArgumentParser Seconds where
-  parseArg input = case parseTime' input "" "" of
-    (time, "d") -> Right . toSeconds . Hours $ read time * 24
-    (time, "h") -> Right . toSeconds . Hours $ read time
-    (time, "m") -> Right . toSeconds . Minutes $ read time
-    (time, "s") -> Right . Seconds $ read time
-    _           -> Left $ "Invalid time. (" ++ input ++ ")"
-    where
-      parseTime' :: String -> String -> String -> (String, String)
-      parseTime' "" time unit = (time, unit)
-      parseTime' (a : as) time unit | isDigit a  = parseTime' as (time ++ [a]) unit
-                                    | isLetter a = parseTime' as time (unit ++ [a])
-                                    | otherwise  = ("", "")
+  parseArg input = case parseTime' input of
+    (time, "d") -> toSeconds . Hours . (* 24) <$> readEither time
+    (time, "h") -> toSeconds . Hours <$> readEither time
+    (time, "m") -> toSeconds . Minutes <$> readEither time
+    (time, "s") -> Seconds <$> readEither time
+    _           -> Left $ "Invalid time. (" +| input |+ ")"
+    where parseTime' = (T.takeWhile isDigit *** T.dropWhile isDigit) . dupe
 
 
-parseAppArgs :: [String] -> Either String AppArgs
+parseAppArgs :: [Text] -> Either Text AppArgs
 parseAppArgs [targetS, timeS] = do
   time <- parseArg timeS
   return $ AppArgs { _time = time, _target = targetS }
 parseAppArgs _ = Left usageMessage
 
-usageMessage :: String
+usageMessage :: Text
 usageMessage = "aphrograph-exe $TARGET $TIME"

@@ -7,11 +7,11 @@ import qualified Graphics.Vty                  as Vty
 import           Normalisation
 import           Display.Graph
 import           Display.Types
-import           Data.Hourglass
+import           Graphite
 
 
 normaliseGraph
-    :: (Integral n, Show n) => Graph Elapsed Double -> Dimensions n -> Graph n n
+    :: (Integral n, Show n) => Graph Time Value -> Dimensions n -> Graph n n
 normaliseGraph graph Dimensions {..} = mapPoints
     (\(x, y) ->
         let distributedX = getOrThrow $ scaleSpecial x

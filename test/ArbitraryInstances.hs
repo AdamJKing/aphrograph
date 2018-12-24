@@ -5,18 +5,20 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DerivingVia #-}
 
 module ArbitraryInstances where
 
 import           Labels
 import           Data.Decimal
 import           Display.Graph
-import           Data.Bifunctor
 import           System.Random
 import           Test.QuickCheck
 import           Display.Types
 import           Time.Types
 import           Graphite
+import           Relude.Extra.Newtype
+import           Test.Types
 
 instance Arbitrary SimpleSeconds where
     arbitrary = SimpleSeconds <$> do
@@ -69,14 +71,14 @@ instance Arbitrary NonZeroTestDecimal where
 
 instance Arbitrary SimpleDataPoint where
     arbitrary = SimpleDataPoint <$> do
-        s                 <- arbitrary
+        (TestValue     s) <- arbitrary
         (SimpleElapsed e) <- arbitrary
-        return $ DataPoint s e
+        return $ DataPoint s (Time e)
 
-    shrink (SimpleDataPoint DataPoint { value = v, time = t }) = do
-        v'                 <- shrink v
+    shrink (SimpleDataPoint DataPoint { value = v, time = (Time t) }) = do
+        (TestValue     v') <- shrink (TestValue v)
         (SimpleElapsed t') <- shrink (SimpleElapsed t)
-        return . SimpleDataPoint $ DataPoint v' t'
+        return . SimpleDataPoint $ DataPoint v' (Time t')
 
 instance Random SimpleSeconds where
     randomR rng gen = first (SimpleSeconds . Seconds . abs)
@@ -88,15 +90,14 @@ instance Random SimpleSeconds where
     random gen = first (SimpleSeconds . Seconds . abs) $ random gen
 
 instance Random SimpleElapsed where
-    randomR rng gen = first (SimpleElapsed . Elapsed . get)
+    randomR rng gen = first (SimpleElapsed . Elapsed . un)
         $ randomR (asSeconds rng) gen
       where
-        get (SimpleSeconds s) = s
         asSeconds (SimpleElapsed (Elapsed lower), SimpleElapsed (Elapsed higher))
             = (SimpleSeconds lower, SimpleSeconds higher)
 
-    random gen = first (SimpleElapsed . Elapsed . get) $ random gen
-        where get (SimpleSeconds s) = s
+    random gen = first (SimpleElapsed . Elapsed . get') $ random gen
+        where get' (SimpleElapsed (Elapsed s)) = s
 
 newtype SimpleDimensions = SimpleDimensions (Dimensions Int)
 

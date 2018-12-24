@@ -14,18 +14,18 @@ spec = describe "Args" $ do
         it "parses seconds" $ parseArg "7d" === Right (Seconds 604800)
 
         it "returns nothing on errors"
-            $ let outcome :: Either String Seconds
+            $ let outcome :: Either Text Seconds
                   outcome = parseArg "gibberish"
               in  outcome `shouldBe` Left "Invalid time. (gibberish)"
 
 
         it "returns nothing for an invalid time unit"
-            $ let outcome :: Either String Seconds
+            $ let outcome :: Either Text Seconds
                   outcome = parseArg "5l"
               in  outcome `shouldBe` Left "Invalid time. (5l)"
 
         it "returns nothing for a missing time unit"
-            $ let outcome :: Either String Seconds
+            $ let outcome :: Either Text Seconds
                   outcome = parseArg "5"
               in  outcome `shouldBe` Left "Invalid time. (5)"
 

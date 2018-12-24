@@ -1,12 +1,12 @@
 module App where
 
 import           Display.Graph
-import           Data.Hourglass
+import           Graphite
 
 data AppState = AppState {
-    appData :: Graph Elapsed Double,
+    appData :: Graph Time Value,
     ui_appData :: Graph Int Int
-    -- ui_labels :: [String]
+    -- ui_labels :: [Text]
 }
 
 emptyState :: AppState
