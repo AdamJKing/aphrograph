@@ -2,6 +2,6 @@ flags: {}
 ghc-options:
   $locals: -Wall -Werror
 packages:
-- .
+  - .
 extra-deps: []
-resolver: nightly-2018-12-08
+resolver: nightly-2018-12-18

@@ -1,3 +1,5 @@
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
@@ -11,6 +13,7 @@ module Graphite
   , getValuesInTimeRange
   , DataPoint(..)
   , Time(..)
+  , timeAsSeconds
   , Value(..)
   )
 where
@@ -30,9 +33,13 @@ import           Time.Types                     ( Elapsed(..)
                                                 , TimeInterval
                                                 , toSeconds
                                                 )
-import Data.Hourglass hiding (Time)
+import           Data.Hourglass          hiding ( Time )
 
 newtype Time = Time Elapsed deriving (Show, Eq, Ord, Num, Timeable)
+
+timeAsSeconds :: Time -> Seconds
+timeAsSeconds (Time (Elapsed s)) = s
+
 newtype Value = Value Double deriving (Show, Eq, Ord, Generic, JSON.FromJSON, Num, Fractional, Real, RealFrac)
 
 data DataPoint = DataPoint

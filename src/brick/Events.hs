@@ -5,13 +5,16 @@ import qualified Brick.Main                    as Brick
 import qualified Brick.Types                   as Brick
 import           Control.Lens
 import           Display.Types
-import           Graphite                       ( getMetricsForPast )
+import           Graphite                       ( getMetricsForPast
+                                                , timeAsSeconds
+                                                )
 import           Args
 import           App
 import           Display.Graph                 as Graph
 import           Control.Monad.Log
 import           Display
 import           Fmt
+import           Labels
 
 data AppEvent = GraphRefresh
 
@@ -29,10 +32,17 @@ mkEventHandler AppArgs {..} appState (Brick.AppEvent GraphRefresh) = do
     Just vp -> do
       latestData <- getMetricsForPast _target _time
       let graph = mkGraph $ extract <$> latestData
+
       logMessage $ "Graph Size: " +|| size graph |+ ""
+
       let targetSize = dim $ view Brick.vpSize vp
       let uiData     = normaliseGraph graph targetSize
-      -- let uiLabels   = generateLabels (width targetSize) uiData
-      lift $ Brick.continue $ AppState { appData = graph, ui_appData = uiData }
+      let uiLabels = generateLabels (width targetSize)
+            $ over each (Discrete . timeAsSeconds) (Graph.boundsX graph)
+      logMessage $ "UI Labels: " +|| uiLabels ||+ ""
+      lift . Brick.continue $ AppState
+        { _appData = graph
+        , _ui      = UI { _displayData = uiData, _displayLabels = uiLabels }
+        }
 
 mkEventHandler AppArgs {..} appState e = lift $ Brick.resizeOrQuit appState e

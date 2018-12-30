@@ -23,7 +23,6 @@ module Display.Graph
 where
 
 import           Normalisation
-import           Data.Hourglass          hiding ( Time )
 import           Control.Lens            hiding ( from
                                                 , to
                                                 )
@@ -49,9 +48,9 @@ instance (Integral n) => Scaled Value n where
 instance (Integral n) => Scaled Time n where
   scale v from to = round <$> normalise from' to' (toRational $ getAsInt v)
    where
-    getAsInt (Time (Elapsed (Seconds i))) = i
-    from' = over each (toRational . getAsInt) from
-    to'   = over each toRational to
+    getAsInt = toInteger . timeAsSeconds
+    from'    = over each (toRational . getAsInt) from
+    to'      = over each toRational to
 
 instance Graphable DataPoint Time Value where
   extract DataPoint { value = v, time = t } = (t, v)

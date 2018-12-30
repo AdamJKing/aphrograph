@@ -12,7 +12,7 @@ import           Display.Widgets
 import qualified Graphics.Vty                  as Vty
 import           Brick.AttrMap
 import           Graphics.Vty.Attributes
-
+import           Control.Lens
 import           Control.Monad                  ( void )
 import           Control.Concurrent             ( threadDelay
                                                 , forkIO
@@ -42,19 +42,14 @@ main = do
             threadDelay 30000000
 
           let handler' = handler . pretty . toString
-          void $ Brick.customMain getVty
-                                  (Just eventQueue)
-                                  (mkApp handler' args)
-                                  emptyState
+          void $ Brick.customMain getVty (Just eventQueue) (mkApp handler' args) emptyState
 
 mkApp :: Handler IO Text -> Args.AppArgs -> App AppState AppEvent AppComponent
 mkApp handler args = App
   { appDraw         =
     \appState ->
-      [ Brick.vBox
-          [graphWidget (ui_appData appState), horizontalAxisWidget appState]
-      ]
-  , appChooseCursor = \_ -> const Nothing
+      [Brick.vBox [graphWidget (view (ui . displayData) appState), horizontalAxisWidget appState]]
+  , appChooseCursor = Brick.neverShowCursor
   , appHandleEvent  = \appState e ->
                         let handle = mkEventHandler args
                         in  runLoggingT (handle appState e) (liftIO . handler)

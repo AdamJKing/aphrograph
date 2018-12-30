@@ -11,19 +11,19 @@ import qualified Data.Text                     as T
 import qualified Fmt
 
 -- choosing the "unit" is a different challenge
-data LabellingError = DisplayTooSmall deriving (Eq, Show)
+data LabellingError = DisplayTooSmall { _maxWidth :: Int, _largestLabelSize :: Int } | BadLabelSize deriving (Eq, Show)
 
 organiseLabels :: Int -> [Text] -> Either LabellingError Text
+organiseLabels _ [] = Right "No Data"
 organiseLabels maxWidth labels
     | maxWidth < largestLabelSize
-    = Left DisplayTooSmall
+    = Left (DisplayTooSmall maxWidth largestLabelSize)
     | otherwise
     = let labelSize = maxWidth `div` length labels
-          space x | T.length x > labelSize = Left DisplayTooSmall
-                  | otherwise = Right $ Fmt.padLeftF labelSize ' ' x
-      in  if labelSize >= largestLabelSize
-              then Fmt.fmt . fold <$> traverse space labels
-              else Left DisplayTooSmall
+          space     = Fmt.padLeftF labelSize ' '
+      in  if labelSize > largestLabelSize
+              then Right . Fmt.fmt . fold $ space <$> labels
+              else Left BadLabelSize
     where largestLabelSize = F.maximum (T.length <$> labels)
 
 class LabellingStrategy a where
@@ -39,16 +39,11 @@ instance LabellingStrategy Decimal where
         findLabels 0 = error "Cannot generate labels"
         findLabels n
             | (large - small) `mod'` i == 0
-            = let
-                  values              = [ small + (i * g) | g <- [0 .. n + 1] ]
+            = let values              = [ small + (i * g) | g <- [0 .. n + 1] ]
                   largestDecimalPlace = F.maximum (decimalPlaces <$> values)
-                  labels =
-                      show
-                          .   roundTo (fromIntegral largestDecimalPlace)
-                          <$> values
-                  fullLength = getSum $ foldMap (Sum . (+ 1) . T.length) labels
-              in
-                  if fullLength > maxWidth then findLabels (n - 1) else labels
+                  labels              = show . roundTo (fromIntegral largestDecimalPlace) <$> values
+                  fullLength          = getSum $ foldMap (Sum . (+ 1) . T.length) labels
+              in  if fullLength > maxWidth then findLabels (n - 1) else labels
             | otherwise
             = findLabels $ n - 1
             where i = (large - small) / n
@@ -68,6 +63,3 @@ instance (Show a, Enum a, Ord a, Integral a) => LabellingStrategy (DiscreteValue
               in  if fullLength > maxWidth then findLabels (n - 1) else labels
             | otherwise
             = findLabels $ n - 1
-
--- account for places < e
-
