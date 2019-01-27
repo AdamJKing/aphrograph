@@ -4,13 +4,14 @@ module CommonProperties where
 
 import           Test.QuickCheck
 import           Test.QuickCheck.Property
+import           Test.Hspec
+
 
 ofEither :: (Testable t, Show b) => (a -> t) -> Either b a -> Property
 ofEither assert target = case target of
     Right value -> property $ assert value
-    Left  other -> counterexample
-        ("Expected Right, but found Left of " ++ show other)
-        (property failed)
+    Left other ->
+        counterexample ("Expected Right, but found Left of " ++ show other) (property failed)
 
 newtype UniqueList a = Unique {
     getUnique :: [a]
@@ -18,9 +19,12 @@ newtype UniqueList a = Unique {
 
 instance (Arbitrary a, Eq a) => Arbitrary (UniqueList a) where
     arbitrary = sized $ fmap Unique . build
-        where
-            build 0 = return []
-            build n' = do
-                as <- build (n' - 1)
-                a  <- arbitrary `suchThat` (`notElem` as)
-                return $ a : as
+      where
+        build 0  = return []
+        build n' = do
+            as <- build (n' - 1)
+            a  <- arbitrary `suchThat` (`notElem` as)
+            return $ a : as
+
+shouldBeM :: (Eq a, Show a, Functor f) => f a -> a -> f Expectation
+shouldBeM op expected = (`shouldBe` expected) <$> op

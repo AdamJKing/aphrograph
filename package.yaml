@@ -12,12 +12,17 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
       - -fno-warn-orphans
+
     dependencies:
       - aphrograph
       - hspec
       - QuickCheck
       - quickcheck-arbitrary-adt
       - random
+
+    default-extensions:
+      - RecordWildCards
+      - OverloadedStrings
 
 default-extensions:
   - RecordWildCards
@@ -31,6 +36,7 @@ dependencies:
   - base-noprelude >= 4.12.0.0
   - containers
   - text
+  - mtl
   - comonad
   - scientific
   - transformers

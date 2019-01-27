@@ -3,12 +3,15 @@
 module App where
 
 import           Display.Graph
+import           Display.Types
 import           Graphite
 import           Control.Lens
 
 data UiElements = UI {
     _displayData :: Graph Int Int,
-    _displayLabels :: [Text]
+    _displayLabelsX :: [Text],
+    _displayLabelsY :: [Text],
+    _canvas :: Canvas
 }
 
 data AppState = AppState {
@@ -20,7 +23,7 @@ emptyState :: AppState
 emptyState = AppState NoData emptyUi
 
 emptyUi :: UiElements
-emptyUi = UI NoData mempty
+emptyUi = UI NoData mempty mempty
 
 makeLenses ''AppState
 makeLenses ''UiElements

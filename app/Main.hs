@@ -8,7 +8,7 @@ import           App
 import           Events
 
 import           Display.Types
-import           Display.Widgets
+import           Display.Widgets               as Widgets
 import qualified Graphics.Vty                  as Vty
 import           Brick.AttrMap
 import           Graphics.Vty.Attributes
@@ -20,9 +20,11 @@ import           Control.Concurrent             ( threadDelay
 import           Brick.Main                    as Brick
 import           Control.Monad.Log
 import qualified Args
-import           Data.Text.Prettyprint.Doc
+import qualified Data.Text.Prettyprint.Doc     as Doc
 import qualified Brick.BChan                   as Brick
-import qualified Brick.Widgets.Core            as Brick
+import           Brick.Widgets.Core             ( (<=>)
+                                                , (<+>)
+                                                )
 import qualified System.Environment            as Env
 
 main :: IO ()
@@ -41,14 +43,17 @@ main = do
             Brick.writeBChan eventQueue GraphRefresh
             threadDelay 30000000
 
-          let handler' = handler . pretty . toString
+          let handler' = handler . Doc.pretty . toString
           void $ Brick.customMain getVty (Just eventQueue) (mkApp handler' args) emptyState
 
 mkApp :: Handler IO Text -> Args.AppArgs -> App AppState AppEvent AppComponent
 mkApp handler args = App
-  { appDraw         =
-    \appState ->
-      [Brick.vBox [graphWidget (view (ui . displayData) appState), horizontalAxisWidget appState]]
+  { appDraw         = \appState ->
+                        [ Widgets.verticalAxis appState
+                            <+> (   graphWidget (view (ui . displayData) appState)
+                                <=> Widgets.horizontalAxis appState
+                                )
+                        ]
   , appChooseCursor = Brick.neverShowCursor
   , appHandleEvent  = \appState e ->
                         let handle = mkEventHandler args

@@ -1,6 +1,5 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DerivingStrategies #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE RankNTypes #-}
@@ -34,13 +33,18 @@ import           Time.Types                     ( Elapsed(..)
                                                 , toSeconds
                                                 )
 import           Data.Hourglass          hiding ( Time )
+import           Data.Decimal
 
 newtype Time = Time Elapsed deriving (Show, Eq, Ord, Num, Timeable)
 
 timeAsSeconds :: Time -> Seconds
 timeAsSeconds (Time (Elapsed s)) = s
 
-newtype Value = Value Double deriving (Show, Eq, Ord, Generic, JSON.FromJSON, Num, Fractional, Real, RealFrac)
+newtype Value = Value Decimal deriving (Show, Eq, Ord, Generic, Num, Fractional, Real, RealFrac)
+
+instance JSON.FromJSON Value where
+  parseJSON (JSON.Number n) = return $ Value (realFracToDecimal 8 n)
+  parseJSON _               = fail "value"
 
 data DataPoint = DataPoint
   { value :: Value
@@ -96,16 +100,11 @@ parseMetricTimeSeries str = case decodeResp str of
     JSON.parseEither responseParser v
 
 getMetricsForPast
-  :: (MonadLog Text m, Show t, TimeInterval t, MonadIO m)
-  => Text
-  -> t
-  -> m [DataPoint]
+  :: (MonadLog Text m, Show t, TimeInterval t, MonadIO m) => Text -> t -> m [DataPoint]
 getMetricsForPast target timeSpan = do
   logMessage "Making a call to graphite."
-  let args = over
-        params
-        (++ [("target", target), ("from", '-' `cons` (show timeSpan))])
-        defaultArgs
+  let args =
+        over params (++ [("target", target), ("from", '-' `cons` (show timeSpan))]) defaultArgs
   response      <- liftIO $ getWith args "http://localhost/render"
   (Elapsed now) <- liftIO timeCurrent
   datapoints    <- parseMetricTimeSeries (view responseBody response)
