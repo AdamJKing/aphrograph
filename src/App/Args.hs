@@ -1,4 +1,6 @@
-module Args where
+{-# LANGUAGE TemplateHaskell #-}
+
+module App.Args where
 
 import           Data.Char
 import           Control.Arrow
@@ -6,10 +8,11 @@ import           Fmt
 import           Data.Hourglass.Types
 import           Data.Text                     as T
 import           Relude.Extra.Tuple
+import           Control.Lens
 
-data AppArgs = AppArgs {
-  _time :: Seconds
-  , _target :: Text
+data Args = Args {
+  _timeArg :: Seconds
+  , _targetArg :: Text
 } deriving (Show, Eq)
 
 class ArgumentParser arg where
@@ -25,11 +28,13 @@ instance ArgumentParser Seconds where
     where parseTime' = (T.takeWhile isDigit *** T.dropWhile isDigit) . dupe
 
 
-parseAppArgs :: [Text] -> Either Text AppArgs
+parseAppArgs :: [Text] -> Either Text Args
 parseAppArgs [targetS, timeS] = do
   time <- parseArg timeS
-  return $ AppArgs { _time = time, _target = targetS }
+  return $ Args { _timeArg = time, _targetArg = targetS }
 parseAppArgs _ = Left usageMessage
 
 usageMessage :: Text
 usageMessage = "aphrograph-exe $TARGET $TIME"
+
+makeLenses ''Args

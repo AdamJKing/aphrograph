@@ -40,6 +40,7 @@ dependencies:
   - comonad
   - scientific
   - transformers
+  - transformers-base
   - fmt >= 0.6.1.1
   - relude
   - array

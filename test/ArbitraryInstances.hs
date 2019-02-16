@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -5,12 +6,15 @@
 
 module ArbitraryInstances where
 
+import           App
+import           App.Args                      as App
 import           Display.Graph                 as Graph
 import           Test.QuickCheck
 import           DerivedArbitraryInstances      ( )
 import           Test.QuickCheck.Arbitrary.ADT
 import           Display.Types
 import           Graphite
+import           Graphics.Vty.Input.Events     as Vty
 
 
 instance Arbitrary DataPoint where
@@ -36,3 +40,33 @@ instance (Arbitrary i, Num i, Ord i) => Arbitrary (Range i) where
         a <- arbitrary
         b <- arbitrary `suchThat` (/= a)
         return $ Range (min a b) (max a b)
+
+instance Arbitrary AppState where
+    arbitrary = AppState <$> arbitrary
+
+instance Arbitrary App.Args where
+    arbitrary = App.Args <$> arbitrary <*> arbitrary
+
+instance Arbitrary Text where
+    arbitrary = fromString <$> arbitrary
+
+instance Arbitrary ByteString where
+    arbitrary = fromString <$> arbitrary
+
+instance Arbitrary Vty.Modifier where
+    arbitrary = genericArbitrary
+
+deriving instance ToADTArbitrary Vty.Modifier
+
+instance Arbitrary Vty.Key where
+    arbitrary = genericArbitrary
+
+deriving instance ToADTArbitrary Vty.Key
+
+instance Arbitrary Vty.Button where
+    arbitrary = genericArbitrary
+
+instance Arbitrary Vty.Event where
+    arbitrary = genericArbitrary
+
+deriving instance ToADTArbitrary Vty.Event

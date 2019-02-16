@@ -6,7 +6,7 @@
 module LabelsSpec where
 
 import           Test.Hspec                    as HS
-import           Labels
+import           Display.Labels
 import           CommonProperties
 import           Display.Graph
 import           Normalisation

@@ -1,29 +1,13 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module App where
 
-import           Display.Graph
-import           Display.Types
 import           Graphite
-import           Control.Lens
+import           Display.Graph
 
-data UiElements = UI {
-    _displayData :: Graph Int Int,
-    _displayLabelsX :: [Text],
-    _displayLabelsY :: [Text],
-    _canvas :: Canvas
-}
-
-data AppState = AppState {
-    _appData :: Graph Time Value,
-    _ui :: UiElements
-}
+newtype AppState = AppState {
+    graphData :: Graph Time Value
+} deriving (Show, Eq)
 
 emptyState :: AppState
-emptyState = AppState NoData emptyUi
+emptyState = AppState NoData
 
-emptyUi :: UiElements
-emptyUi = UI NoData mempty mempty
-
-makeLenses ''AppState
-makeLenses ''UiElements
+data AppComponent = GraphView deriving (Eq, Ord, Show)

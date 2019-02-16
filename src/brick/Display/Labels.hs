@@ -40,4 +40,3 @@ labels = do
             return (Label value pos)
         )
         [0 .. ticks]
-

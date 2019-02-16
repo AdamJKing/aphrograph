@@ -7,7 +7,6 @@ import           Fmt
 import           Text.Show
 import           Data.Array.ST
 
-data AppComponent = GraphView deriving (Eq, Ord, Show)
 
 data Dimensions i = Dimensions { width :: !i, height :: !i } deriving (Eq, Show, Functor)
 

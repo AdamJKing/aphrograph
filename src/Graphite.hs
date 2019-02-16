@@ -1,16 +1,20 @@
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE DeriveFunctor      #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Graphite
-  ( getMetricsForPast
-  , getValuesInTimeRange
+  ( getValuesInTimeRange
   , DataPoint(..)
+  , GraphiteM(runGraphite)
+  , MonadGraphite(..)
   , Time(..)
   , timeAsSeconds
   , Value(..)
@@ -99,15 +103,23 @@ parseMetricTimeSeries str = case decodeResp str of
     v <- JSON.eitherDecode s
     JSON.parseEither responseParser v
 
-getMetricsForPast
-  :: (MonadLog Text m, Show t, TimeInterval t, MonadIO m) => Text -> t -> m [DataPoint]
-getMetricsForPast target timeSpan = do
-  logMessage "Making a call to graphite."
-  let args =
-        over params (++ [("target", target), ("from", '-' `cons` (show timeSpan))]) defaultArgs
-  response      <- liftIO $ getWith args "http://localhost/render"
-  (Elapsed now) <- liftIO timeCurrent
-  datapoints    <- parseMetricTimeSeries (view responseBody response)
-  let timespan = (fromIntegral $ now - toSeconds timeSpan, fromIntegral now)
-  logMessage $ fmt "Size of returned data was: " +| length datapoints |+ "."
-  return $ getValuesInTimeRange timespan datapoints
+class MonadGraphite m where
+  getMetricsForPast :: (Show t, TimeInterval t) => Text -> t -> m [DataPoint]
+
+newtype GraphiteM a = GraphiteM {
+  runGraphite :: LoggingT Text IO a
+} deriving ( Functor, Applicative, Monad , MonadIO)
+
+instance MonadGraphite GraphiteM where
+  getMetricsForPast target timeSpan = GraphiteM $ do
+    logMessage "Making a call to graphite."
+    let args = over
+          params
+          (++ [("target", target), ("from", '-' `cons` show timeSpan)])
+          defaultArgs
+    response      <- liftIO $ getWith args "http://localhost/render"
+    (Elapsed now) <- liftIO timeCurrent
+    datapoints    <- parseMetricTimeSeries (view responseBody response)
+    let timespan = (fromIntegral $ now - toSeconds timeSpan, fromIntegral now)
+    logMessage $ fmt "Size of returned data was: " +| length datapoints |+ "."
+    return $ getValuesInTimeRange timespan datapoints

@@ -1,58 +1,43 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 module Events where
 
-import qualified Brick.Main                    as Brick
 import qualified Brick.Types                   as Brick
+import qualified Display.Graph                 as Graph
+import qualified Graphics.Vty.Input.Events     as Vty
+import qualified App.Args                      as App
+import           Graphite                hiding ( time )
 import           Control.Lens
-import           Display.Types
-import           Graphite                       ( getMetricsForPast
-                                                , timeAsSeconds
-                                                )
-import           Args
-import           App
-import           Display.Graph                 as Graph
 import           Control.Monad.Log
-import           Fmt
+import           App
 
-data AppEvent = GraphRefresh
 
-type AppEventHandler
-  =  AppState
-  -> Brick.BrickEvent AppComponent AppEvent
-  -> LoggingT Text (Brick.EventM AppComponent) (Brick.Next AppState)
+type Logged m = MonadLog Text m
 
--- mkEventHandler :: AppArgs -> AppEventHandler
--- mkEventHandler AppArgs {..} appState (Brick.AppEvent GraphRefresh) = do
---   logMessage "Handling Graph Update!"
---   maybeGraphView <- lift $ Brick.lookupViewport GraphView
---   case maybeGraphView of
---     Nothing -> lift $ Brick.continue appState
---     Just vp -> do
---       latestData <- getMetricsForPast _target _time
---       let graph = mkGraph $ extract <$> latestData
+data AppEvent = UpdateEvent deriving (Show, Eq)
 
---       logMessage $ "Graph Size: " +|| size graph |+ ""
+data EventOutcome s = Continue s | Stop deriving (Show, Eq)
 
---       let targetSize = dim $ view Brick.vpSize vp
+pattern ExitKey :: Vty.Event
+pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
---       let uiData     = normaliseGraph graph targetSize
-
---       xl <- xLabels targetSize graph
---       yl <- yLabels targetSize graph
-
---       lift . Brick.continue $ AppState { _appData = graph, _ui = UI uiData xl yl }
-
---  where
---   xLabels targetSize graph = do
---     let rng    = over each (Discrete . timeAsSeconds) (Graph.boundsX graph)
---     let labels = generateLabels (width targetSize) rng
---     logMessage $ "UI Labels (X): " +|| labels ||+ ""
---     return labels
-
---   yLabels targetSize graph = do
---     let rng    = Graph.boundsY graph
---     let labels = generateLabels (width targetSize) rng
---     logMessage $ "UI Labels (X): " +|| labels ||+ ""
---     return labels
-
--- mkEventHandler AppArgs {..} appState e = lift $ Brick.resizeOrQuit appState e
+appEventHandler
+  :: (Logged m, MonadGraphite m, MonadReader App.Args m)
+  => Brick.BrickEvent n AppEvent
+  -> AppState
+  -> m (EventOutcome AppState)
+appEventHandler (Brick.VtyEvent ExitKey) _ =
+  logMessage "Recieved stop; quitting." >> return Stop
+appEventHandler (Brick.AppEvent UpdateEvent) _ = do
+  time   <- view App.timeArg
+  target <- view App.targetArg
+  data'  <- getMetricsForPast target time
+  let newState = AppState (Graph.mkGraph (Graph.extract <$> data'))
+  return (Continue newState)
+appEventHandler _ previousState = return (Continue previousState)

@@ -52,9 +52,9 @@ conf_layout:
   lconfig_importAsColumn: 50
   lconfig_alignmentLimit: 30
   lconfig_indentListSpecial: true
-  lconfig_indentAmount: 2
+  lconfig_indentAmount: 4
   lconfig_alignmentBreakOnMultiline: true
-  lconfig_cols: 100
+  lconfig_cols: 80
   lconfig_indentPolicy: IndentPolicyFree
   lconfig_indentWhereSpecial: true
   lconfig_columnAlignMode:

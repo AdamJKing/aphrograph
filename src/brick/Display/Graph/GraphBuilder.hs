@@ -1,6 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Display.Graph.GraphBuilder where
 
@@ -9,8 +8,6 @@ import           Display.Labels
 import           Display.Types
 import           Data.Array.ST
 import           Graphite
-import           App
-import           Control.Lens
 
 newtype GraphWidgetState = GraphWidgetState {
     canvas :: Canvas
@@ -27,16 +24,6 @@ initialise Dimensions {..} = GraphWidgetState <$> newArray ((0, 0), (width, heig
 
 data UpdateEvent = GraphUpdate (Graph Value Time) | SizeUpdate (Dimensions Int)
 
-update :: UpdateEvent -> AppState -> m AppState
-update (SizeUpdate newSize) = 
-    | updatedRequired (newSize) 
-update (GraphUpdate newGraph) state
-    | updateRequired state = do
-        updatedCanvas <- drawGraph newGraph (view (ui . canvas) state)
-        return (set appData state)
-    | otherwise = state
-    where updateRequired state = view appData state /= newGraph
-
 class (Monad m) => Projector r r' m where
     project :: r -> m (Maybe r')
     original :: r' -> m (Maybe r)
@@ -49,12 +36,11 @@ drawGraph
     -> Canvas
     -> m Canvas
 drawGraph graph current =
-    (forM_ (assocs graph) $ \point -> do
-            index <- project point
-            case index of
+    forM_ (assocs graph) (\point -> do
+            ix <- project point
+            case ix of
                 Just i  -> writeArray current i '•'
-                Nothing -> fail "Couldn't get index for range"
-        )
+                Nothing -> fail "Couldn't get index for range")
         >> return current
 
 -- normaliseGraph :: (Integral n, Show n) => Graph Time Value -> Dimensions n -> Graph n n

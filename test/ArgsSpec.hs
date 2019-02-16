@@ -1,7 +1,7 @@
 module ArgsSpec where
 
 import           Test.Hspec                    as HS
-import           Args
+import           App.Args                      as App
 import           Test.QuickCheck
 import           Time.Types
 
@@ -32,11 +32,7 @@ spec = describe "Args" $ do
     describe "getAppArgs" $ do
         it "parses the app arguments"
             $          parseAppArgs ["example.target", "30s"]
-            `shouldBe` (Right $ AppArgs
-                           { _target = "example.target"
-                           , _time   = Seconds 30
-                           }
-                       )
+            `shouldBe` (Right $ App.Args (Seconds 30) "example.target")
 
         it "fails to parse no arguments" $ parseAppArgs [] `shouldBe` Left
             "aphrograph-exe $TARGET $TIME"
