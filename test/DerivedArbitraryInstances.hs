@@ -12,7 +12,6 @@ import           Test.QuickCheck
 import           Time.Types
 import           Graphite
 
-
 --- --- --- Arbitrary --- --- ---
 deriving instance Arbitrary Value
 deriving instance Arbitrary Time

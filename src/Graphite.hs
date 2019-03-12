@@ -1,20 +1,18 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE DeriveGeneric      #-}
-{-# LANGUAGE DeriveFunctor      #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NamedFieldPuns     #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Graphite
   ( getValuesInTimeRange
-  , DataPoint(..)
-  , GraphiteM(runGraphite)
+  , runGraphiteT
   , MonadGraphite(..)
+  , DataPoint(..)
   , Time(..)
   , timeAsSeconds
   , Value(..)
@@ -23,6 +21,7 @@ where
 
 import           Fmt
 import           Control.Monad.Log
+import           Display.Projection.Scalable
 import           Control.Lens
 import qualified Data.Aeson                    as JSON
 import           Data.Aeson                     ( (.:) )
@@ -39,12 +38,17 @@ import           Time.Types                     ( Elapsed(..)
 import           Data.Hourglass          hiding ( Time )
 import           Data.Decimal
 
-newtype Time = Time Elapsed deriving (Show, Eq, Ord, Num, Timeable)
+newtype Time = Time Elapsed
+  deriving newtype (Show, Eq, Ord, Num, Timeable)
+  deriving (Enum, Real, Integral) via Seconds
+  deriving Scalable via Int64
 
 timeAsSeconds :: Time -> Seconds
 timeAsSeconds (Time (Elapsed s)) = s
 
-newtype Value = Value Decimal deriving (Show, Eq, Ord, Generic, Num, Fractional, Real, RealFrac)
+newtype Value = Value Decimal
+  deriving newtype (Show, Eq, Ord, Num, Fractional, Real, RealFrac)
+  deriving (Generic , Scalable)
 
 instance JSON.FromJSON Value where
   parseJSON (JSON.Number n) = return $ Value (realFracToDecimal 8 n)
@@ -89,37 +93,50 @@ responseParser str = do
   dps     <- x .: "datapoints"
   JSON.parseJSON dps
 
-parseMetricTimeSeries :: (MonadLog Text m) => LByteString -> m [DataPoint]
+parseMetricTimeSeries :: LByteString -> [DataPoint]
 parseMetricTimeSeries str = case decodeResp str of
-
-  Right resp -> return resp
-
-  Left  err  -> do
-    logMessage (toText err)
-    return []
-
+  Right resp -> resp
+  Left  _    -> []
  where
   decodeResp s = do
     v <- JSON.eitherDecode s
     JSON.parseEither responseParser v
 
-class MonadGraphite m where
+
+class (Monad m) => MonadGraphite m where
   getMetricsForPast :: (Show t, TimeInterval t) => Text -> t -> m [DataPoint]
 
-newtype GraphiteM a = GraphiteM {
-  runGraphite :: LoggingT Text IO a
-} deriving ( Functor, Applicative, Monad , MonadIO)
+-- instance !MonadIO => MonadGraphite
 
-instance MonadGraphite GraphiteM where
-  getMetricsForPast target timeSpan = GraphiteM $ do
-    logMessage "Making a call to graphite."
-    let args = over
-          params
-          (++ [("target", target), ("from", '-' `cons` show timeSpan)])
-          defaultArgs
+newtype GraphiteT m a = GraphiteT (m a) deriving newtype (Functor, Applicative, Monad, MonadIO)
+
+runGraphiteT :: GraphiteT m a -> m a
+runGraphiteT (GraphiteT f) = f
+
+instance (MonadIO m) => MonadGraphite (GraphiteT m) where
+  getMetricsForPast target timeSpan = do
+    let args = constructArgs target timeSpan
     response      <- liftIO $ getWith args "http://localhost/render"
     (Elapsed now) <- liftIO timeCurrent
-    datapoints    <- parseMetricTimeSeries (view responseBody response)
-    let timespan = (fromIntegral $ now - toSeconds timeSpan, fromIntegral now)
-    logMessage $ fmt "Size of returned data was: " +| length datapoints |+ "."
+    let datapoints = parseMetricTimeSeries (view responseBody response)
+
+    let timespan   = (fromIntegral $ now - toSeconds timeSpan, fromIntegral now)
     return $ getValuesInTimeRange timespan datapoints
+
+instance (MonadGraphite m) => MonadGraphite (LoggingT Text m) where
+  getMetricsForPast target timeSpan = do
+    logMessage "Making a call to graphite."
+    datapoints <- lift $ getMetricsForPast target timeSpan
+    logMessage $ fmt "Size of returned data was: " +| length datapoints |+ "."
+    return datapoints
+
+instance (MonadGraphite m) => MonadGraphite (ReaderT r m) where
+  getMetricsForPast target timeSpan = lift (getMetricsForPast target timeSpan)
+
+
+constructArgs :: Show a => Text -> a -> Options
+constructArgs target timeSpan = over
+  params
+  (++ [("target", target), ("from", '-' `cons` show timeSpan)])
+  defaultArgs
+

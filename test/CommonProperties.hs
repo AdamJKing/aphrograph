@@ -1,4 +1,7 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties where
 
@@ -6,12 +9,12 @@ import           Test.QuickCheck
 import           Test.QuickCheck.Property
 import           Test.Hspec
 
-
 ofEither :: (Testable t, Show b) => (a -> t) -> Either b a -> Property
 ofEither assert target = case target of
     Right value -> property $ assert value
-    Left other ->
-        counterexample ("Expected Right, but found Left of " ++ show other) (property failed)
+    Left  other -> counterexample
+        ("Expected Right, but found Left of " ++ show other)
+        (property failed)
 
 newtype UniqueList a = Unique {
     getUnique :: [a]
@@ -28,3 +31,9 @@ instance (Arbitrary a, Eq a) => Arbitrary (UniqueList a) where
 
 shouldBeM :: (Eq a, Show a, Functor f) => f a -> a -> f Expectation
 shouldBeM op expected = (`shouldBe` expected) <$> op
+
+range :: (Ord a, Arbitrary a) => Gen (a, a)
+range = do
+    x <- arbitrary
+    y <- arbitrary `suchThat` (/= x)
+    return (min x y, max x y)

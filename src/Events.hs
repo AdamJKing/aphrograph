@@ -28,7 +28,7 @@ pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
 appEventHandler
-  :: (Logged m, MonadGraphite m, MonadReader App.Args m)
+  :: (MonadGraphite m, Logged m, MonadReader App.Args m)
   => Brick.BrickEvent n AppEvent
   -> AppState
   -> m (EventOutcome AppState)

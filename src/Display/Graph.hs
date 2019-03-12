@@ -8,7 +8,6 @@
 module Display.Graph
   ( Graph(NoData, Graph)
   , Graphable(..)
-  , Scaled(..)
   , size
   , toMap
   , assocs
@@ -22,10 +21,6 @@ module Display.Graph
   )
 where
 
-import           Normalisation
-import           Control.Lens            hiding ( from
-                                                , to
-                                                )
 import           Data.Function                  ( on )
 import qualified Data.Map                      as M
 
@@ -37,19 +32,6 @@ data Graph x y = NoData | Graph (M.Map x y) deriving (Show, Eq)
 
 class Graphable n x y where
   extract :: n -> (x, y)
-
-class (Num n, Num n', Ord n, Ord n') => Scaled n n' where
-  scale :: n -> (n, n) -> (n', n') -> Either NormalisationFailure n'
-
-instance (Integral n) => Scaled Value n where
-  scale v from to = round <$> normalise from to' v where to' = over each fromIntegral to
-
-instance (Integral n) => Scaled Time n where
-  scale v from to = round <$> normalise from' to' (toRational $ getAsInt v)
-   where
-    getAsInt = toInteger . timeAsSeconds
-    from'    = over each (toRational . getAsInt) from
-    to'      = over each toRational to
 
 instance Graphable DataPoint Time Value where
   extract DataPoint { value = v, time = t } = (t, v)
@@ -79,11 +61,16 @@ member (x, y) (Graph _data) = M.member x _data && (_data M.! x) == y
 mapX :: (Ord x', Ord y) => (x -> x') -> Graph x y -> Graph x' y
 mapX f = mapPoints (\(x, y) -> (f x, y))
 
-mapPoints :: (Ord x', Ord y') => ((x, y) -> (x', y')) -> Graph x y -> Graph x' y'
+mapPoints
+  :: (Ord x', Ord y') => ((x, y) -> (x', y')) -> Graph x y -> Graph x' y'
 mapPoints _ NoData        = NoData
 mapPoints f (Graph _data) = mkGraph $ f <$> M.toList _data
 
-mapPointsM :: (Monad m, Ord x', Ord y') => ((x, y) -> m (x', y')) -> Graph x y -> m (Graph x' y')
+mapPointsM
+  :: (Monad m, Ord x', Ord y')
+  => ((x, y) -> m (x', y'))
+  -> Graph x y
+  -> m (Graph x' y')
 mapPointsM _ NoData        = pure NoData
 mapPointsM f (Graph _data) = mkGraph <$> f `mapM` M.toList _data
 

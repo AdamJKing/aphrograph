@@ -1,11 +1,16 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module Main where
 
-import           App
-import           Events
+import qualified App.Args                      as App
+import qualified Data.Text.Prettyprint.Doc     as Doc
+import qualified Brick.BChan                   as Brick
+import qualified System.Environment            as Env
 import qualified Graphics.Vty                  as Vty
+import           Events
+import           App
 import           Brick.AttrMap
 import           Graphics.Vty.Attributes
 import           Control.Monad                  ( void )
@@ -14,10 +19,7 @@ import           Control.Concurrent             ( threadDelay
                                                 )
 import           Brick.Main                    as Brick
 import           Control.Monad.Log
-import qualified App.Args                      as App
-import qualified Data.Text.Prettyprint.Doc     as Doc
-import qualified Brick.BChan                   as Brick
-import qualified System.Environment            as Env
+import           Graphite
 
 main :: IO ()
 main = do
@@ -41,10 +43,30 @@ main = do
                                   (mkApp handler' args)
                                   emptyState
 
+newtype AppT m a = AppT  (  (ReaderT App.Args (LoggingT Text m)) a )
+  deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)
+
+instance MonadTrans AppT where
+  lift op = AppT (lift (lift op))
+
+runAppT :: Handler m Text -> App.Args -> AppT m a -> m a
+runAppT logger args (AppT op) = runLoggingT (runReaderT op args) logger
+
 mkApp :: Handler IO Text -> App.Args -> App AppState AppEvent AppComponent
-mkApp _ _ = App { appDraw         = const []
-                , appChooseCursor = Brick.neverShowCursor
-                , appHandleEvent  = \s _ -> Brick.continue s
-                , appStartEvent   = return
-                , appAttrMap      = \_ -> attrMap defAttr []
-                }
+mkApp logger args = App
+  { appDraw         = const []
+  , appChooseCursor = Brick.neverShowCursor
+  , appHandleEvent  = let logEventM = liftIO . logger
+                      in  \currentState event -> runAppT logEventM args $ do
+                            handledEvent <- runGraphiteT $ runLoggingT
+                              ( usingReaderT args
+                              $ appEventHandler event currentState
+                              )
+                              (liftIO . logger)
+                            case handledEvent of
+                              Continue newState ->
+                                lift $ Brick.continue newState
+                              Stop -> lift $ Brick.halt currentState
+  , appStartEvent   = return
+  , appAttrMap      = \_ -> attrMap defAttr []
+  }

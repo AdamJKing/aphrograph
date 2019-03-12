@@ -1,17 +1,11 @@
 library:
-  source-dirs:
-    - src/
-    - src/brick
+  source-dirs: src
 
 tests:
   aphrograph-test:
     source-dirs: test
     main: Spec.hs
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
-      - -fno-warn-orphans
+    ghc-options: -Wno-orphans
 
     dependencies:
       - aphrograph
@@ -20,44 +14,39 @@ tests:
       - quickcheck-arbitrary-adt
       - random
 
-    default-extensions:
-      - RecordWildCards
-      - OverloadedStrings
+ghc-options: -Wall -Wno-type-defaults -Werror
 
 default-extensions:
   - RecordWildCards
   - OverloadedStrings
 
-ghc-options:
-  - -Wall
-  - -Werror
-
 dependencies:
+  - aeson
+  - array
   - base-noprelude >= 4.12.0.0
-  - containers
-  - text
-  - mtl
+  - brick
   - comonad
+  - containers
+  - Decimal
+  - exceptions
+  - fmt >= 0.6.1.1
+  - hourglass
+  - interpolate
+  - lens
+  - lens-aeson
+  - logging-effect
+  - mmorph
+  - monad-control
+  - monad-loops
+  - mtl
+  - prettyprinter
+  - relude
   - scientific
+  - text
   - transformers
   - transformers-base
-  - fmt >= 0.6.1.1
-  - relude
-  - array
-  - brick
   - vty
   - wreq
-  - aeson
-  - lens-aeson
-  - lens
-  - hourglass
-  - logging-effect
-  - prettyprinter
-  - interpolate
-  - monad-loops
-  - monad-control
-  - exceptions
-  - Decimal
 
 name: aphrograph
 version: 0.1.0.0
@@ -66,19 +55,10 @@ extra-source-files:
   - README.md
   - ChangeLog.md
 
-author: Author name here
-github: githubuser/aphrograph
-license: BSD3
-
 executables:
   aphrograph-exe:
     source-dirs: app
     main: Main.hs
-    ghc-options:
-      - -threaded
-      - -rtsopts
-      - -with-rtsopts=-N
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
     dependencies:
       - aphrograph
-
-description: Please see the README on GitHub at <https://github.com/githubuser/aphrograph#readme>
