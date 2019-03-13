@@ -119,7 +119,6 @@ instance (MonadIO m) => MonadGraphite (GraphiteT m) where
     response      <- liftIO $ getWith args "http://localhost/render"
     (Elapsed now) <- liftIO timeCurrent
     let datapoints = parseMetricTimeSeries (view responseBody response)
-
     let timespan   = (fromIntegral $ now - toSeconds timeSpan, fromIntegral now)
     return $ getValuesInTimeRange timespan datapoints
 
@@ -128,6 +127,7 @@ instance (MonadGraphite m) => MonadGraphite (LoggingT Text m) where
     logMessage "Making a call to graphite."
     datapoints <- lift $ getMetricsForPast target timeSpan
     logMessage $ fmt "Size of returned data was: " +| length datapoints |+ "."
+    logMessage $ fmt "Datapoints: " +|| datapoints ||+ ""
     return datapoints
 
 instance (MonadGraphite m) => MonadGraphite (ReaderT r m) where
