@@ -18,6 +18,8 @@ module Display.Graph
   , boundsX
   , boundsY
   , member
+  , verticalAxis
+  , horizontalAxis
   )
 where
 
@@ -81,3 +83,11 @@ toMap (Graph _data) = _data
 size :: Graph x y -> Int
 size NoData        = 0
 size (Graph _data) = M.size _data
+
+verticalAxis :: Graph x y -> [y]
+verticalAxis NoData        = []
+verticalAxis (Graph data') = M.elems data'
+
+horizontalAxis :: Graph x y -> [x]
+horizontalAxis NoData        = []
+horizontalAxis (Graph data') = M.keys data'

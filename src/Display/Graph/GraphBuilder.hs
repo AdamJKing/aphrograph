@@ -1,3 +1,4 @@
+{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -8,9 +9,16 @@ import           Graphite
 import           Display.Projection.Scalable
 import           Brick.Types                   as Brick
 import           Graphics.Vty                  as Vty
-import           Control.Lens
+import           Data.Foldable                  ( maximum )
+import           Control.Lens            hiding ( cons
+                                                , snoc
+                                                )
+import           Display.Labels
 import qualified Data.Map.Strict               as M
 import           Prelude                 hiding ( (<|>) )
+import qualified Data.Text                     as T
+import qualified Data.Text.Lazy                as LT
+
 
 
 graphWidget :: Graph Time Value -> Brick.Widget n
@@ -22,10 +30,24 @@ graphWidget graph = Widget
                return (set imageL image emptyResult)
   }
 
+verticalAxisWidget :: Graph Time Value -> Brick.Widget n
+verticalAxisWidget graph = Widget
+  { hSize  = Brick.Fixed
+  , vSize  = Brick.Greedy
+  , render = do
+               image <- views
+                 availHeightL
+                 (\h -> drawVerticalAxisImage h (verticalAxis graph))
+               return (set imageL image emptyResult)
+  }
+
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
-drawGraphImage NoData _               = Vty.text mempty "No Data"
-drawGraphImage graph  (width, height) = foldl' appendNextColumn Vty.emptyImage
-  $! [ M.findWithDefault 0 i (normaliseGraph $ toMap graph) | i <- [0..width]]
+drawGraphImage NoData _ = Vty.text mempty "No Data"
+drawGraphImage graph (width, height) =
+  foldl' appendNextColumn Vty.emptyImage
+    $! [ M.findWithDefault 0 i (normaliseGraph $ toMap graph)
+       | i <- [0 .. width]
+       ]
  where
   graphX = boundsX graph
   graphY = boundsY graph
@@ -45,3 +67,21 @@ buildColumn height value = vertCat
 heightAndWidthL :: Getter Brick.Context (Int, Int)
 heightAndWidthL =
   runGetter $ (,) <$> Getter availWidthL <*> Getter availHeightL
+
+drawVerticalAxisImage :: Int -> [Value] -> Vty.Image
+drawVerticalAxisImage height values =
+  let labels = M.fromAscList $ generateLabelsContinuous values (0, height)
+      rows   = (`M.lookup` labels) <$> [0..height]
+  in  vertCat $ buildRow (largest labels) <$> reverse rows
+ where
+  largest = (+ 1) . maximum . fmap T.length
+  buildRow width = maybe (drawDefaultLine width) (drawLabelledLine width)
+
+
+drawLabelledLine :: Int -> Text -> Vty.Image
+drawLabelledLine (fromIntegral -> w) =
+  Vty.text mempty . LT.justifyRight w ' ' . (`LT.snoc` '\9508') . fromStrict
+
+drawDefaultLine :: Int -> Vty.Image
+drawDefaultLine (fromIntegral -> w) =
+  Vty.text mempty $ LT.justifyRight (fromIntegral w) ' ' "\9474"

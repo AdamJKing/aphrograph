@@ -16,17 +16,17 @@ spec = describe "Labels" . describe "labels" $ do
     $ let span  = (0, 100) :: (Int, Int)
           input = [0 .. 10]
           expected =
-            [ Label "0"  0
-            , Label "1"  10
-            , Label "2"  20
-            , Label "3"  30
-            , Label "4"  40
-            , Label "5"  50
-            , Label "6"  60
-            , Label "7"  70
-            , Label "8"  80
-            , Label "9"  90
-            , Label "10" 100
+            [ (0, "0")
+            , (10, "1")
+            , (20, "2")
+            , (30, "3")
+            , (40, "4")
+            , (50, "5")
+            , (60, "6")
+            , (70, "7")
+            , (80, "8")
+            , (90, "9")
+            , (100, "10")
             ]
       in  (generateLabelsDiscrete input span `shouldBe` expected)
 
@@ -34,18 +34,18 @@ spec = describe "Labels" . describe "labels" $ do
     $ let span  = (0, 127) :: (Int, Int)
           input = [0 .. 15]
           expected =
-            [ Label "0"  0
-            , Label "1"  11
-            , Label "2"  22
-            , Label "3"  33
-            , Label "4"  44
-            , Label "5"  55
-            , Label "6"  66
-            , Label "7"  77
-            , Label "8"  88
-            , Label "9"  99
-            , Label "10" 110
-            , Label "11" 121
+            [ (0, "0")
+            , (11, "1")
+            , (22, "2")
+            , (33, "3")
+            , (44, "4")
+            , (55, "5")
+            , (66, "6")
+            , (77, "7")
+            , (88, "8")
+            , (99, "9")
+            , (110, "10")
+            , (121, "11")
             ]
       in  (generateLabelsDiscrete input span `shouldBe` expected)
 
@@ -53,16 +53,16 @@ spec = describe "Labels" . describe "labels" $ do
     $ let span  = (0, 100) :: (Int, Int)
           input = [0 .. 1] :: [Decimal]
           expected =
-            [ Label "0" 0
-            , Label "0.1" 10
-            , Label "0.2" 20
-            , Label "0.3" 30
-            , Label "0.4" 40
-            , Label "0.5" 50
-            , Label "0.6" 60
-            , Label "0.7" 70
-            , Label "0.8" 80
-            , Label "0.9" 90
-            , Label "1" 100
+            [ (0, "0")
+            , (10, "0.1")
+            , (20, "0.2")
+            , (30, "0.3")
+            , (40, "0.4")
+            , (50, "0.5")
+            , (60, "0.6")
+            , (70, "0.7")
+            , (80, "0.8")
+            , (90, "0.9")
+            , (100, "1")
             ]
       in  (generateLabelsContinuous input span `shouldBe` expected)

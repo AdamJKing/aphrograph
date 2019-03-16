@@ -17,6 +17,7 @@ import           Control.Concurrent             ( threadDelay
                                                 )
 import           Brick.Main                    as Brick
 import qualified Brick.BChan                   as Brick
+import qualified Brick.Widgets.Core            as Brick
 import           Brick.AttrMap
 import           Control.Monad.Log
 import           Graphite
@@ -58,7 +59,12 @@ runAppT logger args (AppT op) = runLoggingT (runReaderT op args) logger
 
 mkApp :: Handler IO Text -> App.Args -> App AppState AppEvent AppComponent
 mkApp logger args = App
-  { appDraw         = return . graphWidget . graphData
+  { appDraw         = \s ->
+                        return
+                          . Brick.hBox
+                          $ [ verticalAxisWidget (graphData s)
+                            , graphWidget (graphData s)
+                            ]
   , appChooseCursor = Brick.neverShowCursor
   , appHandleEvent  = let logEventM = liftIO . logger
                       in  \currentState event -> runAppT logEventM args $ do
