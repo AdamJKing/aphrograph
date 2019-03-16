@@ -97,12 +97,14 @@ horizontalAxisWidget graph = Widget
 
 drawHorizontalAxisImage :: Int -> [Time] -> Vty.Image
 drawHorizontalAxisImage width values =
-  let labels = generateLabelsDiscrete values (0, width)
-  in  buildImage labels
+  let labels = tail . fromList $ generateLabelsDiscrete values (0, width)
+      axis   = buildImage labels
         $ \prev (pos, label) -> prev `horizJoin` buildNextBlock prev pos label
+  in  axis `horizJoin` makeFill (width - Vty.imageWidth axis)
  where
   buildNextBlock = drawLabelledBlock . Vty.imageWidth
   buildImage labels f = foldl' f Vty.emptyImage labels
+  makeFill w = Vty.charFill mempty '\9472' w 1
 
 drawLabelledBlock :: Int -> Int -> Text -> Vty.Image
 drawLabelledBlock offset current label =

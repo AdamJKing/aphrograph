@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Add logging capabilities to Graphite interactions
 * Fix "first label" bug
 * Used named arguments
 * Don't use 'Past' in Graphite API, prefer `TimeSpan` type
@@ -16,3 +15,6 @@
 * Cleanup LabelSpec (long list of labels, generative testing?)
 * log error for datapoint parsing
 * move Scaled and normalisation to projection "Internal"
+* Improve test coverage
+* Add logging to widget construction (debug label & `unsafePerformIO`?)
+* Handle NoData version of `generateLabels`
