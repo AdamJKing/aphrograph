@@ -8,6 +8,7 @@ import qualified App.Args                      as App
 import qualified Data.Text.Prettyprint.Doc     as Doc
 import qualified System.Environment            as Env
 import qualified Graphics.Vty                  as Vty
+import           Display.Widgets
 import           Events
 import           App
 import           Graphics.Vty.Attributes
@@ -59,12 +60,16 @@ runAppT logger args (AppT op) = runLoggingT (runReaderT op args) logger
 
 mkApp :: Handler IO Text -> App.Args -> App AppState AppEvent AppComponent
 mkApp logger args = App
-  { appDraw         = \s ->
-                        return
-                          . Brick.hBox
-                          $ [ verticalAxisWidget (graphData s)
-                            , graphWidget (graphData s)
-                            ]
+  { appDraw         = \s -> return $ Brick.vBox
+                        [ Brick.vLimitPercent 90 $ Brick.hBox
+                          [ Brick.hLimitPercent 8 $ verticalAxisWidget (graphData s)
+                          , graphWidget (graphData s)
+                          ]
+                        , Brick.hBox
+                          [ Brick.hLimitPercent 8 cornerPiece
+                          , horizontalAxisWidget (graphData s)
+                          ]
+                        ]
   , appChooseCursor = Brick.neverShowCursor
   , appHandleEvent  = let logEventM = liftIO . logger
                       in  \currentState event -> runAppT logEventM args $ do

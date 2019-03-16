@@ -32,12 +32,12 @@ graphWidget graph = Widget
 
 verticalAxisWidget :: Graph Time Value -> Brick.Widget n
 verticalAxisWidget graph = Widget
-  { hSize  = Brick.Fixed
+  { hSize  = Brick.Greedy
   , vSize  = Brick.Greedy
   , render = do
-               image <- views
-                 availHeightL
-                 (\h -> drawVerticalAxisImage h (verticalAxis graph))
+               image <- views heightAndWidthL $ \(w, h) ->
+                 let img = drawVerticalAxisImage h (verticalAxis graph)
+                 in  Vty.pad (w - Vty.imageWidth img) 0 0 0 img
                return (set imageL image emptyResult)
   }
 
@@ -71,17 +71,54 @@ heightAndWidthL =
 drawVerticalAxisImage :: Int -> [Value] -> Vty.Image
 drawVerticalAxisImage height values =
   let labels = M.fromAscList $ generateLabelsContinuous values (0, height)
-      rows   = (`M.lookup` labels) <$> [0..height]
+      rows   = (`M.lookup` labels) <$> [0 .. height]
   in  vertCat $ buildRow (largest labels) <$> reverse rows
  where
   largest = (+ 1) . maximum . fmap T.length
   buildRow width = maybe (drawDefaultLine width) (drawLabelledLine width)
 
-
 drawLabelledLine :: Int -> Text -> Vty.Image
 drawLabelledLine (fromIntegral -> w) =
-  Vty.text mempty . LT.justifyRight w ' ' . (`LT.snoc` '\9508') . fromStrict
+  Vty.text mempty . prependSpace w . (`LT.snoc` '\9508') . fromStrict
 
 drawDefaultLine :: Int -> Vty.Image
-drawDefaultLine (fromIntegral -> w) =
-  Vty.text mempty $ LT.justifyRight (fromIntegral w) ' ' "\9474"
+drawDefaultLine (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
+
+horizontalAxisWidget :: Graph Time y -> Widget n
+horizontalAxisWidget graph = Widget
+  { hSize  = Brick.Greedy
+  , vSize  = Brick.Greedy
+  , render = do
+               image <- views heightAndWidthL $ \(w, h) ->
+                 let img = drawHorizontalAxisImage w (horizontalAxis graph)
+                 in  Vty.pad 0 0 0 (h - Vty.imageHeight img) img
+               return (set imageL image emptyResult)
+  }
+
+drawHorizontalAxisImage :: Int -> [Time] -> Vty.Image
+drawHorizontalAxisImage width values =
+  let labels = generateLabelsDiscrete values (0, width)
+  in  buildImage labels
+        $ \prev (pos, label) -> prev `horizJoin` buildNextBlock prev pos label
+ where
+  buildNextBlock = drawLabelledBlock . Vty.imageWidth
+  buildImage labels f = foldl' f Vty.emptyImage labels
+
+drawLabelledBlock :: Int -> Int -> Text -> Vty.Image
+drawLabelledBlock offset current label =
+  let
+    width = fromIntegral $ max (current - offset) 0
+    topBar =
+      Vty.text mempty $ LT.replicate (width - 1) "\9472" `LT.snoc` '\9516'
+    labelBar = Vty.text mempty $ prependSpace width $ LT.take
+      (width - 1)
+      (fromStrict label)
+  in
+    topBar `vertJoin` labelBar
+
+drawDefaultColumn :: Int -> Vty.Image
+drawDefaultColumn (fromIntegral -> w) =
+  Vty.text mempty $ prependSpace w "\9474"
+
+prependSpace :: Int64 -> LText -> LText
+prependSpace w = LT.justifyRight w ' '

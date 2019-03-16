@@ -2,8 +2,8 @@
 
 ## TODO List
 
-* Add value markers to the edges of the graph
 * Add logging capabilities to Graphite interactions
+* Fix "first label" bug
 * Used named arguments
 * Don't use 'Past' in Graphite API, prefer `TimeSpan` type
 * Make Graphite URL configurable
