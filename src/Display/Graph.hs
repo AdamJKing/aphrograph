@@ -25,10 +25,8 @@ where
 
 import           Data.Function                  ( on )
 import qualified Data.Map                      as M
-
-
-import           Graphite
 import qualified Relude.Unsafe                 as Unsafe
+import           Graphite.Types
 
 data Graph x y = NoData | Graph (M.Map x y) deriving (Show, Eq)
 

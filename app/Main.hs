@@ -1,6 +1,5 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Main where
 
@@ -20,10 +19,7 @@ import qualified Brick.BChan                   as Brick
 import qualified Brick.Widgets.Core            as Brick
 import           Brick.AttrMap
 import           Control.Monad.Log
-import           Graphite
 import           Display.Graph.GraphBuilder
-import           Display.Graph                 as Graph
-import           Control.Lens                   ( view )
 
 
 main :: IO ()
@@ -35,23 +31,14 @@ main = do
     withFile "aphrograph.log" WriteMode $ \logfile ->
       withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
         _ <- forkIO . forever $ do
-          Brick.writeBChan eventQueue UpdateEvent
           threadDelay 30000000
+          Brick.writeBChan eventQueue UpdateEvent
 
         let handler' = handler . Doc.pretty . toString
         void $ Brick.customMain getVty
                                 (Just eventQueue)
                                 (mkApp handler' args)
                                 emptyState
-
-newtype AppT m a = AppT  (  (ReaderT App.Args (LoggingT Text m)) a )
-  deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)
-
-instance MonadTrans AppT where
-  lift op = AppT (lift (lift op))
-
-runAppT :: Handler m Text -> App.Args -> AppT m a -> m a
-runAppT logger args (AppT op) = runLoggingT (runReaderT op args) logger
 
 mkApp :: Handler IO Text -> App.Args -> App AppState AppEvent AppComponent
 mkApp logger args = App
@@ -66,29 +53,15 @@ mkApp logger args = App
                           ]
                         ]
   , appChooseCursor = Brick.neverShowCursor
-  , appHandleEvent  = let logEventM = liftIO . logger
-                      in  \currentState event -> runAppT logEventM args $ do
-                            handledEvent <- runGraphiteT $ runLoggingT
-                              ( usingReaderT args
-                              $ appEventHandler event currentState
-                              )
-                              (liftIO . logger)
-                            case handledEvent of
-                              Continue newState ->
-                                lift $ Brick.continue newState
-                              Stop -> lift $ Brick.halt currentState
-  , appStartEvent   =
-    let logEventM = liftIO . logger
-    in
-      \_ -> runAppT logEventM args $ runGraphiteT $ runLoggingT
-        (usingReaderT args $ do
-          time   <- view App.timeArg
-          target <- view App.targetArg
-          data'  <- getMetricsForPast target time
-          let newState = AppState (Graph.mkGraph (Graph.extract <$> data'))
-          return newState
-        )
-        (liftIO . logger)
+  , appHandleEvent  = \currentState event ->
+                        runApp (appEventHandler event currentState)
+                          >>= handleEventOutcome currentState
+  , appStartEvent   = const $ runApp updateGraphData
   , appAttrMap      = \_ -> attrMap defAttr []
   }
-
+ where
+  runApp    = runAppT logEventM args
+  logEventM = liftIO . logger
+  handleEventOutcome prevState = \case
+    Continue newState -> Brick.continue newState
+    Stop              -> Brick.halt prevState

@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Used named arguments
 * Don't use 'Past' in Graphite API, prefer `TimeSpan` type
 * Make Graphite URL configurable
 * improve graphite tests
@@ -18,3 +17,6 @@
 * Add logging to widget construction (debug label & `unsafePerformIO`?)
 * Handle NoData version of `generateLabels`
 * Dynamically add version information from stack build
+* Include links to Graphite API in the argument documentation
+* Make 'to' argument optional at command-line
+* Handle Graphite errors (5**) more gracefully

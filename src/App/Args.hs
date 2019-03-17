@@ -3,44 +3,31 @@
 module App.Args where
 
 import           Options.Applicative.Simple
-import           Data.Char                     as Char
-import           Fmt
-import           Data.Hourglass.Types
 import           Control.Lens
+import           Graphite.Types
 
 data Args = Args {
-  _timeArg :: Seconds
-  , _targetArg :: Text
+  _fromTime :: From,
+  _toTime :: To,
+  _targetArg :: Text
 } deriving (Show, Eq)
 
 makeLenses ''Args
 
-readTime :: String -> Either String Seconds
-readTime input = do
-  let (time, unit) = splitInput input
-  timeAsInt <- readEither' time
-  case unit of
-    "d" -> return $ toSeconds (Hours (timeAsInt * 24))
-    "h" -> return $ toSeconds (Hours timeAsInt)
-    "m" -> return $ toSeconds (Minutes timeAsInt)
-    "s" -> return $ Seconds timeAsInt
-    _   -> fail ("Invalid time. (" +| input |+ ")")
- where
-  takeDigits  = takeWhile Char.isDigit
-  dropDigits  = dropWhile Char.isDigit
-  splitInput  = (,) <$> takeDigits <*> dropDigits
-  readEither' = first toString . readEither
+fromTimeArgument :: Parser From
+fromTimeArgument = strOption $ long "from" <> help
+  "Represents the 'from' argument of the Graphite API."
 
-timeArgument :: Parser Seconds
-timeArgument = option (eitherReader readTime) $ long "time" <> help
-  "The timespan to search in (from now)."
+toTimeArgument :: Parser To
+toTimeArgument = strOption $ long "to" <> help
+  "Represents the 'to' argument of the Graphite API."
 
 targetArgument :: Parser Text
 targetArgument =
   strOption $ long "target" <> help "The Graphite metric string."
 
 arguments :: Parser Args
-arguments = Args <$> timeArgument <*> targetArgument
+arguments = Args <$> fromTimeArgument <*> toTimeArgument <*> targetArgument
 
 
 withCommandLineArguments :: (Args -> IO b) -> IO b

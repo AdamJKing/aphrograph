@@ -28,16 +28,19 @@ pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
 appEventHandler
-  :: (MonadGraphite m, Logged m, MonadReader App.Args m)
-  => Brick.BrickEvent n AppEvent
+  :: Brick.BrickEvent n AppEvent
   -> AppState
-  -> m (EventOutcome AppState)
+  -> AppT ( Brick.EventM AppComponent) (EventOutcome AppState)
 appEventHandler (Brick.VtyEvent ExitKey) _ =
   logMessage "Recieved stop; quitting." >> return Stop
-appEventHandler (Brick.AppEvent UpdateEvent) _ = do
-  time   <- view App.timeArg
-  target <- view App.targetArg
-  data'  <- getMetricsForPast target time
-  let newState = AppState (Graph.mkGraph (Graph.extract <$> data'))
-  return (Continue newState)
+appEventHandler (Brick.AppEvent UpdateEvent) _ = Continue <$> updateGraphData
 appEventHandler _ previousState = return (Continue previousState)
+
+updateGraphData :: (MonadReader App.Args m, MonadGraphite m) => m AppState
+updateGraphData = do
+  fromTime <- view App.fromTime
+  toTime <- view App.toTime
+  target <- view App.targetArg
+  data'  <- getMetricsForPast target fromTime toTime
+  let newState = AppState (Graph.mkGraph (Graph.extract <$> data'))
+  return newState
