@@ -2,12 +2,10 @@
 
 module App.Args where
 
-import           Data.Char
-import           Control.Arrow
+import           Options.Applicative.Simple
+import           Data.Char                     as Char
 import           Fmt
 import           Data.Hourglass.Types
-import           Data.Text                     as T
-import           Relude.Extra.Tuple
 import           Control.Lens
 
 data Args = Args {
@@ -15,26 +13,41 @@ data Args = Args {
   , _targetArg :: Text
 } deriving (Show, Eq)
 
-class ArgumentParser arg where
-  parseArg :: Text -> Either Text arg
-
-instance ArgumentParser Seconds where
-  parseArg input = case parseTime' input of
-    (time, "d") -> toSeconds . Hours . (* 24) <$> readEither time
-    (time, "h") -> toSeconds . Hours <$> readEither time
-    (time, "m") -> toSeconds . Minutes <$> readEither time
-    (time, "s") -> Seconds <$> readEither time
-    _           -> Left $ "Invalid time. (" +| input |+ ")"
-    where parseTime' = (T.takeWhile isDigit *** T.dropWhile isDigit) . dupe
-
-
-parseAppArgs :: [Text] -> Either Text Args
-parseAppArgs [targetS, timeS] = do
-  time <- parseArg timeS
-  return $ Args { _timeArg = time, _targetArg = targetS }
-parseAppArgs _ = Left usageMessage
-
-usageMessage :: Text
-usageMessage = "aphrograph-exe $TARGET $TIME"
-
 makeLenses ''Args
+
+readTime :: String -> Either String Seconds
+readTime input = do
+  let (time, unit) = splitInput input
+  timeAsInt <- readEither' time
+  case unit of
+    "d" -> return $ toSeconds (Hours (timeAsInt * 24))
+    "h" -> return $ toSeconds (Hours timeAsInt)
+    "m" -> return $ toSeconds (Minutes timeAsInt)
+    "s" -> return $ Seconds timeAsInt
+    _   -> fail ("Invalid time. (" +| input |+ ")")
+ where
+  takeDigits  = takeWhile Char.isDigit
+  dropDigits  = dropWhile Char.isDigit
+  splitInput  = (,) <$> takeDigits <*> dropDigits
+  readEither' = first toString . readEither
+
+timeArgument :: Parser Seconds
+timeArgument = option (eitherReader readTime) $ long "time" <> help
+  "The timespan to search in (from now)."
+
+targetArgument :: Parser Text
+targetArgument =
+  strOption $ long "target" <> help "The Graphite metric string."
+
+arguments :: Parser Args
+arguments = Args <$> timeArgument <*> targetArgument
+
+
+withCommandLineArguments :: (Args -> IO b) -> IO b
+withCommandLineArguments f =
+  let version     = "0.1"
+      title       = "△phrograph"
+      description = "A command-line viewer for graphite metrics."
+  in  do
+        (args, ()) <- simpleOptions version title description arguments empty
+        f args

@@ -6,7 +6,6 @@ module Main where
 
 import qualified App.Args                      as App
 import qualified Data.Text.Prettyprint.Doc     as Doc
-import qualified System.Environment            as Env
 import qualified Graphics.Vty                  as Vty
 import           Display.Widgets
 import           Events
@@ -30,24 +29,20 @@ import           Control.Lens                   ( view )
 main :: IO ()
 main = do
   eventQueue <- Brick.newBChan 10
-  maybeArgs  <- App.parseAppArgs . fmap toText <$> Env.getArgs
+  App.withCommandLineArguments $ \args -> do
+    let getVty = Vty.userConfig >>= Vty.mkVty
 
-  case maybeArgs of
-    Left  err  -> putStrLn $ toString err
-    Right args -> do
-      let getVty = Vty.userConfig >>= Vty.mkVty
+    withFile "aphrograph.log" WriteMode $ \logfile ->
+      withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
+        _ <- forkIO . forever $ do
+          Brick.writeBChan eventQueue UpdateEvent
+          threadDelay 30000000
 
-      withFile "aphrograph.log" WriteMode $ \logfile ->
-        withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
-          _ <- forkIO . forever $ do
-            Brick.writeBChan eventQueue UpdateEvent
-            threadDelay 30000000
-
-          let handler' = handler . Doc.pretty . toString
-          void $ Brick.customMain getVty
-                                  (Just eventQueue)
-                                  (mkApp handler' args)
-                                  emptyState
+        let handler' = handler . Doc.pretty . toString
+        void $ Brick.customMain getVty
+                                (Just eventQueue)
+                                (mkApp handler' args)
+                                emptyState
 
 newtype AppT m a = AppT  (  (ReaderT App.Args (LoggingT Text m)) a )
   deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)

@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Fix "first label" bug
 * Used named arguments
 * Don't use 'Past' in Graphite API, prefer `TimeSpan` type
 * Make Graphite URL configurable
@@ -18,3 +17,4 @@
 * Improve test coverage
 * Add logging to widget construction (debug label & `unsafePerformIO`?)
 * Handle NoData version of `generateLabels`
+* Dynamically add version information from stack build
