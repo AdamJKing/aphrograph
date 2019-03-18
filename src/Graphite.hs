@@ -8,18 +8,15 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Graphite
-  ( getValuesInTimeRange
-  , MonadGraphite(..)
-  , DataPoint(..)
-  , Time(..)
+  ( MonadGraphite(..)
   , timeAsSeconds
-  , Value(..)
   )
 where
 
 import           Fmt
 import           Control.Monad.Log
 import           App
+import           App.Args                       ( graphiteUrl )
 import           Control.Lens            hiding ( from
                                                 , to
                                                 )
@@ -29,12 +26,6 @@ import qualified Data.Aeson.Types              as JSON
 import           Network.Wreq
 import           Graphite.Types
 
-
-getValuesInTimeRange :: (Time, Time) -> [DataPoint] -> [DataPoint]
-getValuesInTimeRange (a, b) = if a == b
-  then error "Cannot find values without range"
-  else filter (isInRange . time)
-  where isInRange s = a <= s && s <= b
 
 responseParser :: JSON.Value -> JSON.Parser [DataPoint]
 responseParser str = do
@@ -57,17 +48,18 @@ class (Monad m) => MonadGraphite m where
 instance (MonadIO m) => MonadGraphite (AppT m) where
   getMetricsForPast target from to =
     let parameters = constructQueryParams target from to
-    in
-      do
-        logMessage "Making a call to graphite."
-        response <- liftIO $ getWith parameters "http://localhost/render"
-        let datapoints = parseMetricTimeSeries (view responseBody response)
-        logMessage
-          $  fmt "Size of returned data was: "
-          +| length datapoints
-          |+ "."
-        logMessage $ fmt "Datapoints: " +|| datapoints ||+ ""
-        return datapoints
+    in  do
+          logMessage "Making a call to graphite."
+          url        <- views graphiteUrl buildUrl
+          datapoints <- liftIO $ getTimeSeries <$> getWith parameters url
+          logDataSize datapoints
+          return datapoints
+   where
+    buildUrl graphiteHost = fmt $ "http://" +| graphiteHost |+ "/render"
+    getTimeSeries = views responseBody parseMetricTimeSeries
+    logDataSize dps =
+      logMessage $ fmt "Size of returned data was: " +| length dps |+ "."
+
 
 instance (MonadGraphite m) => MonadGraphite (ReaderT a m) where
   getMetricsForPast a b c = lift $ getMetricsForPast a b c

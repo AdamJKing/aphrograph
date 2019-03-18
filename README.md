@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Don't use 'Past' in Graphite API, prefer `TimeSpan` type
 * Make Graphite URL configurable
 * improve graphite tests
 * explore ways to combine the two "Graph.bounds" tests

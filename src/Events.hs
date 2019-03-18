@@ -12,10 +12,10 @@ import qualified Brick.Types                   as Brick
 import qualified Display.Graph                 as Graph
 import qualified Graphics.Vty.Input.Events     as Vty
 import qualified App.Args                      as App
-import           Graphite                hiding ( time )
 import           Control.Lens
 import           Control.Monad.Log
 import           App
+import Graphite
 
 
 type Logged m = MonadLog Text m

@@ -5,7 +5,6 @@
 module Display.Graph.GraphBuilder where
 
 import           Display.Graph
-import           Graphite
 import           Display.Projection.Scalable
 import           Brick.Types                   as Brick
 import           Graphics.Vty                  as Vty
@@ -18,7 +17,7 @@ import qualified Data.Map.Strict               as M
 import           Prelude                 hiding ( (<|>) )
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
-
+import           Graphite.Types
 
 
 graphWidget :: Graph Time Value -> Brick.Widget n

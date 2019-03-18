@@ -2,14 +2,15 @@
 
 module App.Args where
 
-import           Options.Applicative.Simple
+import           Options.Applicative.Simple    as Opt
 import           Control.Lens
-import           Graphite.Types
+import           Graphite.Types          hiding ( value )
 
 data Args = Args {
   _fromTime :: From,
   _toTime :: To,
-  _targetArg :: Text
+  _targetArg :: Text,
+  _graphiteUrl :: Text
 } deriving (Show, Eq)
 
 makeLenses ''Args
@@ -26,8 +27,22 @@ targetArgument :: Parser Text
 targetArgument =
   strOption $ long "target" <> help "The Graphite metric string."
 
+graphiteUrlArgument :: Parser Text
+graphiteUrlArgument =
+  strOption
+    $  long "graphite-url"
+    <> help "The graphite host."
+    <> showDefault
+    <> value "localhost"
+    <> metavar "GRAPHITE_HOST"
+
 arguments :: Parser Args
-arguments = Args <$> fromTimeArgument <*> toTimeArgument <*> targetArgument
+arguments =
+  Args
+    <$> fromTimeArgument
+    <*> toTimeArgument
+    <*> targetArgument
+    <*> graphiteUrlArgument
 
 
 withCommandLineArguments :: (Args -> IO b) -> IO b

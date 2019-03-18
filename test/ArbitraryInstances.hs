@@ -7,7 +7,6 @@
 module ArbitraryInstances where
 
 import           App
-import           App.Args                      as App
 import           Display.Graph                 as Graph
 import           Test.QuickCheck
 import           DerivedArbitraryInstances      ( )
@@ -43,9 +42,6 @@ instance (Arbitrary i, Num i, Ord i) => Arbitrary (Range i) where
 
 instance Arbitrary AppState where
     arbitrary = AppState <$> arbitrary
-
-instance Arbitrary App.Args where
-    arbitrary = App.Args <$> arbitrary <*> arbitrary
 
 instance Arbitrary Text where
     arbitrary = fromString <$> arbitrary
