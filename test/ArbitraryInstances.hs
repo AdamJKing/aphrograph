@@ -6,14 +6,16 @@
 
 module ArbitraryInstances where
 
+import           System.Random
 import           App
 import           Display.Graph                 as Graph
 import           Test.QuickCheck
 import           DerivedArbitraryInstances      ( )
 import           Test.QuickCheck.Arbitrary.ADT
 import           Display.Types
-import           Graphite
+import           Graphite.Types                as Graphite
 import           Graphics.Vty.Input.Events     as Vty
+import           Test.QuickCheck.Instances.Time ( )
 
 
 instance Arbitrary DataPoint where
@@ -41,7 +43,11 @@ instance (Arbitrary i, Num i, Ord i) => Arbitrary (Range i) where
         return $ Range (min a b) (max a b)
 
 instance Arbitrary AppState where
-    arbitrary = AppState <$> arbitrary
+    arbitrary = applyArbitrary2 AppState
+
+deriving via Text instance Arbitrary Graphite.From
+
+deriving via Text instance Arbitrary Graphite.To
 
 instance Arbitrary Text where
     arbitrary = fromString <$> arbitrary
@@ -66,3 +72,12 @@ instance Arbitrary Vty.Event where
     arbitrary = genericArbitrary
 
 deriving instance ToADTArbitrary Vty.Event
+
+instance Arbitrary Time where
+    arbitrary = fromInteger <$> arbitrary
+
+instance Random Time where
+    randomR range = first fromInteger . randomR (toInts range)
+        where toInts = join bimap (round . timestamp)
+
+    random = randomR (0, 1)

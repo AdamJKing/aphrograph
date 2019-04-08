@@ -7,6 +7,7 @@ import           Control.Lens                   ( over
                                                 , each
                                                 )
 import           Normalisation
+import           Data.Time.Clock
 import           Data.Decimal
 
 class (Real b) => Scalable b where
@@ -42,4 +43,7 @@ instance Scalable Double where
     scale = scale2Fractional
 
 instance Scalable Decimal where
+    scale = scale2Fractional
+
+instance Scalable NominalDiffTime where
     scale = scale2Fractional

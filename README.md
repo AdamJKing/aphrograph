@@ -2,9 +2,6 @@
 
 ## TODO List
 
-* Make Graphite URL configurable
-* improve graphite tests
-* explore ways to combine the two "Graph.bounds" tests
 * Enable units in days
 * Enable intermediary units for two discrete labels (discrete -> continuous)
 * Don't kill program when we can't reach graphite
@@ -19,3 +16,11 @@
 * Include links to Graphite API in the argument documentation
 * Make 'to' argument optional at command-line
 * Handle Graphite errors (5**) more gracefully
+* Handle potential empty list in graphite response
+* improve graphite tests
+* investigate replacing 'Hourglass' with 'time'
+* remove unsafe exceptions from bounds calls in graph
+* Replace 'time' labels with localised time
+* Remove temporary Testable Maybe typeclass
+* Expand scale to Seconds and Milliseconds
+* Remove magic numbers (ie, 86400, 3600, etc)

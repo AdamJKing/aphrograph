@@ -1,27 +1,51 @@
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveFunctor #-}
-module App where
+{-# LANGUAGE TemplateHaskell #-}
+
+module App
+  ( AppState(..)
+  , AppComponent(..)
+  , emptyState
+  , AppError(..)
+  , App
+  , runApp
+  , graphData
+  , timezone
+  )
+where
 
 import           Display.Graph
 import           Graphite.Types
 import           App.Args                      as App
 import           Control.Monad.Log
+import           Control.Lens.TH
+import           Data.Time.LocalTime
 
 
-newtype AppState = AppState {
-    graphData :: Graph Time Value
+data AppState = AppState {
+    _graphData :: Graph Time Value,
+    _timezone :: TimeZone
 } deriving (Show, Eq)
 
-emptyState :: AppState
-emptyState = AppState NoData
+makeLenses ''AppState
+
+emptyState :: IO AppState
+emptyState = AppState NoData <$> getCurrentTimeZone
 
 data AppComponent = GraphView deriving (Eq, Ord, Show)
 
-newtype AppT m a = AppT  (  (ReaderT App.Args (LoggingT Text m)) a )
+data AppError where
+  AppError ::e -> AppError
+
+newtype App a = App  {
+  _unApp :: (ExceptT AppError (ReaderT App.Args (LoggingT Text IO))) a
+}
   deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)
 
-instance MonadTrans AppT where
-  lift op = AppT (lift (lift op))
+instance MonadFail App where
+  fail = liftIO . fail
 
-runAppT :: Handler m Text -> App.Args -> AppT m a -> m a
-runAppT logger args (AppT op) = runLoggingT (runReaderT op args) logger
+runApp :: Handler IO Text -> App.Args -> App a -> IO (Either AppError a)
+runApp logger args =
+  (`runLoggingT` logger) . usingReaderT args . runExceptT . _unApp

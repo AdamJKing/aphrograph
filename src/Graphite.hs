@@ -1,4 +1,3 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -7,11 +6,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Graphite
-  ( MonadGraphite(..)
-  , timeAsSeconds
-  )
-where
+module Graphite where
 
 import           Fmt
 import           Control.Monad.Log
@@ -21,44 +16,40 @@ import           Control.Lens            hiding ( from
                                                 , to
                                                 )
 import qualified Data.Aeson                    as JSON
-import           Data.Aeson                     ( (.:) )
-import qualified Data.Aeson.Types              as JSON
+import qualified Data.Aeson.Types              as JSONT
 import           Network.Wreq
+import qualified Data.Vector                   as V
 import           Graphite.Types
 
-
-responseParser :: JSON.Value -> JSON.Parser [DataPoint]
-responseParser str = do
-  (x : _) <- JSON.parseJSONList str
-  dps     <- x .: "datapoints"
-  JSON.parseJSON dps
-
-parseMetricTimeSeries :: LByteString -> [DataPoint]
-parseMetricTimeSeries str = case decodeResp str of
-  Right resp -> resp
-  Left  _    -> []
- where
-  decodeResp s = do
-    v <- JSON.eitherDecode s
-    JSON.parseEither responseParser v
 
 class (Monad m) => MonadGraphite m where
   getMetricsForPast :: Text -> From -> To -> m [DataPoint]
 
-instance (MonadIO m) => MonadGraphite (AppT m) where
+instance MonadGraphite App where
   getMetricsForPast target from to =
     let parameters = constructQueryParams target from to
     in  do
           logMessage "Making a call to graphite."
           url        <- views graphiteUrl buildUrl
-          datapoints <- liftIO $ getTimeSeries <$> getWith parameters url
+          response   <- liftIO $ getWith parameters url
+          datapoints <- handleResponse response
           logDataSize datapoints
           return datapoints
    where
     buildUrl graphiteHost = fmt $ "http://" +| graphiteHost |+ "/render"
-    getTimeSeries = views responseBody parseMetricTimeSeries
     logDataSize dps =
       logMessage $ fmt "Size of returned data was: " +| length dps |+ "."
+
+
+handleResponse
+  :: (MonadFail m, MonadLog Text m) => Response LByteString -> m [DataPoint]
+handleResponse resp =
+  let body = view responseBody resp
+  in  do
+        logMessage . fmt $ "Response from graphite:\n " +|| body ||+ "\n"
+        case parseMetricTimeSeries body of
+          Right dps -> return dps
+          Left  err -> fail $ "Unusable response from graphite. (" +| err |+ ")"
 
 
 instance (MonadGraphite m) => MonadGraphite (ReaderT a m) where
@@ -71,3 +62,15 @@ constructQueryParams target (From from) (To to) =
       toArg     = ("to", to)
       jsonArg   = ("format", "json")
   in  set params [targetArg, fromArg, toArg, jsonArg] defaults
+
+parseMetricTimeSeries :: LByteString -> Either String [DataPoint]
+parseMetricTimeSeries respBody = do
+  strResp <- JSON.eitherDecode respBody
+  JSONT.parseEither parseDataPoints strResp
+
+ where
+  unwrapArray arr = guard (not (V.null arr)) >> return (V.unsafeHead arr)
+  parseDataPoints body = do
+    unwrapped <- JSON.withArray "Array Wrapper" unwrapArray body
+    JSON.withObject "Datapoints" (`JSONT.parseField` "datapoints") unwrapped
+

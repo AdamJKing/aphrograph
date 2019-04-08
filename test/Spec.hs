@@ -9,7 +9,6 @@ import qualified Display.ProjectionSpec         ( spec )
 import qualified Display.WidgetsSpec            ( spec )
 import qualified GraphiteSpec                   ( spec )
 import qualified LabelsSpec                     ( spec )
-import qualified ArgsSpec                       ( spec )
 import qualified NormalisationSpec              ( spec )
 import qualified EventsSpec                     ( spec )
 
@@ -20,6 +19,5 @@ main = hspec $ do
   describe "Widgets"       Display.WidgetsSpec.spec
   describe "Events"        EventsSpec.spec
   describe "Graphite"      GraphiteSpec.spec
-  describe "Args"          ArgsSpec.spec
   describe "Labels"        LabelsSpec.spec
   describe "Normalisation" NormalisationSpec.spec

@@ -28,7 +28,9 @@ import qualified Data.Map                      as M
 import qualified Relude.Unsafe                 as Unsafe
 import           Graphite.Types
 
-data Graph x y = NoData | Graph (M.Map x y) deriving (Show, Eq)
+data Graph x y = NoData | Graph {
+  _graphData :: M.Map x y
+ } deriving (Show, Eq)
 
 class Graphable n x y where
   extract :: n -> (x, y)
@@ -36,13 +38,13 @@ class Graphable n x y where
 instance Graphable DataPoint Time Value where
   extract DataPoint { value = v, time = t } = (t, v)
 
-boundsX :: (Num x, Ord x) => Graph x y -> (x, x)
-boundsX NoData        = (0, 0)
-boundsX (Graph _data) = getBounds $ M.keys _data
+boundsX :: (Ord x) => Graph x y -> (x, x)
+boundsX NoData = error "boundsX on empty graph"
+boundsX g      = getBounds . M.keys . _graphData $ g
   where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 boundsY :: (Num y, Ord y) => Graph x y -> (y, y)
-boundsY NoData        = (0, 0)
+boundsY NoData        = error "boundsY on empty graph"
 boundsY (Graph _data) = getBounds . sort . M.elems $ _data
   where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 

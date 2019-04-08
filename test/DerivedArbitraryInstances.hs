@@ -10,17 +10,15 @@ import           System.Random
 import           Data.Decimal
 import           Test.QuickCheck
 import           Time.Types
-import           Graphite
+import           Graphite.Types                as Graphite
 
 --- --- --- Arbitrary --- --- ---
 deriving instance Arbitrary Value
-deriving instance Arbitrary Time
 deriving instance Arbitrary Seconds
 
 --- --- ---  Random   --- --- ---
 deriving instance Random Seconds
 deriving instance Random Elapsed
-deriving instance Random Time
 deriving instance Random Value
 deriving via (Positive Int64) instance Arbitrary Elapsed
 

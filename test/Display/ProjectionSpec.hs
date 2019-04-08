@@ -8,7 +8,7 @@ import           Test.Hspec                    as HS
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck         hiding ( scale )
 import           Display.Projection.Scalable
-import           Graphite
+import           Graphite.Types
 import           ArbitraryInstances
 
 
@@ -39,10 +39,10 @@ spec = describe "Projection" $ do
         . describe "scaling a value"
         . prop "scales to a value in the target range"
         $ do
-            (l, h) :: (Time, Time) <- range
-            (l', h') :: (Int, Int) <- range
+              (l , h ) :: (Time, Time) <- range
+              (l', h') :: (Int, Int)   <- range
 
-            v <- choose (l, h)
+              v                        <- choose (l, h)
 
-            let outcome = scale v (l, h) (l', h')
-            return (outcome `shouldSatisfy` liftA2 (&&) (l' <=) (<= h'))
+              let outcome = scale v (l, h) (l', h')
+              return (outcome `shouldSatisfy` liftA2 (&&) (l' <=) (<= h'))

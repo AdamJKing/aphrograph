@@ -1,39 +1,40 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties where
 
+import           ArbitraryInstances             ( )
 import           Test.QuickCheck
-import           Test.QuickCheck.Property
-import           Test.Hspec
+import           Graphite.Types
 
-ofEither :: (Testable t, Show b) => (a -> t) -> Either b a -> Property
-ofEither assert target = case target of
-    Right value -> property $ assert value
-    Left  other -> counterexample
-        ("Expected Right, but found Left of " ++ show other)
-        (property failed)
 
-newtype UniqueList a = Unique {
-    getUnique :: [a]
-} deriving (Show, Eq, Foldable)
+newtype UniqueList a = Unique { getUnique :: [a] }
+  deriving (Show, Eq, Foldable)
 
 instance (Arbitrary a, Eq a) => Arbitrary (UniqueList a) where
-    arbitrary = sized $ fmap Unique . build
-      where
-        build 0  = return []
-        build n' = do
-            as <- build (n' - 1)
-            a  <- arbitrary `suchThat` (`notElem` as)
-            return $ a : as
-
-shouldBeM :: (Eq a, Show a, Functor f) => f a -> a -> f Expectation
-shouldBeM op expected = (`shouldBe` expected) <$> op
+  arbitrary = sized $ fmap Unique . build
+   where
+    build 0  = return []
+    build n' = do
+      as <- build (n' - 1)
+      a  <- arbitrary `suchThat` (`notElem` as)
+      return $ a : as
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
-    x <- arbitrary
-    y <- arbitrary `suchThat` (/= x)
-    return (min x y, max x y)
+  x <- arbitrary
+  y <- arbitrary `suchThat` (/= x)
+  return (min x y, max x y)
+
+-- Temporary until QuickCheck 2.13
+instance Testable prop => Testable (Maybe prop) where
+  property = property . liftMaybe
+   where
+    liftMaybe Nothing     = property Discard
+    liftMaybe (Just prop) = property prop
+
+daysFrom :: Word16 -> Time -> [Time]
+daysFrom n = take (fromIntegral n + 1) . iterate (+ 86400)

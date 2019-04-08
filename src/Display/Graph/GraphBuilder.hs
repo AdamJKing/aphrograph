@@ -1,12 +1,10 @@
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Display.Graph.GraphBuilder where
 
 import           Display.Graph
 import           Display.Projection.Scalable
-import           Brick.Types                   as Brick
 import           Graphics.Vty                  as Vty
 import           Data.Foldable                  ( maximum )
 import           Control.Lens            hiding ( cons
@@ -18,27 +16,55 @@ import           Prelude                 hiding ( (<|>) )
 import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
 import           Graphite.Types
+import           Brick.Types                   as Brick
+import           Brick.Widgets.Core            as Brick
+import           App
+import           Data.Time.LocalTime
 
 
-graphWidget :: Graph Time Value -> Brick.Widget n
-graphWidget graph = Widget
-  { hSize  = Brick.Greedy
-  , vSize  = Brick.Greedy
-  , render = do
-               image <- views heightAndWidthL (drawGraphImage graph)
-               return (set imageL image emptyResult)
-  }
+type GraphBuilder n = Reader AppState (Brick.Widget n)
 
-verticalAxisWidget :: Graph Time Value -> Brick.Widget n
-verticalAxisWidget graph = Widget
-  { hSize  = Brick.Greedy
-  , vSize  = Brick.Greedy
-  , render = do
-               image <- views heightAndWidthL $ \(w, h) ->
-                 let img = drawVerticalAxisImage h (verticalAxis graph)
-                 in  Vty.pad (w - Vty.imageWidth img) 0 0 0 img
-               return (set imageL image emptyResult)
-  }
+build :: GraphBuilder n -> AppState -> Brick.Widget n
+build = runReader
+
+cornerPiece :: Widget n
+cornerPiece = padBottom Max $ padLeft Max $ txt "\9492"
+
+graphDisplayWidget :: GraphBuilder n
+graphDisplayWidget =
+  arrange <$> graphWidget <*> verticalAxisWidget <*> horizontalAxisWidget
+ where
+  arrange g v h = Brick.vBox
+    [ Brick.vLimitPercent 90 $ Brick.hBox [Brick.hLimitPercent 8 v, g]
+    , Brick.hBox [Brick.hLimitPercent 8 cornerPiece, h]
+    ]
+
+graphWidget :: GraphBuilder n
+graphWidget = views graphData buildWidget
+ where
+  buildWidget graph = Widget { hSize  = Brick.Greedy
+                             , vSize  = Brick.Greedy
+                             , render = renderImg
+                             }
+   where
+    renderImg = do
+      image <- views heightAndWidthL (drawGraphImage graph)
+      return (set imageL image emptyResult)
+
+verticalAxisWidget :: GraphBuilder n
+verticalAxisWidget = views graphData buildWidget
+ where
+  buildWidget graph = Widget { hSize  = Brick.Greedy
+                             , vSize  = Brick.Greedy
+                             , render = renderImg
+                             }
+   where
+    expandToFit w img = Vty.pad (w - Vty.imageWidth img) 0 0 0 img
+    createImg g (w, h) =
+      expandToFit w $ drawVerticalAxisImage h $ verticalAxis g
+    renderImg = do
+      image <- views heightAndWidthL $ createImg graph
+      return (set imageL image emptyResult)
 
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
 drawGraphImage NoData _ = Vty.text mempty "No Data"
@@ -83,20 +109,25 @@ drawLabelledLine (fromIntegral -> w) =
 drawDefaultLine :: Int -> Vty.Image
 drawDefaultLine (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
 
-horizontalAxisWidget :: Graph Time y -> Widget n
-horizontalAxisWidget graph = Widget
-  { hSize  = Brick.Greedy
-  , vSize  = Brick.Greedy
-  , render = do
-               image <- views heightAndWidthL $ \(w, h) ->
-                 let img = drawHorizontalAxisImage w (horizontalAxis graph)
-                 in  Vty.pad 0 0 0 (h - Vty.imageHeight img) img
-               return (set imageL image emptyResult)
-  }
+horizontalAxisWidget :: GraphBuilder n
+horizontalAxisWidget = do
+  graph <- view graphData
+  tz    <- view timezone
 
-drawHorizontalAxisImage :: Int -> [Time] -> Vty.Image
-drawHorizontalAxisImage width values =
-  let labels = tail . fromList $ generateLabelsDiscrete values (0, width)
+  return Widget { hSize  = Brick.Greedy
+                , vSize  = Brick.Greedy
+                , render = renderImg graph tz
+                }
+ where
+  renderImg graph tz = do
+    image <- views heightAndWidthL $ \(w, h) ->
+      let img = drawHorizontalAxisImage tz w (horizontalAxis graph)
+      in  Vty.pad 0 0 0 (h - Vty.imageHeight img) img
+    return (set imageL image emptyResult)
+
+drawHorizontalAxisImage :: TimeZone -> Int -> [Time] -> Vty.Image
+drawHorizontalAxisImage tz width values =
+  let labels = generateLabelsTime tz values (0, width)
       axis   = buildImage labels
         $ \prev (pos, label) -> prev `horizJoin` buildNextBlock prev pos label
   in  axis `horizJoin` makeFill (width - Vty.imageWidth axis)

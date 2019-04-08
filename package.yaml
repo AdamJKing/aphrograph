@@ -13,8 +13,9 @@ tests:
       - QuickCheck
       - quickcheck-arbitrary-adt
       - random
+      - quickcheck-instances
 
-ghc-options: -Wall -Wno-type-defaults -Werror
+ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS
 
 default-extensions:
   - RecordWildCards
@@ -44,8 +45,10 @@ dependencies:
   - relude
   - scientific
   - text
+  - time
   - transformers
   - transformers-base
+  - vector
   - vty
   - wreq
 
