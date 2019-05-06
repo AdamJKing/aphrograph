@@ -4,9 +4,11 @@ module GraphiteSpec where
 
 import           Test.Hspec                    as HS
 import           ArbitraryInstances             ( )
+import           Graphite
 import           Graphite.Types
 import qualified Data.Aeson                    as JSON
-
+import           Test.QuickCheck
+import           Test.Hspec.QuickCheck
 
 spec :: HS.Spec
 spec = describe "Graphite" $ do
