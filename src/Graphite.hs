@@ -22,11 +22,15 @@ import qualified Data.Vector                   as V
 import           Graphite.Types
 
 
+data RenderRequest = RenderRequest {
+  from :: From, to :: To, target :: Text
+}
+
 class (Monad m) => MonadGraphite m where
-  getMetricsForPast :: Text -> From -> To -> m [DataPoint]
+  getMetrics :: RenderRequest -> m [DataPoint]
 
 instance MonadGraphite App where
-  getMetricsForPast target from to =
+  getMetrics RenderRequest {..} =
     let parameters = constructQueryParams target from to
     in  do
           logMessage "Making a call to graphite."
@@ -51,9 +55,6 @@ handleResponse resp =
           Right dps -> return dps
           Left  err -> fail $ "Unusable response from graphite. (" +| err |+ ")"
 
-
-instance (MonadGraphite m) => MonadGraphite (ReaderT a m) where
-  getMetricsForPast a b c = lift $ getMetricsForPast a b c
 
 constructQueryParams :: Text -> From -> To -> Options
 constructQueryParams target (From from) (To to) =

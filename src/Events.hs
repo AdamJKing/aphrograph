@@ -9,6 +9,7 @@
 module Events where
 
 import qualified Brick.Types                   as Brick
+import Control.Monad.Except
 import qualified Display.Graph                 as Graph
 import qualified Graphics.Vty.Input.Events     as Vty
 import qualified App.Args                      as App
@@ -31,7 +32,7 @@ pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
 appEventHandler
-  :: (MonadGraphite m, MonadReader App.Args m, MonadLog Text m, MonadIO m) => SystemEvent n
+  :: (MonadError AppError m, MonadGraphite m, MonadReader App.Args m, MonadLog Text m, MonadIO m) => SystemEvent n
   -> AppState
   -> m (EventOutcome AppState)
 appEventHandler (Brick.VtyEvent ExitKey) _ =
@@ -39,12 +40,12 @@ appEventHandler (Brick.VtyEvent ExitKey) _ =
 appEventHandler (Brick.AppEvent UpdateEvent) _ = Continue <$> updateGraphData
 appEventHandler _ previousState = return (Continue previousState)
 
-updateGraphData :: (MonadReader App.Args m, MonadGraphite m, MonadIO m) => m AppState
+updateGraphData :: (MonadError AppError m, MonadReader App.Args m, MonadGraphite m, MonadIO m) => m AppState
 updateGraphData = do
   fromTime <- view App.fromTime
   toTime <- view App.toTime
   target <- view App.targetArg
-  data'  <- getMetricsForPast target fromTime toTime
+  data'  <- getMetrics $ RenderRequest fromTime toTime target
 
   AppState (graphFromData data') <$> liftIO getCurrentTimeZone
   where graphFromData = Graph.mkGraph . fmap Graph.extract

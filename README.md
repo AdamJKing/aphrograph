@@ -2,8 +2,6 @@
 
 ## TODO List
 
-* Enable units in days
-* Enable intermediary units for two discrete labels (discrete -> continuous)
 * Don't kill program when we can't reach graphite
 * Moved scaled to it's own package
 * Cleanup LabelSpec (long list of labels, generative testing?)
@@ -24,3 +22,6 @@
 * Remove temporary Testable Maybe typeclass
 * Expand scale to Seconds and Milliseconds
 * Remove magic numbers (ie, 86400, 3600, etc)
+
+** user config dependant **
+choose between numerical and word representation for days

@@ -60,3 +60,7 @@ spec = describe "Graphite" $ do
     it "treats null values as zero"
       $          JSON.decode "[ null, 155005500 ]"
       `shouldBe` Just (DataPoint 0.0 155005500)
+    
+  describe "When the Graphite server is unavailable" $ do
+    it "does not result in an error call which crashes the program" $ do
+        getMetrics $ RenderRequest "some.target.metric" (From "-1h") (To "0")

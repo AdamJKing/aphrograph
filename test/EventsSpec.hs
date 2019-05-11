@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module EventsSpec
@@ -16,23 +15,8 @@ import           Control.Monad.Log
 import           Events
 import           App.Args                      as App
 import           Graphite
+import           CommonProperties
 
-
-data DummyComponent = DummyComponent deriving (Eq, Show)
-
-instance MonadGraphite TestIO where
-    getMetricsForPast _ _ _ = arbitraryTestIO
-
-newtype TestIO a = TestIO (ReaderT App.Args (DiscardLoggingT Text IO) a)
-    deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)
-
-arbitraryTestIO :: (Arbitrary a) => TestIO a
-arbitraryTestIO = liftIO $ generate arbitrary
-
-instance (Testable t) => Testable ( TestIO t ) where
-    property (TestIO t) = idempotentIOProperty $ do
-        args <- generate (applyArbitrary4 App.Args)
-        discardLogging $ usingReaderT args t
 
 mouseDown :: Gen (BrickEvent DummyComponent e)
 mouseDown = do
@@ -64,3 +48,6 @@ spec = describe "Events" $ do
         initialState <- arbitraryTestIO
         outcome      <- appEventHandler (Brick.VtyEvent ExitKey) initialState
         return (outcome === Stop)
+
+    it "gracefully handles failures from Graphite" $ do
+        updateGraphData
