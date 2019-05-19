@@ -15,6 +15,16 @@ import           Data.Time.Format
 import           Data.Time.LocalTime
 
 
+type Target = Text
+
+data RenderRequest = RenderRequest { from :: From, to :: To, target :: Target }
+
+newtype GraphiteResponse a = GraphiteResponse a deriving (Eq, Show)
+
+data GraphiteError = GraphiteUnavailable { reason :: String } | GraphiteResponseError { reason :: String } deriving ( Show, Eq )
+
+instance Exception GraphiteError where
+
 newtype Time = Time { timestamp :: POSIXTime }
   deriving (Show, Eq, Ord, Num, Real, Enum, Fractional, RealFrac, Scalable)
 
@@ -42,7 +52,7 @@ deltaMinutes :: Time -> Time -> Int
 deltaMinutes = deltaTime' 60
 
 deltaTime' :: Time -> Time -> Time -> Int
-deltaTime' step earliest latest = 
+deltaTime' step earliest latest =
   if earliest == latest then 0 else floor $ (latest - earliest) / step
 
 newtype Value = Value Decimal

@@ -7,8 +7,10 @@ import           ArbitraryInstances             ( )
 import           Graphite
 import           Graphite.Types
 import qualified Data.Aeson                    as JSON
+import           App
 import           Test.QuickCheck
 import           Test.Hspec.QuickCheck
+import           CommonProperties
 
 spec :: HS.Spec
 spec = describe "Graphite" $ do
@@ -60,7 +62,8 @@ spec = describe "Graphite" $ do
     it "treats null values as zero"
       $          JSON.decode "[ null, 155005500 ]"
       `shouldBe` Just (DataPoint 0.0 155005500)
-    
+
   describe "When the Graphite server is unavailable" $ do
     it "does not result in an error call which crashes the program" $ do
-        getMetrics $ RenderRequest "some.target.metric" (From "-1h") (To "0")
+      executeGraphiteRequest (error "Expected error")
+        `shouldFailWith` AppGraphiteError (GraphiteUnavailable "Expected error")

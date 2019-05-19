@@ -17,6 +17,7 @@ import           Control.Lens
 import           Control.Monad.Log
 import           App
 import Graphite
+import Graphite.Types
 import           Data.Time.LocalTime
 
 
@@ -45,7 +46,7 @@ updateGraphData = do
   fromTime <- view App.fromTime
   toTime <- view App.toTime
   target <- view App.targetArg
-  data'  <- getMetrics $ RenderRequest fromTime toTime target
+  (GraphiteResponse data')  <- getMetrics $ RenderRequest fromTime toTime target
 
   AppState (graphFromData data') <$> liftIO getCurrentTimeZone
   where graphFromData = Graph.mkGraph . fmap Graph.extract

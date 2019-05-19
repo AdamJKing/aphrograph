@@ -1,68 +1,58 @@
-{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module Graphite where
 
-import           Fmt
 import           Control.Monad.Log
-import           App
-import           App.Args                       ( graphiteUrl )
+import           Control.Monad.Except
+import           Control.Monad.Catch
 import           Control.Lens            hiding ( from
                                                 , to
                                                 )
 import qualified Data.Aeson                    as JSON
 import qualified Data.Aeson.Types              as JSONT
-import           Network.Wreq
+import           Network.Wreq                  as Wreq
+import           Network.HTTP.Client            ( HttpException(..) )
 import qualified Data.Vector                   as V
 import           Graphite.Types
+import           Fmt
+import           App.Args
+import           App
 
 
-data RenderRequest = RenderRequest {
-  from :: From, to :: To, target :: Text
-}
+executeGraphiteRequest
+  :: (MonadError AppError m, MonadIO m)
+  => IO (Response LByteString)
+  -> m (GraphiteResponse [DataPoint])
+executeGraphiteRequest req =
+  liftIO
+    $ catch (req <&> buildMetrics . view responseBody)
+    $ \(e :: HttpException) -> throwM (GraphiteUnavailable $ displayException e)
+ where
+  buildMetrics body = GraphiteResponse $ case parseMetricTimeSeries body of
+    Right metrics -> metrics
+    Left  err     -> throwM . AppGraphiteError $ GraphiteResponseError err
 
-class (Monad m) => MonadGraphite m where
-  getMetrics :: RenderRequest -> m [DataPoint]
+class MonadGraphite m where
+  getMetrics :: RenderRequest -> m (GraphiteResponse [DataPoint])
 
 instance MonadGraphite App where
-  getMetrics RenderRequest {..} =
+  getMetrics RenderRequest {..} = do
+    logMessage "Making a call to graphite."
     let parameters = constructQueryParams target from to
-    in  do
-          logMessage "Making a call to graphite."
-          url        <- views graphiteUrl buildUrl
-          response   <- liftIO $ getWith parameters url
-          datapoints <- handleResponse response
-          logDataSize datapoints
-          return datapoints
+    url        <- views graphiteUrl buildUrl
+    datapoints <- executeGraphiteRequest (getWith parameters url)
+    logDataSize datapoints
+    return datapoints
    where
     buildUrl graphiteHost = fmt $ "http://" +| graphiteHost |+ "/render"
-    logDataSize dps =
+    logDataSize (GraphiteResponse dps) =
       logMessage $ fmt "Size of returned data was: " +| length dps |+ "."
 
-
-handleResponse
-  :: (MonadFail m, MonadLog Text m) => Response LByteString -> m [DataPoint]
-handleResponse resp =
-  let body = view responseBody resp
-  in  do
-        logMessage . fmt $ "Response from graphite:\n " +|| body ||+ "\n"
-        case parseMetricTimeSeries body of
-          Right dps -> return dps
-          Left  err -> fail $ "Unusable response from graphite. (" +| err |+ ")"
-
-
 constructQueryParams :: Text -> From -> To -> Options
-constructQueryParams target (From from) (To to) =
-  let targetArg = ("target", target)
-      fromArg   = ("from", from)
-      toArg     = ("to", to)
-      jsonArg   = ("format", "json")
-  in  set params [targetArg, fromArg, toArg, jsonArg] defaults
+constructQueryParams target (From from) (To to) = set
+  params
+  [("target", target), ("from", from), ("to", to), ("format", "json")]
+  defaults
 
 parseMetricTimeSeries :: LByteString -> Either String [DataPoint]
 parseMetricTimeSeries respBody = do

@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveFunctor #-}
@@ -21,6 +23,7 @@ import           App.Args                      as App
 import           Control.Monad.Log
 import           Control.Lens.TH
 import           Data.Time.LocalTime
+import           Control.Monad.Except
 
 
 data AppState = AppState {
@@ -35,16 +38,14 @@ emptyState = AppState NoData <$> getCurrentTimeZone
 
 data AppComponent = GraphView deriving (Eq, Ord, Show)
 
-data AppError where
-  AppError ::e -> AppError
+newtype AppError = AppGraphiteError GraphiteError deriving (Eq, Show)
+
+instance Exception AppError where
 
 newtype App a = App  {
   _unApp :: (ExceptT AppError (ReaderT App.Args (LoggingT Text IO))) a
 }
-  deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)
-
-instance MonadFail App where
-  fail = liftIO . fail
+  deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO, MonadError AppError)
 
 runApp :: Handler IO Text -> App.Args -> App a -> IO (Either AppError a)
 runApp logger args =

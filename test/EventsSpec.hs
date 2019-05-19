@@ -48,6 +48,3 @@ spec = describe "Events" $ do
         initialState <- arbitraryTestIO
         outcome      <- appEventHandler (Brick.VtyEvent ExitKey) initialState
         return (outcome === Stop)
-
-    it "gracefully handles failures from Graphite" $ do
-        updateGraphData
