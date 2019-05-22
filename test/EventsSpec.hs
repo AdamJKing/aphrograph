@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module EventsSpec
@@ -10,12 +10,15 @@ where
 import           Test.Hspec                    as HS
 import           Brick.Types                   as Brick
 import           Test.QuickCheck
+import           Test.QuickCheck.Property
 import           Test.Hspec.QuickCheck
 import           ArbitraryInstances             ( )
 import           Control.Monad.Log
 import           Events
+import           App
 import           App.Args                      as App
 import           Graphite
+import           Control.Monad.Except    hiding ( runExceptT )
 
 
 data DummyComponent = DummyComponent deriving (Eq, Show)
@@ -23,16 +26,22 @@ data DummyComponent = DummyComponent deriving (Eq, Show)
 instance MonadGraphite TestIO where
     getMetricsForPast _ _ _ = arbitraryTestIO
 
-newtype TestIO a = TestIO (ReaderT App.Args (DiscardLoggingT Text IO) a)
-    deriving (Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args, MonadIO)
+newtype TestIO a = TestIO (ReaderT App.Args (DiscardLoggingT Text (ExceptT AppError IO )) a)
+    deriving (Functor, Applicative, Monad,  MonadError AppError
+      , MonadReader App.Args
+      , MonadLog Text , AppLike, MonadIO)
 
 arbitraryTestIO :: (Arbitrary a) => TestIO a
 arbitraryTestIO = liftIO $ generate arbitrary
 
 instance (Testable t) => Testable ( TestIO t ) where
     property (TestIO t) = idempotentIOProperty $ do
-        args <- generate (applyArbitrary4 App.Args)
-        discardLogging $ usingReaderT args t
+        args   <- generate (applyArbitrary4 App.Args)
+        result <- runExceptT $ discardLogging $ usingReaderT args t
+        return $ case result of
+            Right x   -> property x
+            Left  err -> counterexample ("Unexpected error: " ++ show err)
+                                        (property failed)
 
 mouseDown :: Gen (BrickEvent DummyComponent e)
 mouseDown = do

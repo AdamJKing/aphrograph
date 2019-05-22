@@ -24,3 +24,5 @@
 * Remove temporary Testable Maybe typeclass
 * Expand scale to Seconds and Milliseconds
 * Remove magic numbers (ie, 86400, 3600, etc)
+* Remove MonadFail for App
+* Reconcile difference between App "Failed State" and an error returned when running an "App" monad

@@ -7,8 +7,10 @@ import           ArbitraryInstances             ( )
 import           Graphite
 import           Graphite.Types
 import qualified Data.Aeson                    as JSON
+import           Data.Aeson                     ( (.=) )
 import           Test.QuickCheck
 import           Test.Hspec.QuickCheck
+
 
 spec :: HS.Spec
 spec = describe "Graphite" $ do
@@ -27,19 +29,31 @@ spec = describe "Graphite" $ do
 
   describe "JSON Parsing" $ do
     it "decodes metric responses"
-      $ let
-          outcome =
-            parseMetricTimeSeries
-              "[{\"datapoints\": [[0, 1000], [1, 2000], [2, 3000]], \"target\": \"test\", \"tags\": { \"name\": \"test\" } }]"
-        in  case outcome of
-              Right response ->
-                response
-                  `shouldBe` [ DataPoint 0 1000
-                             , DataPoint 1 2000
-                             , DataPoint 2 3000
+      $ let outcome = parseMetricTimeSeries $ JSON.Array $ fromList
+              [ JSON.object
+                  [ "datapoints"
+                    .= (JSON.Array $ fromList
+                         (   JSON.Array
+                         .   fromList
+                         <$> [ [JSON.Number 0, JSON.Number 1000]
+                             , [JSON.Number 1, JSON.Number 2000]
+                             , [JSON.Number 2, JSON.Number 3000]
                              ]
-
-              Left err -> expectationFailure $ "Left: " ++ err
+                         )
+                       )
+                  , "target" .= JSON.String "test"
+                  , "tags" .= JSON.object ["name" .= JSON.String "test"]
+                  ]
+              ]
+        in
+          case outcome of
+            Right x ->
+              x
+                `shouldBe` [ DataPoint 0 1000
+                           , DataPoint 1 2000
+                           , DataPoint 2 3000
+                           ]
+            Left err -> expectationFailure (show err)
 
     it "decodes times from JSON entities" $ do
       JSON.decode "12345" `shouldBe` Just (12345 :: Time)

@@ -2,21 +2,27 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE StandaloneDeriving #-}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module ArbitraryInstances where
 
-import           System.Random
 import           App
-import           Display.Graph                 as Graph
-import           Test.QuickCheck
-import           DerivedArbitraryInstances      ( )
-import           Test.QuickCheck.Arbitrary.ADT
-import           Display.Types
-import           Graphite.Types                as Graphite
-import           Graphics.Vty.Input.Events     as Vty
-import           Test.QuickCheck.Instances.Time ( )
 
+import           DerivedArbitraryInstances      ()
+
+import           Display.Graph                  as Graph
+import           Display.Types
+
+import           Graphics.Vty.Input.Events      as Vty
+
+import           Graphite.Types                 as Graphite
+
+import           System.Random
+
+import           Test.QuickCheck
+import           Test.QuickCheck.Arbitrary.ADT
+import           Test.QuickCheck.Instances.Time ()
 
 instance Arbitrary DataPoint where
     arbitrary = genericArbitrary
@@ -31,10 +37,8 @@ instance (Ord x, Arbitrary x, Ord y, Arbitrary y) => Arbitrary (Graph x y) where
         (NonEmpty xs) <- arbitrary
         return $ Graph.mkGraph xs
 
-data Range i = Range {
-    lower :: i,
-    higher :: i
-} deriving (Show, Eq)
+data Range i = Range { lower :: i, higher :: i }
+    deriving ( Show, Eq )
 
 instance (Arbitrary i, Num i, Ord i) => Arbitrary (Range i) where
     arbitrary = do
@@ -78,6 +82,7 @@ instance Arbitrary Time where
 
 instance Random Time where
     randomR range = first fromInteger . randomR (toInts range)
-        where toInts = join bimap (round . timestamp)
+      where
+        toInts = join bimap (round . timestamp)
 
     random = randomR (0, 1)
