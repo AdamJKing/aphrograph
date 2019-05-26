@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Add logging to widget construction (debug label & `unsafePerformIO` ?)
 * Handle NoData version of `generateLabels` 
 * Dynamically add version information from stack build
 * Include links to Graphite API in the argument documentation
