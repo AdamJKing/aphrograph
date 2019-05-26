@@ -8,21 +8,23 @@
 module ArbitraryInstances where
 
 import           App
+import           App.Args                      as App
+                                                ( Args(..) )
 
-import           DerivedArbitraryInstances      ()
+import           DerivedArbitraryInstances      ( )
 
-import           Display.Graph                  as Graph
+import           Display.Graph                 as Graph
 import           Display.Types
 
-import           Graphics.Vty.Input.Events      as Vty
+import           Graphics.Vty.Input.Events     as Vty
 
-import           Graphite.Types                 as Graphite
+import           Graphite.Types                as Graphite
 
 import           System.Random
 
 import           Test.QuickCheck
 import           Test.QuickCheck.Arbitrary.ADT
-import           Test.QuickCheck.Instances.Time ()
+import           Test.QuickCheck.Instances.Time ( )
 
 instance Arbitrary DataPoint where
     arbitrary = genericArbitrary
@@ -82,7 +84,15 @@ instance Arbitrary Time where
 
 instance Random Time where
     randomR range = first fromInteger . randomR (toInts range)
-      where
-        toInts = join bimap (round . timestamp)
+        where toInts = join bimap (round . timestamp)
 
     random = randomR (0, 1)
+
+instance Arbitrary App.Args where
+    arbitrary = do
+        fromTime    <- arbitrary
+        toTime      <- arbitrary
+        targetArg   <- arbitrary
+        graphiteUrl <- arbitrary
+        let debugMode = False
+        return (App.Args fromTime toTime targetArg graphiteUrl debugMode)

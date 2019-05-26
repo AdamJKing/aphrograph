@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -19,17 +21,19 @@ import           Graphite.Types
 import           Brick.Types                   as Brick
 import           Brick.Widgets.Core            as Brick
 import           App
+import           Control.Monad.Log
 import           Data.Time.LocalTime
 
-type GraphBuilder n = Reader AppState (Brick.Widget n)
+newtype GraphBuilder a = GraphBuilder ( PureLoggingT [Text] (Reader AppState) a)
+    deriving ( Functor , Applicative , Monad , MonadReader AppState, MonadLog [ Text ])
 
-build :: GraphBuilder n -> AppState -> Brick.Widget n
-build = runReader
+build :: GraphBuilder (Brick.Widget n) -> AppState -> (Brick.Widget n, [Text])
+build (GraphBuilder internal) st = usingReader st . runPureLoggingT $ internal
 
 cornerPiece :: Widget n
 cornerPiece = padBottom Max $ padLeft Max $ txt "\9492"
 
-graphDisplayWidget :: GraphBuilder n
+graphDisplayWidget :: GraphBuilder (Brick.Widget n)
 graphDisplayWidget =
     arrange <$> graphWidget <*> verticalAxisWidget <*> horizontalAxisWidget
   where
@@ -38,8 +42,10 @@ graphDisplayWidget =
         , Brick.hBox [Brick.hLimitPercent 8 cornerPiece, h]
         ]
 
-graphWidget :: GraphBuilder n
-graphWidget = asks (buildWidget . graphData)
+graphWidget :: GraphBuilder (Brick.Widget n)
+graphWidget = do
+    logMessage ["Building graph!"]
+    asks (buildWidget . graphData)
   where
     buildWidget Nothing      = txt "Couldn't get app state."
     buildWidget (Just graph) = Widget { hSize  = Brick.Greedy
@@ -51,7 +57,7 @@ graphWidget = asks (buildWidget . graphData)
             image <- views heightAndWidthL (drawGraphImage graph)
             return (set imageL image emptyResult)
 
-verticalAxisWidget :: GraphBuilder n
+verticalAxisWidget :: GraphBuilder (Brick.Widget n)
 verticalAxisWidget = asks (buildWidget . graphData)
   where
     buildWidget Nothing      = Brick.emptyWidget
@@ -120,7 +126,7 @@ drawLabelledLine (fromIntegral -> w) =
 drawDefaultLine :: Int -> Vty.Image
 drawDefaultLine (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
 
-horizontalAxisWidget :: GraphBuilder n
+horizontalAxisWidget :: GraphBuilder (Brick.Widget n)
 horizontalAxisWidget = asks $ fromMaybe Brick.emptyWidget . buildWidget
   where
     buildWidget st = do

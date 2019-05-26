@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Improve test coverage
 * Add logging to widget construction (debug label & `unsafePerformIO` ?)
 * Handle NoData version of `generateLabels` 
 * Dynamically add version information from stack build
@@ -24,3 +23,4 @@
 * Investigate weird label cropping when using day labels (-12d in from section)
 * Make application logger part of the app state
 * Create version of logger that takes buildable fmt data rather than strings (make it lazy)
+

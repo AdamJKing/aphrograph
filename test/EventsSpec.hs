@@ -36,7 +36,7 @@ arbitraryTestIO = liftIO $ generate arbitrary
 
 instance (Testable t) => Testable ( TestIO t ) where
     property (TestIO t) = idempotentIOProperty $ do
-        args   <- generate (applyArbitrary4 App.Args)
+        args   <- generate arbitrary
         result <- runExceptT $ discardLogging $ usingReaderT args t
         return $ case result of
             Right x   -> property x

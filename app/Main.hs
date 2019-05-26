@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -17,6 +18,8 @@ import           Control.Concurrent             ( forkIO
 import           Control.Monad                  ( void )
 import           Control.Monad.Log
 import           Control.Monad.Except
+import           Control.Lens.Getter
+import qualified Control.Exception             as Exc
 
 import qualified Data.Text.Prettyprint.Doc     as Doc
 import           Data.Time.LocalTime
@@ -27,6 +30,7 @@ import           Events
 
 import qualified Graphics.Vty                  as Vty
 import           Graphics.Vty.Attributes
+import           System.IO.Unsafe
 
 main :: IO ()
 main = do
@@ -51,7 +55,10 @@ executeApp eq handler args = do
 
 mkApp :: Handler IO Text -> App.Args -> Brick.App AppState AppEvent AppComponent
 mkApp logger args = Brick.App
-  { appDraw         = return . build graphDisplayWidget
+  { appDraw         = \st ->
+                        let (widget, logs) = build graphDisplayWidget st
+                        in  handleWidgetLogs (view App.debugMode args) logger logs
+                              & const [widget]
   , appChooseCursor = Brick.neverShowCursor
   , appHandleEvent  =
     \currentState event ->
@@ -70,7 +77,6 @@ mkApp logger args = Brick.App
       tz <- liftIO getCurrentTimeZone
       return (AppState gd tz)
 
-
   handleEventOutcome prevState = \case
     Right (Continue (FailedAppState err)) -> Brick.halt (FailedAppState err)
     Right (Continue newState            ) -> Brick.continue newState
@@ -80,3 +86,9 @@ mkApp logger args = Brick.App
   handleEventOutcome' prevState = \case
     Right newState -> newState
     Left  _        -> prevState
+
+-- warning: unsafe when debug mode is enabled!
+handleWidgetLogs :: Bool -> Handler IO Text -> [Text] -> ()
+handleWidgetLogs debugMode log logs =
+  unsafePerformIO $ guard debugMode >> Exc.catch (mapM_ log logs) ignoreError
+  where ignoreError (_ :: Exc.ErrorCall) = pass
