@@ -4,6 +4,7 @@ module Main where
 
 import           Test.Hspec.Runner
 import           Test.Hspec
+import qualified Display.DisplaySpec            ( spec )
 import qualified Display.GraphSpec              ( spec )
 import qualified Display.ProjectionSpec         ( spec )
 import qualified Display.WidgetsSpec            ( spec )
@@ -14,6 +15,7 @@ import qualified EventsSpec                     ( spec )
 
 main :: IO ()
 main = hspec $ do
+  describe "Display"       Display.DisplaySpec.spec
   describe "Graph"         Display.GraphSpec.spec
   describe "Projection"    Display.ProjectionSpec.spec
   describe "Widgets"       Display.WidgetsSpec.spec

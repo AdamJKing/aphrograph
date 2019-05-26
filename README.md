@@ -2,16 +2,9 @@
 
 ## TODO List
 
-* Enable units in days
-* Enable intermediary units for two discrete labels (discrete -> continuous)
-* Don't kill program when we can't reach graphite
-* Moved scaled to it's own package
-* Cleanup LabelSpec (long list of labels, generative testing?)
-* log error for datapoint parsing
-* move Scaled and normalisation to projection "Internal"
 * Improve test coverage
-* Add logging to widget construction (debug label & `unsafePerformIO`?)
-* Handle NoData version of `generateLabels`
+* Add logging to widget construction (debug label & `unsafePerformIO` ?)
+* Handle NoData version of `generateLabels` 
 * Dynamically add version information from stack build
 * Include links to Graphite API in the argument documentation
 * Make 'to' argument optional at command-line
@@ -26,3 +19,8 @@
 * Remove magic numbers (ie, 86400, 3600, etc)
 * Remove MonadFail for App
 * Reconcile difference between App "Failed State" and an error returned when running an "App" monad
+* Create app configuration parameter
+* Add error reason to "failure state"
+* Investigate weird label cropping when using day labels (-12d in from section)
+* Make application logger part of the app state
+* Create version of logger that takes buildable fmt data rather than strings (make it lazy)

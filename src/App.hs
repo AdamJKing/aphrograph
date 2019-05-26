@@ -92,13 +92,13 @@ instance MonadGraphite App where
     let parameters = constructQueryParams target from to
     in  do
           logMessage "Making a call to graphite."
-          url      <- views graphiteUrl $ \host -> http host /: "render"
-          response <- makeRequest url parameters
-          logMessage "I'mma let you finish but I'm about to parse some metrics"
+          url        <- views graphiteUrl $ \host -> http host /: "render"
+          response   <- makeRequest url parameters
           datapoints <- runExceptT $ parseMetricTimeSeries response
           case datapoints of
             Left (GraphiteError reason) -> do
-              logMessage "Terrible things!"
+              logMessage
+                (fmt $ "Error parsing metric response: " +| reason |+ ".")
               throwError $ HttpError reason
             Right dps -> logDataSize dps >> return dps
    where
