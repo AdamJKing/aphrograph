@@ -21,16 +21,25 @@ data Args =
 makeLenses ''Args
 
 fromTimeArgument :: Parser From
-fromTimeArgument = strOption $ long "from" <> help
-    "Represents the 'from' argument of the Graphite API."
+fromTimeArgument =
+    strOption
+        $  long "from"
+        <> help
+               "Represents the 'from' argument of the Graphite API. (see https://graphite-api.readthedocs.io/en/latest/)"
 
 toTimeArgument :: Parser To
-toTimeArgument = strOption $ long "to" <> help
-    "Represents the 'to' argument of the Graphite API."
+toTimeArgument =
+    strOption
+        $  long "to"
+        <> help
+               "Represents the 'to' argument of the Graphite API. (see https://graphite-api.readthedocs.io/en/latest/)"
 
 targetArgument :: Parser Text
 targetArgument =
-    strOption $ long "target" <> help "The Graphite metric string."
+    strOption
+        $  long "target"
+        <> help
+               "The Graphite metric string. (see https://graphite-api.readthedocs.io/en/latest/)"
 
 graphiteUrlArgument :: Parser Text
 graphiteUrlArgument =

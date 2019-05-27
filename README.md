@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Include links to Graphite API in the argument documentation
 * Make 'to' argument optional at command-line
 * Handle Graphite errors (5**) more gracefully
 * Handle potential empty list in graphite response
