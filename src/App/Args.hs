@@ -5,6 +5,8 @@ module App.Args where
 import           Options.Applicative.Simple    as Opt
 import           Control.Lens
 import           Graphite.Types          hiding ( value )
+import           Paths_aphrograph               ( version )
+import           Data.Version                   ( showVersion )
 
 data Args =
     Args
@@ -53,11 +55,11 @@ arguments =
 
 withCommandLineArguments :: (Args -> IO b) -> IO b
 withCommandLineArguments f =
-    let version     = "0.1"
+    let version'    = showVersion version
         title       = "△phrograph"
         description = "A command-line viewer for graphite metrics."
     in  do
-            (args, ()) <- simpleOptions version
+            (args, ()) <- simpleOptions version'
                                         title
                                         description
                                         arguments

@@ -2,8 +2,6 @@
 
 ## TODO List
 
-* Handle NoData version of `generateLabels` 
-* Dynamically add version information from stack build
 * Include links to Graphite API in the argument documentation
 * Make 'to' argument optional at command-line
 * Handle Graphite errors (5**) more gracefully
