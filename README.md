@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Make 'to' argument optional at command-line
 * Handle Graphite errors (5**) more gracefully
 * Handle potential empty list in graphite response
 * improve graphite tests
@@ -19,4 +18,5 @@
 * Investigate weird label cropping when using day labels (-12d in from section)
 * Make application logger part of the app state
 * Create version of logger that takes buildable fmt data rather than strings (make it lazy)
-
+* Come up with better equality instance for app state than two failed states not being equal
+* Graphite being unavailable shows the error message "thread blocked indefinitely in an STM transaction" on exit

@@ -1,4 +1,9 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module App.Args where
 
@@ -7,16 +12,17 @@ import           Control.Lens
 import           Graphite.Types          hiding ( value )
 import           Paths_aphrograph               ( version )
 import           Data.Version                   ( showVersion )
+import           Network.HTTP.Req
+
 
 data Args =
     Args
     { _fromTime :: From
-    , _toTime :: To
+    , _toTime :: Maybe To
     , _targetArg :: Text
-    , _graphiteUrl :: Text
+    , _graphiteUrl :: GraphiteUrl
     , _debugMode :: Bool
     }
-    deriving (Show,Eq)
 
 makeLenses ''Args
 
@@ -41,14 +47,19 @@ targetArgument =
         <> help
                "The Graphite metric string. (see https://graphite-api.readthedocs.io/en/latest/)"
 
-graphiteUrlArgument :: Parser Text
+graphiteUrlArgument :: Parser GraphiteUrl
 graphiteUrlArgument =
-    strOption
+    option httpParser
         $  long "graphite-url"
         <> help "The graphite host."
         <> showDefault
-        <> value "localhost"
+        <> value (GraphiteUrl $ http "localhost")
         <> metavar "GRAPHITE_HOST"
+
+httpParser :: ReadM GraphiteUrl
+httpParser = maybeReader $ \input -> parseUrl (fromString input) <&> \case
+    Right (httpsUrl, _) -> GraphiteUrl httpsUrl
+    Left  (httpUrl , _) -> GraphiteUrl httpUrl
 
 debugArgument :: Parser Bool
 debugArgument = switch $ long "debug" <> hidden
@@ -57,7 +68,7 @@ arguments :: Parser Args
 arguments =
     Args
         <$> fromTimeArgument
-        <*> toTimeArgument
+        <*> optional toTimeArgument
         <*> targetArgument
         <*> graphiteUrlArgument
         <*> debugArgument

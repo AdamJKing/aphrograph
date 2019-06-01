@@ -25,6 +25,7 @@ import           System.Random
 import           Test.QuickCheck
 import           Test.QuickCheck.Arbitrary.ADT
 import           Test.QuickCheck.Instances.Time ( )
+import           Network.HTTP.Req               ( http )
 
 instance Arbitrary DataPoint where
     arbitrary = genericArbitrary
@@ -90,9 +91,9 @@ instance Random Time where
 
 instance Arbitrary App.Args where
     arbitrary = do
-        fromTime    <- arbitrary
-        toTime      <- arbitrary
-        targetArg   <- arbitrary
-        graphiteUrl <- arbitrary
-        let debugMode = False
+        fromTime  <- arbitrary
+        toTime    <- arbitrary
+        targetArg <- arbitrary
+        let graphiteUrl = GraphiteUrl (http "example.com")
+        let debugMode   = False
         return (App.Args fromTime toTime targetArg graphiteUrl debugMode)

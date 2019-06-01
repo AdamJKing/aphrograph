@@ -17,19 +17,19 @@ import           Control.Monad.Log
 import           Events
 import           App
 import           App.Args                      as App
-import           Graphite
 import           Control.Monad.Except    hiding ( runExceptT )
+import           Graphite.Types
 
 
 data DummyComponent = DummyComponent deriving (Eq, Show)
-
-instance MonadGraphite TestIO where
-    getMetricsForPast _ _ _ = arbitraryTestIO
 
 newtype TestIO a = TestIO (ReaderT App.Args (DiscardLoggingT Text (ExceptT AppError IO )) a)
     deriving (Functor, Applicative, Monad,  MonadError AppError
       , MonadReader App.Args
       , MonadLog Text , AppLike, MonadIO)
+
+instance MonadGraphite TestIO where
+    getMetrics _ = return []
 
 arbitraryTestIO :: (Arbitrary a) => TestIO a
 arbitraryTestIO = liftIO $ generate arbitrary

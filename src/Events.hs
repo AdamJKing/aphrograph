@@ -21,7 +21,6 @@ import qualified Display.Graph             as Graph
 
 import qualified Graphics.Vty.Input.Events as Vty
 
-import           Graphite
 import           Graphite.Types
 
 type Logged m = MonadLog Text m
@@ -51,12 +50,12 @@ appEventHandler (Brick.AppEvent UpdateEvent) (AppState _ tz) = do
     return $ Continue (AppState newGraphData tz)
 appEventHandler _ previousState = return (Continue previousState)
 
-updateGraphData :: (AppLike m) => m (Graph.Graph Time Value)
+updateGraphData :: AppLike m => m (Graph.Graph Time Value)
 updateGraphData = do
     fromTime <- view App.fromTime
     toTime <- view App.toTime
     target <- view App.targetArg
-    data' <- getMetricsForPast target fromTime toTime
+    data' <- getMetrics $ RenderRequest fromTime toTime target 
     logMessage "Populating graph."
     return (graphFromData data')
   where

@@ -24,6 +24,7 @@ dependencies:
 - exceptions
 - fmt >= 0.6.1.1
 - hourglass
+- http-api-data
 - interpolate
 - lens
 - lens-aeson
