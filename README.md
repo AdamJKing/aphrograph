@@ -20,3 +20,4 @@
 * Create version of logger that takes buildable fmt data rather than strings (make it lazy)
 * Come up with better equality instance for app state than two failed states not being equal
 * Graphite being unavailable shows the error message "thread blocked indefinitely in an STM transaction" on exit
+* Add default To param to command help

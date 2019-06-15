@@ -26,6 +26,10 @@ conf_forward:
   - -XQuasiQuotes
   - -XTemplateHaskell
   - -XBangPatterns
+  - -XTypeApplications
+  - -XDataKinds                  
+  - -XGeneralizedNewtypeDeriving
+  - -XTypeOperators            
 
 conf_errorHandling:
   econf_ExactPrintFallback: ExactPrintFallbackModeInline

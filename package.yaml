@@ -1,8 +1,9 @@
 library:
   source-dirs: src
+
 tests:
-  aphrograph-test:
-    source-dirs: test
+  unit-test:
+    source-dirs: test/unit
     main: Spec.hs
     ghc-options: -Wno-orphans
     dependencies:
@@ -12,7 +13,24 @@ tests:
     - quickcheck-arbitrary-adt
     - random
     - quickcheck-instances
-ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS
+
+  end2end-test:
+    source-dirs: test/end2end
+    main: FullSpec.hs
+    dependencies:
+    - aphrograph
+    - hspec
+    - warp
+    - servant-server
+    - http-client
+    - http-types
+    - servant-mock
+    - QuickCheck
+    - quickcheck-instances
+    - unix
+    - async
+
+ghc-options: -Wall -Wno-type-defaults -Werror -j4 -threaded -O2
 dependencies:
 - aeson
 - array
@@ -44,18 +62,20 @@ dependencies:
 - transformers-base
 - vector
 - vty
+
 default-extensions:
 - RecordWildCards
 - OverloadedStrings
+
 name: aphrograph
 version: 0.1.0.0
 extra-source-files:
 - README.md
 - ChangeLog.md
+
 executables:
   aphrograph:
     source-dirs: app
     main: Main.hs
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
     dependencies:
     - aphrograph
