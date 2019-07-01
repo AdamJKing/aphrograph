@@ -5,7 +5,7 @@
 
 module Display.Graph.GraphBuilder where
 
-import           Display.Graph
+import           Display.Graph                 as G
 import           Display.Projection.Scalable
 import           Graphics.Vty                  as Vty
 import           Data.Foldable                  ( maximum )
@@ -76,12 +76,13 @@ verticalAxisWidget = asks (buildWidget . graphData)
             return (set imageL image emptyResult)
 
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
-drawGraphImage NoData _ = Vty.text mempty "No Data"
-drawGraphImage graph (width, height) =
-    foldl' appendNextColumn Vty.emptyImage
-        $! [ M.findWithDefault 0 i (normaliseGraph $ toMap graph)
-           | i <- [0 .. width]
-           ]
+drawGraphImage graph (width, height) = if G.null graph
+    then Vty.text mempty "No Data"
+    else
+        foldl' appendNextColumn Vty.emptyImage
+            $! [ M.findWithDefault 0 i (normaliseGraph $ toMap graph)
+               | i <- [0 .. width]
+               ]
   where
     graphX = boundsX graph
 

@@ -36,9 +36,7 @@ instance (Generic n, Arbitrary n) => Arbitrary (Dimensions n) where
     arbitrary = genericArbitrary
 
 instance (Ord x, Arbitrary x, Ord y, Arbitrary y) => Arbitrary (Graph x y) where
-    arbitrary = do
-        (NonEmpty xs) <- arbitrary
-        return $ Graph.mkGraph xs
+    arbitrary = Graph.mkGraph <$> arbitrary
 
 data Range i = Range { lower :: i, higher :: i }
     deriving ( Show, Eq )

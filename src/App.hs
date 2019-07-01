@@ -55,7 +55,7 @@ failure (FailedAppState err) = Just err
 failure _                    = Nothing
 
 emptyState :: IO AppState
-emptyState = getCurrentTimeZone <&> AppState NoData
+emptyState = getCurrentTimeZone <&> AppState mempty
 
 data AppError = forall e. Exception e => AppError e
 

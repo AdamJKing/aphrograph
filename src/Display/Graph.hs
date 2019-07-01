@@ -1,12 +1,8 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE GeneralisedNewtypeDeriving #-}
 
 module Display.Graph
-  ( Graph(NoData, Graph)
+  ( Graph
   , Graphable(..)
   , size
   , toMap
@@ -20,6 +16,7 @@ module Display.Graph
   , member
   , verticalAxis
   , horizontalAxis
+  , Display.Graph.null
   )
 where
 
@@ -28,9 +25,9 @@ import qualified Data.Map                      as M
 import qualified Relude.Unsafe                 as Unsafe
 import           Graphite.Types
 
-data Graph x y = NoData | Graph {
-  _graphData :: M.Map x y
- } deriving (Show, Eq)
+
+newtype Graph x y = Graph { _data :: M.Map x y }
+  deriving (Show, Eq, Semigroup, Monoid)
 
 class Graphable n x y where
   extract :: n -> (x, y)
@@ -39,55 +36,51 @@ instance Graphable DataPoint Time Value where
   extract DataPoint { value = v, time = t } = (t, v)
 
 boundsX :: (Ord x) => Graph x y -> (x, x)
-boundsX NoData = error "boundsX on empty graph"
-boundsX g      = getBounds . M.keys . _graphData $ g
+boundsX (Graph g) = if M.null g
+  then error "boundsX on empty graph"
+  else getBounds (M.keys g)
   where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 boundsY :: (Num y, Ord y) => Graph x y -> (y, y)
-boundsY NoData        = error "boundsY on empty graph"
-boundsY (Graph _data) = getBounds . sort . M.elems $ _data
+boundsY (Graph g) = if M.null g
+  then error "boundsY on empty graph"
+  else getBounds (sort (M.elems g))
   where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 mkGraph :: (Ord x, Ord y) => [(x, y)] -> Graph x y
-mkGraph [] = NoData
-mkGraph ps = Graph . M.fromList . sortBy (compare `on` fst) $ ps
+mkGraph = Graph . M.fromList . sortBy (compare `on` fst)
 
 assocs :: Graph x y -> [(x, y)]
-assocs NoData        = []
-assocs (Graph _data) = M.toList _data
+assocs = M.toList . _data
 
 member :: (Ord x, Ord y) => (x, y) -> Graph x y -> Bool
-member _      NoData        = False
 member (x, y) (Graph _data) = M.member x _data && (_data M.! x) == y
 
 mapX :: (Ord x', Ord y) => (x -> x') -> Graph x y -> Graph x' y
 mapX f = mapPoints (\(x, y) -> (f x, y))
 
+null :: Graph x y -> Bool
+null = M.null . _data
+
 mapPoints
   :: (Ord x', Ord y') => ((x, y) -> (x', y')) -> Graph x y -> Graph x' y'
-mapPoints _ NoData        = NoData
-mapPoints f (Graph _data) = mkGraph $ f <$> M.toList _data
+mapPoints f g = mkGraph $ f <$> M.toList (_data g)
 
 mapPointsM
   :: (Monad m, Ord x', Ord y')
   => ((x, y) -> m (x', y'))
   -> Graph x y
   -> m (Graph x' y')
-mapPointsM _ NoData        = pure NoData
-mapPointsM f (Graph _data) = mkGraph <$> f `mapM` M.toList _data
+mapPointsM f g = mkGraph <$> mapM f (M.toList (_data g))
 
 toMap :: (Ord x, Ord y) => Graph x y -> M.Map x y
-toMap NoData        = mempty
-toMap (Graph _data) = _data
+toMap = _data
 
 size :: Graph x y -> Int
-size NoData        = 0
-size (Graph _data) = M.size _data
+size = M.size . _data
 
 verticalAxis :: Graph x y -> [y]
-verticalAxis NoData        = []
-verticalAxis (Graph data') = M.elems data'
+verticalAxis = M.elems . _data
 
 horizontalAxis :: Graph x y -> [x]
-horizontalAxis NoData        = []
-horizontalAxis (Graph data') = M.keys data'
+horizontalAxis = M.keys . _data

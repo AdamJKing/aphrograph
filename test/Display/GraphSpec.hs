@@ -1,21 +1,28 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
 
 module Display.GraphSpec where
 
 import           Display.Graph                 as Graph
-import           CommonProperties
 import           ArbitraryInstances             ( )
 import           Test.Hspec                    as HS
+import           Prelude                 hiding ( null )
 import           Test.QuickCheck
 import           Graphite.Types                 ( time
                                                 , value
                                                 )
+import qualified Data.Set                      as S
 import           Test.Hspec.QuickCheck
 import           Relude.Unsafe                 as Unsafe
 import           Data.List                      ( maximum
                                                 , minimum
                                                 )
+
+genUniqueNonEmptyListSorted :: forall a . (Ord a, Arbitrary a) => Gen [a]
+genUniqueNonEmptyListSorted = do
+    distinct <- arbitrary @(Set a) `suchThat` (not . S.null)
+    return $ sort . toList $ distinct
 
 spec :: HS.Spec
 spec = describe "Graph" $ do
@@ -24,23 +31,18 @@ spec = describe "Graph" $ do
         . prop "extracts graphable data from a type"
         $ \dp -> extract dp === (time dp, value dp)
 
-    describe "boundsX"
-        . prop "correctly gets the bounds (Integers)"
-        $ \((Unique xs) :: UniqueList Int) ((Unique ys) :: UniqueList Int) ->
-              (not (null xs) && not (null ys))
-                  ==> (length xs == length ys)
-                  ==> let graph        = mkGraph (xs `zip` ys)
-                          (minX, maxX) = (minimum xs, maximum xs)
-                      in  boundsX graph === (minX, maxX)
+    describe "bounds" . prop "correctly gets the bounds (Integers)" $ do
+        xs <- genUniqueNonEmptyListSorted @Int
+        ys <- vector @Int (length xs)
+        let graph        = mkGraph (xs `zip` ys)
+        let (minX, maxX) = (Unsafe.head xs, Unsafe.last xs)
+        let (minY, maxY) = (minimum ys, maximum ys)
+        return
+            $    boundsX graph
+            ===  (minX, maxX)
+            .&&. boundsY graph
+            ===  (minY, maxY)
 
-    describe "boundsY"
-        . prop "correctly gets the bounds (Integers)"
-        $ \((Unique xs) :: UniqueList Int) ((Unique ys) :: UniqueList Int) ->
-              (not (null xs) && not (null ys))
-                  ==> (length xs == length ys)
-                  ==> let graph        = mkGraph (xs `zip` ys)
-                          (minY, maxY) = (minimum ys, maximum ys)
-                      in  boundsY graph === (minY, maxY)
 
     describe "mapPoints"
         . prop "mapping with identity doesn't change the map"
@@ -48,6 +50,7 @@ spec = describe "Graph" $ do
 
     describe "mapPoints"
         . prop "condenses duplicates correctly"
+        . forAll (arbitrary `suchThat` (not . null))
         $ \(graph :: Graph Int Int) -> do
               dupPoint <- Unsafe.head <$> shuffle (assocs graph)
               let outcome  = mapPoints (const dupPoint) graph
@@ -64,24 +67,24 @@ spec = describe "Graph" $ do
     describe "mkGraph"
         . prop "does not remove elements that duplicate on the Y axis"
         $ \(y :: Int) -> do
-              (Unique (xs :: [Int])) <- arbitrary
-              let points = (, y) <$> sort xs
+              xs <- arbitrary @(Set Int)
+              let points = (, y) <$> sort (toList xs)
               return $ assocs (mkGraph points) `shouldBe` points
 
     describe "member"
         . prop "correctly identifies members of a graph"
-        $ \(Unique xs) -> do
+        $ \(xs :: Set Int) -> do
               ys <- vectorOf (length xs) arbitrary
-              let points = xs `zip` ys
+              let points = toList xs `zip` ys
               let graph  = mkGraph points :: Graph Int Int
               return $ all (`member` graph) points
 
     describe "member"
         . prop "correctly idenitifies non-members of a graph"
-        $ \(Unique xs) -> do
+        $ \(xs :: [Int]) -> do
               ys <- vectorOf (length xs) arbitrary
               let graph = mkGraph (xs `zip` ys) :: Graph Int Int
               return
-                  $ forAll (arbitrary `suchThat` (`notElem` (assocs graph)))
+                  $ forAll (arbitrary `suchThat` (`notElem` assocs graph))
                   $ not
                   . (`member` graph)

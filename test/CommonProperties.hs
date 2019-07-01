@@ -1,6 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -10,18 +9,6 @@ import           ArbitraryInstances             ( )
 import           Test.QuickCheck
 import           Graphite.Types
 
-
-newtype UniqueList a = Unique { getUnique :: [a] }
-  deriving (Show, Eq, Foldable)
-
-instance (Arbitrary a, Eq a) => Arbitrary (UniqueList a) where
-  arbitrary = sized $ fmap Unique . build
-   where
-    build 0  = return []
-    build n' = do
-      as <- build (n' - 1)
-      a  <- arbitrary `suchThat` (`notElem` as)
-      return $ a : as
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
