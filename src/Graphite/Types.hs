@@ -43,6 +43,9 @@ instance FormatTime Time where
         return $ \locale numericPad mwidth ->
             fmtF locale numericPad mwidth . toUTC
 
+millisecond :: Time
+millisecond = 0.001
+
 toLocalTime :: TimeZone -> Time -> LocalTime
 toLocalTime timezone = utcToLocalTime timezone . toUTC
 

@@ -2,8 +2,6 @@
 
 ## TODO List
 
-* Remove magic numbers (ie, 86400, 3600, etc)
-* Remove MonadFail for App
 * Reconcile difference between App "Failed State" and an error returned when running an "App" monad
 * Create app configuration parameter
 * Add error reason to "failure state"

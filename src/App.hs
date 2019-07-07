@@ -54,7 +54,7 @@ emptyState = getCurrentTimeZone <&> AppState . MetricContext mempty
 data AppError = forall e. Exception e => AppError e
 
 instance Exception AppError where
-  displayException (AppError err) = displayException err 
+  displayException (AppError err) = displayException err
 
 instance TS.Show AppError where
   show = displayException
@@ -71,9 +71,6 @@ newtype App e a =
         }
     deriving ( Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args
              , MonadIO, MonadError e)
-
-instance MonadFail ( App e ) where
-  fail = liftIO . Prelude.fail
 
 adaptError :: App e a -> (e -> e') -> App e' a
 adaptError (App op) f = App (f `withExceptT` op)
