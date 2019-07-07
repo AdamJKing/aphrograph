@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -44,10 +45,10 @@ appEventHandler _ (FailedAppState err) =
     logMessage (fmt $ "Error occurred: " +|| err ||+ ".") >> return Stop
 appEventHandler (Brick.VtyEvent ExitKey) _ =
     logMessage "Recieved stop; quitting." >> return Stop
-appEventHandler (Brick.AppEvent UpdateEvent) (AppState _ tz) = do
-    newGraphData <- updateGraphData
+appEventHandler (Brick.AppEvent UpdateEvent) (AppState ctxt) = do
+    graphData <- updateGraphData
     logMessage "Producing new state."
-    return $ Continue (AppState newGraphData tz)
+    return $ Continue (AppState ( ctxt {graphData} ))
 appEventHandler _ previousState = return (Continue previousState)
 
 updateGraphData :: AppLike m => m (Graph.Graph Time Value)

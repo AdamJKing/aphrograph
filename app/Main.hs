@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
@@ -11,6 +10,8 @@ import qualified App.Args                      as App
 import           Brick.AttrMap
 import qualified Brick.BChan                   as Brick
 import           Brick.Main                    as Brick
+import           Brick.Widgets.Core            as Brick
+import           Display.Graph.Widget
 
 import           Control.Concurrent             ( forkIO
                                                 , threadDelay
@@ -18,13 +19,11 @@ import           Control.Concurrent             ( forkIO
 import           Control.Monad                  ( void )
 import           Control.Monad.Log
 import           Control.Monad.Except
-import           Control.Lens.Getter
+import           Display.Widgets
 import qualified Control.Exception             as Exc
 
 import qualified Data.Text.Prettyprint.Doc     as Doc
 import           Data.Time.LocalTime
-
-import           Display.Graph.GraphBuilder
 
 import           Events
 
@@ -55,10 +54,9 @@ executeApp eq handler args = do
 
 mkApp :: Handler IO Text -> App.Args -> Brick.App AppState AppEvent AppComponent
 mkApp logger args = Brick.App
-  { appDraw         = \st ->
-                        let (widget, logs) = build graphDisplayWidget st
-                        in  handleWidgetLogs (view App.debugMode args) logger logs
-                              & const [widget]
+  { appDraw         = pure . \case
+                        (FailedAppState err) -> Brick.str $ show err
+                        (AppState ctxt) -> compile $ graphDisplayWidget ctxt
   , appChooseCursor = Brick.neverShowCursor
   , appHandleEvent  =
     \currentState event ->
@@ -75,7 +73,7 @@ mkApp logger args = Brick.App
     startEvent = do
       gd <- updateGraphData
       tz <- liftIO getCurrentTimeZone
-      return (AppState gd tz)
+      return (AppState $ MetricContext gd tz)
 
   handleEventOutcome prevState = \case
     Right (Continue (FailedAppState err)) -> Brick.halt (FailedAppState err)

@@ -47,8 +47,11 @@ instance (Arbitrary i, Num i, Ord i) => Arbitrary (Range i) where
         b <- arbitrary `suchThat` (/= a)
         return $ Range (min a b) (max a b)
 
+instance Arbitrary MetricContext where
+    arbitrary = applyArbitrary2 MetricContext
+
 instance Arbitrary AppState where
-    arbitrary = applyArbitrary2 AppState
+    arbitrary = AppState <$> arbitrary
 
 deriving via Text instance Arbitrary Graphite.From
 

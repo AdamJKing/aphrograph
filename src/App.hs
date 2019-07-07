@@ -11,15 +11,13 @@
 
 module App
   ( AppState(..)
+  , MetricContext(..)
   , AppComponent(..)
   , emptyState
   , AppError(..)
   , App
   , runApp
   , AppLike
-  , graphData
-  , timezone
-  , failure
   )
 where
 
@@ -35,27 +33,19 @@ import           Text.Show                     as TS
 import           Control.Lens.Getter            ( view )
 
 
-data AppState = AppState (Graph Time Value) TimeZone | FailedAppState AppError deriving Show
+data MetricContext = MetricContext {
+   graphData :: Graph Time Value,  timezone ::  TimeZone
+   } deriving ( Show, Eq )
+
+data AppState = AppState MetricContext | FailedAppState AppError deriving Show
 
 instance Eq AppState where
-  (AppState graphA tzA) == (AppState graphB tzB) =
-    (graphA == graphB) && (tzA == tzB)
-  _ == _ = False
+  (AppState ctxt) == (AppState ctxt') = ctxt == ctxt'
+  _               == _                = False
 
-graphData :: AppState -> Maybe (Graph Time Value)
-graphData (AppState graph _) = Just graph
-graphData _                  = Nothing
-
-timezone :: AppState -> Maybe TimeZone
-timezone (AppState _ tz) = Just tz
-timezone _               = Nothing
-
-failure :: AppState -> Maybe AppError
-failure (FailedAppState err) = Just err
-failure _                    = Nothing
 
 emptyState :: IO AppState
-emptyState = getCurrentTimeZone <&> AppState mempty
+emptyState = getCurrentTimeZone <&> AppState . MetricContext mempty
 
 data AppError = forall e. Exception e => AppError e
 
