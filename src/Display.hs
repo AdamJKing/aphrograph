@@ -6,8 +6,8 @@ import           Display.Widgets
 import           Display.Graph.Widget
 import qualified Brick.Widgets.Core            as Widget
 
-newtype AppErrorWidget = AppErrorWidget AppError
-newtype AppWidget = AppWidget (Either AppErrorWidget GraphDisplayWidget )
+newtype AppErrorWidget = AppErrorWidget AppError deriving Show
+newtype AppWidget = AppWidget (Either AppErrorWidget GraphDisplayWidget ) deriving Show
 
 instance CompileWidget AppErrorWidget where
     compile (AppErrorWidget err) = Widget.str (show err)

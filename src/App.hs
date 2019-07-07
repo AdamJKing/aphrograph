@@ -53,7 +53,8 @@ emptyState = getCurrentTimeZone <&> AppState . MetricContext mempty
 
 data AppError = forall e. Exception e => AppError e
 
-instance Exception AppError
+instance Exception AppError where
+  displayException (AppError err) = displayException err 
 
 instance TS.Show AppError where
   show = displayException

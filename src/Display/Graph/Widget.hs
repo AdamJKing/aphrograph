@@ -30,11 +30,11 @@ import           Display.Types
 import           Display.Labels
 
 
-data HorizontalAxisWidget = HorizontalAxis [Time] TimeZone
-newtype VerticalAxisWidget = VerticalAxis [Value]
-newtype GraphCanvasWidget = GraphCanvas (Graph Time Value)
+data HorizontalAxisWidget = HorizontalAxis [Time] TimeZone deriving Show
+newtype VerticalAxisWidget = VerticalAxis [Value] deriving Show
+newtype GraphCanvasWidget = GraphCanvas (Graph Time Value) deriving Show
 
-data GraphDisplayWidget = GraphDisplay GraphCanvasWidget VerticalAxisWidget HorizontalAxisWidget
+data GraphDisplayWidget = GraphDisplay GraphCanvasWidget VerticalAxisWidget HorizontalAxisWidget deriving Show
 
 graphDisplayWidget :: MetricContext -> GraphDisplayWidget
 graphDisplayWidget (MetricContext graphData timezone) = GraphDisplay
