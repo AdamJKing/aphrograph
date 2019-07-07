@@ -47,7 +47,7 @@ instance CompileWidget GraphDisplayWidget where
         let graphWidget          = compile graphCanvas
             horizontalAxisWidget = compile horizontalAxis'
             verticalAxisWidget   = compile verticalAxis'
-        in  arrange graphWidget horizontalAxisWidget verticalAxisWidget
+        in  arrange graphWidget verticalAxisWidget horizontalAxisWidget
       where
         arrange g v h = Brick.vBox
             [ Brick.vLimitPercent 90 $ Brick.hBox [Brick.hLimitPercent 8 v, g]
