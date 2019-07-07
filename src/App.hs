@@ -18,6 +18,7 @@ module App
   , App
   , runApp
   , AppLike
+  , hasFailed
   )
 where
 
@@ -43,6 +44,9 @@ instance Eq AppState where
   (AppState ctxt) == (AppState ctxt') = ctxt == ctxt'
   _               == _                = False
 
+hasFailed :: AppState -> Bool
+hasFailed (AppState       _) = False
+hasFailed (FailedAppState _) = True
 
 emptyState :: IO AppState
 emptyState = getCurrentTimeZone <&> AppState . MetricContext mempty
