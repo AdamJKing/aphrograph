@@ -15,7 +15,6 @@ import           Graphite.Types                as Graphite
 --- --- --- Arbitrary --- --- ---
 deriving instance Arbitrary Value
 deriving instance Arbitrary Seconds
-
 --- --- ---  Random   --- --- ---
 deriving instance Random Seconds
 deriving instance Random Elapsed

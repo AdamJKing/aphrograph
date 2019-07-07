@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -21,13 +22,15 @@ generateSteps (earliest, latest) =
     let step = asTime $ determineStepSize (earliest, latest)
     in  [earliest, earliest + step .. latest]
 
-data TimeStep = Day | Hour | FiveMinute | Minute deriving ( Show , Eq )
+data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond deriving ( Show , Eq , Generic )
 
 asTime :: TimeStep -> Time
-asTime Day        = 86400
-asTime Hour       = 3600
-asTime FiveMinute = 300
-asTime Minute     = 60
+asTime Day         = 86400
+asTime Hour        = 3600
+asTime FiveMinute  = 300
+asTime Minute      = 60
+asTime Second      = 1
+asTime Millisecond = 0.001
 
 determineStepSize :: (Time, Time) -> TimeStep
 determineStepSize (earliest, latest)
@@ -35,7 +38,8 @@ determineStepSize (earliest, latest)
     | deltaHours earliest latest > 1   = Hour
     | deltaMinutes earliest latest > 5 = FiveMinute
     | deltaMinutes earliest latest > 0 = Minute
-    | otherwise = error "unaccounted for scenario (not enough time delta)"
+    | deltaSeconds earliest latest > 0 = Second
+    | otherwise                        = Millisecond
 
 renderTimeLabel :: TimeStep -> TimeZone -> Time -> Text
 renderTimeLabel step timezone = fmt . renderFunc . toLocalTime timezone

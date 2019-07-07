@@ -11,7 +11,7 @@ import           CommonProperties
 import           Display.Labels
 import           Data.Decimal
 import           Data.Time.LocalTime
-
+import           Data.Fixed
 
 spec :: HS.Spec
 spec = describe "Labels" $ do
@@ -119,6 +119,15 @@ spec = describe "Labels" $ do
                                          , (90, "20/04")
                                          ]
 
+      describe "step sizes" $ do
+            prop "step size is deterministic"
+                  $ \step -> (asTime step - asTime step) === 0
+
+            prop "time steps can be composed of smaller steps" $ \step step' ->
+                  let stepTime  = asTime step
+                      stepTime' = asTime step'
+                  in  max stepTime stepTime' `mod'` min stepTime stepTime' === 0
+
       describe "determineStepSize" $ do
             prop
                         "when there are less than 5 minutes, 1 minute increments are used"
@@ -147,3 +156,16 @@ spec = describe "Labels" $ do
                   $ \days' start ->
                           let end = start + (days' * 86400)
                           in  (determineStepSize (start, end) === Day)
+
+            prop
+                        "when there are fewer seconds than a minute then seconds are used"
+                  . forAll (arbitrary `suchThat` (< Positive 60))
+                  $ \(Positive seconds) (Positive start) ->
+                          let end = start + seconds
+                          in  (determineStepSize (start, end) === Second)
+
+            prop "when there are fewer than one second it becomes milliseconds"
+                  . forAll (choose (0, 1))
+                  $ \milliseconds start ->
+                          let end = start + (milliseconds * 0.001)
+                          in  determineStepSize (start, end) === Millisecond

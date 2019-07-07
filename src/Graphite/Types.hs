@@ -61,6 +61,9 @@ deltaHours = deltaTime' 3600
 deltaMinutes :: Time -> Time -> Int
 deltaMinutes = deltaTime' 60
 
+deltaSeconds :: Time -> Time -> Int
+deltaSeconds = deltaTime' 1
+
 deltaTime' :: Time -> Time -> Time -> Int
 deltaTime' step earliest latest =
     if earliest == latest then 0 else floor $ (latest - earliest) / step

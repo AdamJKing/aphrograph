@@ -26,6 +26,7 @@ import           Test.QuickCheck
 import           Test.QuickCheck.Arbitrary.ADT
 import           Test.QuickCheck.Instances.Time ( )
 import           Network.HTTP.Req               ( http )
+import           Display.Labels
 
 instance Arbitrary DataPoint where
     arbitrary = genericArbitrary
@@ -40,6 +41,11 @@ instance (Ord x, Arbitrary x, Ord y, Arbitrary y) => Arbitrary (Graph x y) where
 
 data Range i = Range { lower :: i, higher :: i }
     deriving ( Show, Eq )
+
+deriving instance ToADTArbitrary TimeStep
+
+instance Arbitrary TimeStep where
+    arbitrary = genericArbitrary
 
 instance (Arbitrary i, Num i, Ord i) => Arbitrary (Range i) where
     arbitrary = do

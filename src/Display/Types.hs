@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs #-}
 
 module Display.Types where
@@ -11,20 +12,13 @@ data Dimensions i = Dimensions { width :: !i, height :: !i }
     deriving (Eq, Show, Functor)
 
 dim :: (i, i) -> Dimensions i
-dim (w, h) = Dimensions { width = w, height = h }
+dim (width, height) = Dimensions { .. }
 
-data DisplayError where
-    DisplayTooSmall ::(Show i) => Dimensions i -> DisplayError
-    ErrorDuringRender ::(Exception e) => e -> DisplayError
+data DisplayError = forall e. (Exception e) => ErrorDuringRender e
 
 instance Show DisplayError where
-    show (DisplayTooSmall dim') =
-        fmt
-            $   "Could not use display as it was too small: dim=("
-            +|| dim'
-            ||+ ")"
-    show (ErrorDuringRender e) =
-        fmt ("Error during rendering: err=" +|| e ||+ ".")
+    show (ErrorDuringRender underlying) =
+        fmt $ "Error during render: err=" +|| underlying ||+ "."
 
 instance Exception DisplayError where
 
