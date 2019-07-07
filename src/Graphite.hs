@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -27,7 +26,7 @@ parseMetricTimeSeries v = case JSON.parseEither parseDataPoints v of
   Right metrics -> return metrics
   Left  err     -> throwError (ParsingError (fromString err))
  where
-  unwrapArray arr = guard (not (V.null arr)) >> return (V.unsafeHead arr)
+  unwrapArray arr = guard (not $ V.null arr) >> return (V.head arr)
   parseDataPoints body = do
     unwrapped <- JSON.withArray "Array Wrapper" unwrapArray body
     JSON.withObject "Datapoints" (`JSON.parseField` "datapoints") unwrapped

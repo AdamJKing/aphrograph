@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ApplicativeDo #-}
+
 module GraphiteSpec where
 
 import           Test.Hspec                    as HS
@@ -10,7 +11,7 @@ import qualified Data.Aeson                    as JSON
 import           Data.Aeson                     ( (.=) )
 import           Test.QuickCheck
 import           Test.Hspec.QuickCheck
-
+import qualified Data.Vector                   as V
 
 spec :: HS.Spec
 spec = describe "Graphite" $ do
@@ -54,6 +55,18 @@ spec = describe "Graphite" $ do
                            , DataPoint 2 3000
                            ]
             Left err -> expectationFailure (show err)
+
+    it "handles instances where the returned metric list is empty"
+      $ let outcome = parseMetricTimeSeries $ JSON.Array $ fromList
+              [ JSON.object
+                  [ "datapoints" .= JSON.Array V.empty
+                  , "target" .= JSON.String "test"
+                  , "tags" .= JSON.object ["name" .= JSON.String "test"]
+                  ]
+              ]
+        in  case outcome of
+              Right x   -> x `shouldBe` []
+              Left  err -> expectationFailure (show err)
 
     it "decodes times from JSON entities" $ do
       JSON.decode "12345" `shouldBe` Just (12345 :: Time)

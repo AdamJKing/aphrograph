@@ -2,13 +2,6 @@
 
 ## TODO List
 
-* Handle Graphite errors (5**) more gracefully
-* Handle potential empty list in graphite response
-* improve graphite tests
-* investigate replacing 'Hourglass' with 'time'
-* remove unsafe exceptions from bounds calls in graph
-* Replace 'time' labels with localised time
-* Remove temporary Testable Maybe typeclass
 * Expand scale to Seconds and Milliseconds
 * Remove magic numbers (ie, 86400, 3600, etc)
 * Remove MonadFail for App
