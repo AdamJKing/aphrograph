@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -15,7 +16,7 @@ module App
   , AppComponent(..)
   , emptyState
   , AppError(..)
-  , App
+  , AppT
   , runApp
   , AppLike
   , hasFailed
@@ -30,7 +31,7 @@ import           Network.HTTP.Req              as Req
 import           Graphite.Types
 import           Graphite
 import           Control.Monad.Log
-import           Text.Show                     as TS
+import qualified Text.Show                     as TS
 import           Control.Lens.Getter            ( view )
 
 
@@ -64,25 +65,29 @@ data AppComponent = GraphView
 
 class ( MonadError AppError m , MonadReader App.Args m , MonadLog Text m , MonadGraphite m) => AppLike m
 
-instance AppLike (App AppError)
-
-newtype App e a =
-    App { _unApp :: (ExceptT e (ReaderT App.Args (LoggingT Text IO))) a
-        }
+newtype AppT e m a =
+    AppT { _unApp :: (ExceptT e (ReaderT App.Args (LoggingT Text m))) a }
     deriving ( Functor, Applicative, Monad, MonadLog Text, MonadReader App.Args
              , MonadIO, MonadError e)
 
-adaptError :: App e a -> (e -> e') -> App e' a
-adaptError (App op) f = App (f `withExceptT` op)
+instance MonadIO m => AppLike (AppT AppError m)
 
-runApp
-  :: Handler IO Text -> App.Args -> App AppError a -> IO (Either AppError a)
-runApp logger args =
-  (`runLoggingT` logger) . usingReaderT args . runExceptT . _unApp
+instance MonadTrans ( AppT e ) where
+  lift = AppT . lift . lift . lift
 
-instance MonadHttp (App GraphiteError) where
+adaptError :: Functor m => AppT e m a -> (e -> e') -> AppT e' m a
+adaptError (AppT op) f = AppT (f `withExceptT` op)
+
+runApp :: Monad m => Handler m Text -> App.Args -> AppT AppError m a -> m a
+runApp logger args = runApp' >=> \case
+  Right result -> return result
+  Left  err    -> error (show err)
+ where
+  runApp' = (`runLoggingT` logger) . usingReaderT args . runExceptT . _unApp
+
+instance MonadIO m => MonadHttp (AppT GraphiteError m) where
   handleHttpException err = throwError $ HttpError err
 
-instance MonadGraphite ( App AppError ) where
+instance MonadIO m => MonadGraphite ( AppT AppError m) where
   getMetrics request = view graphiteUrl
     >>= \url -> getMetricsHttp url request `adaptError` AppError

@@ -2,7 +2,6 @@
 
 ## TODO List
 
-* Reconcile difference between App "Failed State" and an error returned when running an "App" monad
 * Create app configuration parameter
 * Add error reason to "failure state"
 * Investigate weird label cropping when using day labels (-12d in from section)
