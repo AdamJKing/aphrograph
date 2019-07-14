@@ -52,8 +52,6 @@ graphiteUrlArgument =
     option httpParser
         $  long "graphite-url"
         <> help "The graphite host."
-        <> showDefault
-        <> value (GraphiteUrl $ http "localhost")
         <> metavar "GRAPHITE_HOST"
 
 httpParser :: ReadM GraphiteUrl
