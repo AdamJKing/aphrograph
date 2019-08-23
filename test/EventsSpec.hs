@@ -1,4 +1,7 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -10,38 +13,13 @@ where
 import           Test.Hspec                    as HS
 import           Brick.Types                   as Brick
 import           Test.QuickCheck
-import           Test.QuickCheck.Property
-import           Test.Hspec.QuickCheck
+import           Test.QuickCheck.Monadic
 import           ArbitraryInstances             ( )
-import           Control.Monad.Log
 import           Events
 import           App
-import           App.Args                      as App
-import           Control.Monad.Except    hiding ( runExceptT )
-import           Graphite.Types
-
+import           CommonProperties
 
 data DummyComponent = DummyComponent deriving (Eq, Show)
-
-newtype TestIO a = TestIO (ReaderT App.Args (DiscardLoggingT Text (ExceptT AppError IO )) a)
-    deriving (Functor, Applicative, Monad,  MonadError AppError
-      , MonadReader App.Args
-      , MonadLog Text , AppLike, MonadIO)
-
-instance MonadGraphite TestIO where
-    getMetrics _ = return []
-
-arbitraryTestIO :: (Arbitrary a) => TestIO a
-arbitraryTestIO = liftIO $ generate arbitrary
-
-instance (Testable t) => Testable ( TestIO t ) where
-    property (TestIO t) = idempotentIOProperty $ do
-        args   <- generate arbitrary
-        result <- runExceptT $ discardLogging $ usingReaderT args t
-        return $ case result of
-            Right x   -> property x
-            Left  err -> counterexample ("Unexpected error: " ++ show err)
-                                        (property failed)
 
 mouseDown :: Gen (BrickEvent DummyComponent e)
 mouseDown = do
@@ -57,19 +35,18 @@ mouseUp = do
 
 spec :: HS.Spec
 spec = describe "Events" $ do
-    prop "ignores misc. events that the application doesn't use"
-        . forAll (oneof [mouseDown, mouseUp])
-        $ \event -> do
-              initialState <- arbitraryTestIO
-              outcome      <- appEventHandler event initialState
-              return (outcome === Continue initialState)
+    appProp "ignores misc. events that the application doesn't use" $ do
+        event     <- pick (oneof [mouseDown, mouseUp])
+        outcome   <- run (appEventHandler event)
+        testState <- run ask
+        return (outcome `shouldBe` Continue (Active testState))
 
-    prop "updates the app state from graphite when requested (UpdateEvent)" $ do
-        initialState <- arbitraryTestIO
-        outcome <- appEventHandler (Brick.AppEvent UpdateEvent) initialState
-        return (outcome =/= Continue initialState)
+    appProp "updates the app state from graphite when requested (UpdateEvent)"
+        $ do
+              testState <- run ask
+              outcome   <- run (appEventHandler (Brick.AppEvent UpdateEvent))
+              return (outcome `shouldNotBe` Update (Active testState))
 
-    prop "ends the event loop when an Exit Key is pressed" $ do
-        initialState <- arbitraryTestIO
-        outcome      <- appEventHandler (Brick.VtyEvent ExitKey) initialState
+    appProp "ends the event loop when an Exit Key is pressed" $ do
+        outcome <- run (appEventHandler (Brick.VtyEvent ExitKey))
         return (outcome === Stop)

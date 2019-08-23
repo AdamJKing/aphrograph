@@ -22,7 +22,8 @@ generateSteps (earliest, latest) =
     let step = asTime $ determineStepSize (earliest, latest)
     in  [earliest, earliest + step .. latest]
 
-data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond deriving ( Show , Eq , Generic )
+data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond
+  deriving ( Show , Eq , Generic, Enum )
 
 asTime :: TimeStep -> Time
 asTime Day         = 86400

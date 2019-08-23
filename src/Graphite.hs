@@ -1,3 +1,4 @@
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -8,40 +9,50 @@
 
 module Graphite where
 
-import           Control.Monad.Except    hiding ( runExceptT )
 import           Data.Aeson                    as JSON
-import           Data.Aeson.Types              as JSON
-import qualified Data.Vector                   as V
 import           Graphite.Types
 import           Network.HTTP.Req              as Req
-
+import           Control.Monad.Log
 
 asQueryParams :: GraphiteRequest -> Req.Option s
 asQueryParams RenderRequest {..} = mconcat
-  ["target" =: target, "from" =: from, "to" =: to, "format" =: ("json" :: Text)]
+  [ "target" =: _target
+  , "from" =: _from
+  , "to" =: _to
+  , "format" =: ("json" :: Text)
+  ]
 
-parseMetricTimeSeries
-  :: MonadError GraphiteError m => JSON.Value -> m [DataPoint]
-parseMetricTimeSeries v = case JSON.parseEither parseDataPoints v of
-  Right metrics -> return metrics
-  Left  err     -> throwError (ParsingError (fromString err))
- where
-  unwrapArray arr = guard (not $ V.null arr) >> return (V.head arr)
-  parseDataPoints body = do
-    unwrapped <- JSON.withArray "Array Wrapper" unwrapArray body
-    JSON.withObject "Datapoints" (`JSON.parseField` "datapoints") unwrapped
+listMetricsHttp :: MonadHttp m => GraphiteUrl -> m [Metric]
+listMetricsHttp (GraphiteUrl url) = makeRequest $ url /: "metrics/index.json"
 
-getMetricsHttp
-  :: (MonadHttp m, MonadError GraphiteError m)
-  => GraphiteUrl
-  -> GraphiteRequest
-  -> m [DataPoint]
+getMetricsHttp :: MonadHttp m => GraphiteUrl -> GraphiteRequest -> m [DataPoint]
 getMetricsHttp (GraphiteUrl url) renderRequest =
   let parameters = asQueryParams renderRequest
       renderUrl  = url /: "render"
-  in  makeRequest renderUrl parameters >>= parseMetricTimeSeries
+  in  datapoints <$> makeRequest' renderUrl parameters
 
-makeRequest :: (MonadHttp m, JSON.FromJSON a) => Url s -> Req.Option s -> m a
-makeRequest url params = do
+makeRequest :: (MonadHttp m, JSON.FromJSON a) => Url s -> m a
+makeRequest url = do
+  resp <- req GET url NoReqBody jsonResponse mempty
+  return (responseBody resp)
+
+makeRequest' :: (MonadHttp m, JSON.FromJSON a) => Url s -> Req.Option s -> m a
+makeRequest' url params = do
   resp <- req GET url NoReqBody jsonResponse params
   return (responseBody resp)
+
+instance MonadIO m => MonadGraphite (ReaderT GraphiteUrl m) where
+  listMetrics = ask >>= runReq defaultHttpConfig . listMetricsHttp
+
+  getMetrics request =
+    ask >>= \url -> runReq defaultHttpConfig (getMetricsHttp url request)
+
+instance (IsString msg,  MonadGraphite m) => MonadGraphite (LoggingT msg m) where
+  listMetrics = logMessage "Listing available metrics" >> lift listMetrics
+
+  getMetrics request =
+    logMessage "Requesting metrics" >> lift (getMetrics request)
+
+instance MonadGraphite m => MonadGraphite (ReaderT r m) where
+  listMetrics = lift listMetrics
+  getMetrics request = lift (getMetrics request)

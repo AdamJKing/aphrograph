@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -7,7 +9,6 @@ module Display.Graph.Widget where
 
 import           Display.Graph                 as G
 import           Display.Projection.Scalable
-import           App
 import qualified Graphics.Vty                  as Vty
 import           Graphics.Vty                   ( horizJoin
                                                 , vertJoin
@@ -23,43 +24,45 @@ import qualified Data.Text                     as T
 import qualified Data.Text.Lazy                as LT
 import           Graphite.Types
 import           Brick.Types                   as Brick
-import           Brick.Widgets.Core            as Brick
+import           Brick.Widgets.Core            as W
 import           Data.Time.LocalTime
 import           Display.Widgets
 import           Display.Types
 import           Display.Labels
 
-
 data HorizontalAxisWidget = HorizontalAxis [Time] TimeZone deriving Show
 newtype VerticalAxisWidget = VerticalAxis [Value] deriving Show
 newtype GraphCanvasWidget = GraphCanvas (Graph Time Value) deriving Show
 
-data GraphDisplayWidget = GraphDisplay GraphCanvasWidget VerticalAxisWidget HorizontalAxisWidget deriving Show
+data GraphDisplayWidget = GraphDisplay GraphCanvasWidget VerticalAxisWidget HorizontalAxisWidget | NoDataDisplayWidget deriving Show
 
-graphDisplayWidget :: MetricContext -> GraphDisplayWidget
-graphDisplayWidget (MetricContext graphData timezone) = GraphDisplay
-    (GraphCanvas graphData)
-    (VerticalAxis (verticalAxis graphData))
-    (HorizontalAxis (horizontalAxis graphData) timezone)
+graphDisplayWidget :: Graph Time Value -> TimeZone -> GraphDisplayWidget
+graphDisplayWidget graph timezone = if G.null graph
+    then NoDataDisplayWidget
+    else GraphDisplay (GraphCanvas graph)
+                      (VerticalAxis (verticalAxis graph))
+                      (HorizontalAxis (horizontalAxis graph) timezone)
 
-instance CompileWidget GraphDisplayWidget where
+instance CompileWidget n GraphDisplayWidget where
+    compile NoDataDisplayWidget = W.str "NoData"
     compile (GraphDisplay graphCanvas verticalAxis' horizontalAxis') =
         let graphWidget          = compile graphCanvas
             horizontalAxisWidget = compile horizontalAxis'
             verticalAxisWidget   = compile verticalAxis'
         in  arrange graphWidget verticalAxisWidget horizontalAxisWidget
       where
-        arrange g v h = Brick.vBox
-            [ Brick.vLimitPercent 90 $ Brick.hBox [Brick.hLimitPercent 8 v, g]
-            , Brick.hBox [Brick.hLimitPercent 8 cornerPiece, h]
+        arrange g v h = W.vBox
+            [ W.vLimitPercent 90 $ W.hBox [W.hLimitPercent 8 v, g]
+            , W.hBox [W.hLimitPercent 8 cornerPiece, h]
             ]
 
-instance CompileWidget GraphCanvasWidget where
-    compile (GraphCanvas graphData) = Widget
+instance CompileWidget n GraphCanvasWidget where
+    compile (GraphCanvas canvasData) = Widget
         { hSize  = Brick.Greedy
         , vSize  = Brick.Greedy
         , render = do
-                       image <- views heightAndWidthL (drawGraphImage graphData)
+                       image <- views heightAndWidthL
+                                      (drawGraphImage canvasData)
                        return (set imageL image emptyResult)
         }
 
@@ -91,7 +94,7 @@ drawGraphImage graph (width, height) = if G.null graph
 
 
 
-instance CompileWidget VerticalAxisWidget where
+instance CompileWidget n VerticalAxisWidget where
     compile (VerticalAxis values) = Widget { hSize  = Brick.Greedy
                                            , vSize  = Brick.Greedy
                                            , render = renderImg
@@ -116,17 +119,17 @@ drawVerticalAxisImage height values =
     buildRow width = maybe (drawDefaultLine width) (drawLabelledLine width)
 
 
-instance CompileWidget HorizontalAxisWidget where
-    compile (HorizontalAxis values timezone) = Widget { hSize  = Brick.Greedy
-                                                      , vSize  = Brick.Greedy
-                                                      , render = renderImg
-                                                      }
+instance CompileWidget n HorizontalAxisWidget where
+    compile (HorizontalAxis values tz) = Widget { hSize  = Brick.Greedy
+                                                , vSize  = Brick.Greedy
+                                                , render = renderImg
+                                                }
 
       where
         renderImg :: RenderM n (Result n)
         renderImg = do
             Dimensions {..} <- views heightAndWidthL dim
-            let img       = drawHorizontalAxisImage timezone width values
+            let img       = drawHorizontalAxisImage tz width values
             let paddedImg = Vty.pad 0 0 0 (height - Vty.imageHeight img) img
             return (set imageL paddedImg emptyResult)
 

@@ -5,13 +5,11 @@ module GraphiteSpec where
 
 import           Test.Hspec                    as HS
 import           ArbitraryInstances             ( )
-import           Graphite
 import           Graphite.Types
 import qualified Data.Aeson                    as JSON
 import           Data.Aeson                     ( (.=) )
 import           Test.QuickCheck
 import           Test.Hspec.QuickCheck
-import qualified Data.Vector                   as V
 
 spec :: HS.Spec
 spec = describe "Graphite" $ do
@@ -30,7 +28,7 @@ spec = describe "Graphite" $ do
 
   describe "JSON Parsing" $ do
     it "decodes metric responses"
-      $ let outcome = parseMetricTimeSeries $ JSON.Array $ fromList
+      $ let json = JSON.Array $ fromList
               [ JSON.object
                   [ "datapoints"
                     .= (JSON.Array $ fromList
@@ -46,27 +44,20 @@ spec = describe "Graphite" $ do
                   , "tags" .= JSON.object ["name" .= JSON.String "test"]
                   ]
               ]
-        in
-          case outcome of
-            Right x ->
-              x
-                `shouldBe` [ DataPoint 0 1000
-                           , DataPoint 1 2000
-                           , DataPoint 2 3000
-                           ]
-            Left err -> expectationFailure (show err)
-
-    it "handles instances where the returned metric list is empty"
-      $ let outcome = parseMetricTimeSeries $ JSON.Array $ fromList
-              [ JSON.object
-                  [ "datapoints" .= JSON.Array V.empty
-                  , "target" .= JSON.String "test"
-                  , "tags" .= JSON.object ["name" .= JSON.String "test"]
-                  ]
-              ]
-        in  case outcome of
-              Right x   -> x `shouldBe` []
-              Left  err -> expectationFailure (show err)
+        in  case JSON.fromJSON json of
+              JSON.Success [MetricsResponse {..}] -> do
+                target `shouldBe` "test"
+                tags `shouldBe` one ("name", "test")
+                datapoints
+                  `shouldMatchList` [ DataPoint 0 1000
+                                    , DataPoint 1 2000
+                                    , DataPoint 2 3000
+                                    ]
+              JSON.Success other ->
+                expectationFailure
+                  $  "Parser returned an unexpected value: "
+                  ++ show other
+              JSON.Error err -> expectationFailure err
 
     it "decodes times from JSON entities" $ do
       JSON.decode "12345" `shouldBe` Just (12345 :: Time)

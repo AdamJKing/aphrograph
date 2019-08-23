@@ -1,21 +1,38 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Display where
 
 import           App
-import           Display.Widgets
 import           Display.Graph.Widget
+import           Display.Widgets
 import qualified Brick.Widgets.Core            as Widget
+import           Data.Vector.Lens               ( vector )
+import           Control.Lens
 
 newtype AppErrorWidget = AppErrorWidget AppError deriving Show
-newtype AppWidget = AppWidget (Either AppErrorWidget GraphDisplayWidget ) deriving Show
 
-instance CompileWidget AppErrorWidget where
+data AppWidget = DefaultDisplay {
+    dataDisplay :: GraphDisplayWidget,
+    metricBrowser :: Maybe MetricsBrowserWidget
+  } | ErrorDisplay AppErrorWidget
+
+instance CompileWidget n AppErrorWidget where
     compile (AppErrorWidget err) = Widget.str (show err)
 
-instance CompileWidget AppWidget where
-    compile (AppWidget (Left  errState    )) = compile errState
-    compile (AppWidget (Right defaultState)) = compile defaultState
+instance CompileLayeredWidget AppComponent AppWidget where
+    compileLayered (ErrorDisplay errState             ) = [compile errState]
+    compileLayered (DefaultDisplay dataDisplay Nothing) = [compile dataDisplay]
+    compileLayered (DefaultDisplay dataDisplay (Just mBrowser)) =
+        [compile mBrowser, compile dataDisplay]
 
 constructDom :: AppState -> AppWidget
-constructDom (AppState       ctxt) = AppWidget (Right (graphDisplayWidget ctxt))
-constructDom (FailedAppState err ) = AppWidget (Left (AppErrorWidget err))
+constructDom (Failed err         ) = ErrorDisplay (AppErrorWidget err)
+constructDom (Active currentState) = DefaultDisplay
+    { dataDisplay   = graphDisplayWidget (currentState ^. graphData)
+                                         (currentState ^. timezone)
+    , metricBrowser = currentState ^? toMetricBrowser
+    }
+    where toMetricBrowser = metricsView . _Just . vector . to MetricsBrowser
+
+

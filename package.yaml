@@ -12,7 +12,8 @@ tests:
     - quickcheck-arbitrary-adt
     - random
     - quickcheck-instances
-ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS
+
+ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS -fno-print-expanded-synonyms
 dependencies:
 - aeson
 - array
@@ -25,6 +26,7 @@ dependencies:
 - fmt >= 0.6.1.1
 - hourglass
 - http-api-data
+- http-client
 - interpolate
 - lens
 - lens-aeson
@@ -38,6 +40,7 @@ dependencies:
 - relude
 - req
 - scientific
+- singletons
 - text
 - time
 - transformers

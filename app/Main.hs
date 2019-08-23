@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -6,20 +7,21 @@ module Main where
 
 import           App
 import qualified App.Args                      as App
+import           Control.Lens
 import           Brick.AttrMap
+import           Brick.Util                     ( on )
+import           Prelude                 hiding ( on )
 import qualified Brick.BChan                   as Brick
 import qualified Brick.Types                   as Brick
-import           Brick.Main                    as Brick
+import qualified Brick.Main                    as Brick
 import           Display
 import           Control.Concurrent             ( forkIO
                                                 , threadDelay
                                                 )
 import           Control.Monad                  ( void )
 import           Control.Monad.Log
-import           Control.Monad.Except
 import           Display.Widgets
 import qualified Data.Text.Prettyprint.Doc     as Doc
-import           Data.Time.LocalTime
 import           Events
 import qualified Graphics.Vty                  as Vty
 import           Graphics.Vty.Attributes
@@ -33,53 +35,44 @@ main = do
         _ <- forkIO . forever $ do
           threadDelay 30000000
           Brick.writeBChan eventQueue UpdateEvent
-        executeApp eventQueue (liftIO . prettier handler) args
+        startState <- constructDefaultContext (prettier handler) args
+        initialVty <- getVty
+        Brick.customMain initialVty getVty (Just eventQueue) mkApp startState
   where prettier f = f . Doc.pretty . toString
 
-getVty :: IO Vty.Vty
-getVty = Vty.userConfig >>= Vty.mkVty
+getVty :: MonadIO m => m Vty.Vty
+getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
 
-executeApp
-  :: Brick.BChan AppEvent
-  -> Handler (Brick.EventM AppComponent) Text
-  -> App.Args
-  -> IO AppState
-executeApp eq handler args = do
-  initialVty <- getVty
-  startState <- emptyState
-  Brick.customMain initialVty getVty (Just eq) (mkApp handler args) startState
-
-mkApp
-  :: Handler (Brick.EventM AppComponent) Text
-  -> App.Args
-  -> Brick.App AppState AppEvent AppComponent
-mkApp logger args = Brick.App
-  { appDraw         = pure . compile . constructDom
+mkApp :: Brick.App AppState AppEvent AppComponent
+mkApp = Brick.App
+  { appDraw         = compileLayered . constructDom
   , appChooseCursor = Brick.neverShowCursor
-  , appHandleEvent  = \state' event ->
-                        runApp logger args (handleAppEvent state' event)
-  , appStartEvent   = runApp logger args . generateStartEvent
-  , appAttrMap      = \_ -> attrMap defAttr []
+  , appHandleEvent  = \state' event -> case state' of
+                        Active st  -> handleAppEvent st event
+                        Failed err -> Brick.halt (Failed err)
+  , appStartEvent   = \case
+                        Active st -> liftIO . runAppM st $ do
+                          newGraphData <- updateGraphData
+                          logMessage "Producing new state."
+                          return (Active (st & graphData .~ newGraphData))
+                        Failed err -> return (Failed err)
+  , appAttrMap      = \_ -> attrMap
+                        defAttr
+                        [ ("metric" <> "selected"  , black `on` blue)
+                        , ("metric" <> "unselected", blue `on` black)
+                        ]
   }
- where
-  generateStartEvent _ = (`catchError` return . FailedAppState) $ do
-    gd <- updateGraphData
-    tz <- liftIO getCurrentTimeZone
-    return (AppState $ MetricContext gd tz)
-
 
 handleAppEvent
-  :: AppState
+  :: ActiveState
   -> SystemEvent AppComponent
-  -> AppT AppError (Brick.EventM AppComponent) (Brick.Next AppState)
-handleAppEvent currentState event =
-  let outcome = appEventHandler event currentState
-  in  (lift . handleResult) =<< outcome
+  -> Brick.EventM AppComponent (Brick.Next AppState)
+handleAppEvent currentState event = handleResult
+  =<< liftIO (runAppM currentState (appEventHandler event))
 
  where
-  handleResult :: EventOutcome AppState -> Brick.EventM n (Brick.Next AppState)
   handleResult = \case
-    (Continue (FailedAppState err)) -> Brick.halt (FailedAppState err)
-    (Continue newState            ) -> Brick.continue newState
-    Stop                            -> Brick.halt currentState
-
+    (Continue (Failed err)) -> Brick.halt (Failed err)
+    (Continue sameState   ) -> Brick.continue sameState
+    (Update   newState    ) -> Brick.continue newState
+    Stop                    -> Brick.halt (Active currentState)

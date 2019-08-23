@@ -14,18 +14,27 @@ conf_debug:
 
 conf_forward:
   options_ghc:
-  - -XLambdaCase
-  - -XMultiWayIf
-  - -XGADTs
-  - -XPatternGuards
-  - -XViewPatterns
-  - -XRecursiveDo
-  - -XTupleSections
-  - -XExplicitForAll
-  - -XImplicitParams
-  - -XQuasiQuotes
-  - -XTemplateHaskell
   - -XBangPatterns
+  - -XDataKinds
+  - -XDeriveFunctor
+  - -XExplicitForAll
+  - -XFlexibleContexts
+  - -XFlexibleInstances
+  - -XGADTs
+  - -XGeneralizedNewtypeDeriving
+  - -XImplicitParams
+  - -XKindSignatures
+  - -XLambdaCase
+  - -XMultiParamTypeClasses
+  - -XMultiWayIf
+  - -XPatternGuards
+  - -XQuasiQuotes
+  - -XRankNTypes
+  - -XRecursiveDo
+  - -XScopedTypeVariables
+  - -XTemplateHaskell
+  - -XTupleSections
+  - -XViewPatterns
 
 conf_errorHandling:
   econf_ExactPrintFallback: ExactPrintFallbackModeInline

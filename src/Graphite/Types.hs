@@ -1,8 +1,10 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Graphite.Types where
@@ -16,22 +18,31 @@ import           Data.Time.Format
 import           Data.Time.LocalTime
 import           Web.HttpApiData
 import           Display.Projection.Scalable
-import           Text.Show                     as TS
 import           Network.HTTP.Req
+import           Network.HTTP.Client           as HTTP
+import           Data.Typeable
+import qualified Text.Show                     as TS
 
 newtype Time = Time { timestamp :: POSIXTime }
     deriving ( Show, Eq, Ord, Num, Real, Enum, Fractional, RealFrac, Scalable )
 
 data GraphiteRequest = RenderRequest {
-  from :: From, to :: Maybe To, target :: Target
+  _from :: From,
+  _to :: Maybe To,
+  _target :: Target
 }
+  deriving (Eq, Show, Generic)
 
-data GraphiteUrl = forall s. GraphiteUrl (Url s)
+data GraphiteUrl where
+    GraphiteUrl ::Typeable s => Url ( s :: Scheme ) -> GraphiteUrl
+
+instance Eq GraphiteUrl where
+    (GraphiteUrl url) == (GraphiteUrl url') = Just url == cast url'
 
 instance Show GraphiteUrl where
-    show (GraphiteUrl url) = TS.show url
+    show (GraphiteUrl url) = show url
 
-data GraphiteError = HttpError HttpException | ParsingError Text deriving Show
+data GraphiteError = HttpError HTTP.HttpException | ParsingError Text deriving Show
 
 instance Exception GraphiteError
 
@@ -98,7 +109,17 @@ instance JSON.FromJSON DataPoint where
         _              -> fail "Couldn't parse datapoint"
     parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
-newtype GraphiteResponse a = GraphiteResponse a
+newtype Metric = Metric Text
+  deriving (Show, Eq,  JSON.FromJSON, IsString)
 
-class MonadGraphite m where
+class Monad m => MonadGraphite m where
+  listMetrics :: m [Metric]
   getMetrics :: GraphiteRequest -> m [DataPoint]
+
+data MetricsResponse = MetricsResponse {
+    target :: Text,
+    tags :: Map Text Text,
+    datapoints :: [DataPoint]
+} deriving ( Show, Eq, Generic )
+
+instance JSON.FromJSON MetricsResponse

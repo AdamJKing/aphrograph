@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
@@ -9,9 +11,7 @@ import           ArbitraryInstances             ( )
 import           Test.Hspec                    as HS
 import           Prelude                 hiding ( null )
 import           Test.QuickCheck
-import           Graphite.Types                 ( time
-                                                , value
-                                                )
+import           Graphite.Types
 import qualified Data.Set                      as S
 import           Test.Hspec.QuickCheck
 import           Relude.Unsafe                 as Unsafe
@@ -24,8 +24,28 @@ genUniqueNonEmptyListSorted = do
     distinct <- arbitrary @(Set a) `suchThat` (not . S.null)
     return $ sort . toList $ distinct
 
+uniqueFstTupleList'
+    :: forall a b . (Ord a, Arbitrary a, Arbitrary b) => Gen (SortedList (a, b))
+uniqueFstTupleList' = do
+    distinct <- arbitrary @(Set a)
+    values   <- arbitrary @(InfiniteList b)
+    return . Sorted $ toList distinct `zip` getInfiniteList values
+
+
 spec :: HS.Spec
 spec = describe "Graph" $ do
+    describe "extractGraph" $ do
+        prop
+                "extracting a graph is equivalent to creating one from a list of points"
+            $ \(points :: [DataPoint]) ->
+                  Graph.mkGraph (Graph.extract <$> points)
+                      === (Graph.extractGraph points :: Graph Time Value)
+
+        prop "graph extracted from list has the same elements"
+            $ forAll uniqueFstTupleList'
+            $ \(Sorted (points :: [(Int, Int)])) ->
+                  points `shouldSatisfy` all (`member` Graph.mkGraph points)
+
     describe "Graphable (DataPoint)"
         . describe "extract"
         . prop "extracts graphable data from a type"

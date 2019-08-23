@@ -16,6 +16,7 @@ module Display.Graph
   , member
   , verticalAxis
   , horizontalAxis
+  , extractGraph
   , Display.Graph.null
   )
 where
@@ -29,7 +30,7 @@ import           Graphite.Types
 newtype Graph x y = Graph { _data :: M.Map x y }
   deriving (Show, Eq, Semigroup, Monoid)
 
-class Graphable n x y where
+class (Ord x, Ord y) => Graphable n x y where
   extract :: n -> (x, y)
 
 instance Graphable DataPoint Time Value where
@@ -49,6 +50,9 @@ boundsY (Graph g) = if M.null g
 
 mkGraph :: (Ord x, Ord y) => [(x, y)] -> Graph x y
 mkGraph = Graph . M.fromList . sortBy (compare `on` fst)
+
+extractGraph :: Graphable a x y => [a] -> Graph x y
+extractGraph = mkGraph . fmap extract
 
 assocs :: Graph x y -> [(x, y)]
 assocs = M.toList . _data

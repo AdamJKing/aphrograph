@@ -22,7 +22,7 @@ data Args =
     , _targetArg :: Text
     , _graphiteUrl :: GraphiteUrl
     , _debugMode :: Bool
-    }
+   } deriving (Show, Eq)
 
 makeLenses ''Args
 
