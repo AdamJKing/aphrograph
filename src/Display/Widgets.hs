@@ -24,13 +24,13 @@ data AppComponent = GraphView | MetricsBrowserComponent
 newtype MetricsBrowserWidget = MetricsBrowser (Vector Metric)
 
 instance CompileWidget AppComponent MetricsBrowserWidget where
-    compile (MetricsBrowser metrics) =
-        let hasFocus   = True
-            listHeight = 1
-        in  WL.renderList
-                (\active (Metric descriptor) -> withAttr
-                    ("metric" <> if active then "selected" else "unselcted")
-                    (BW.txt descriptor)
-                )
-                hasFocus
-                (WL.list MetricsBrowserComponent metrics listHeight)
+  compile (MetricsBrowser metrics) =
+    let hasFocus   = True
+        listHeight = 1
+    in  WL.renderList
+          (\active (Metric descriptor) -> withAttr
+            ("metric" <> if active then "selected" else "unselcted")
+            (BW.txt descriptor)
+          )
+          hasFocus
+          (WL.list MetricsBrowserComponent metrics listHeight)

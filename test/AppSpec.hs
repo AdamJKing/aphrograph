@@ -1,40 +1,38 @@
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE LambdaCase #-}
 
 module AppSpec where
 
-import           Test.Hspec                    as HS
+import           Test.Hspec                     ( Spec
+                                                , describe
+                                                )
 import           Test.Hspec.QuickCheck          ( prop )
 import           Test.QuickCheck
 import           Test.QuickCheck.Monadic
-import           Prelude                 hiding ( null )
 import           ArbitraryInstances             ( )
 import           App
-import           Network.HTTP.Req               ( handleHttpException
-                                                , HttpException
-                                                )
-import           Control.Monad.Error            ( catchError )
+import           Network.HTTP.Req
 import           CommonProperties
+import           Graphite.Types
 
-spec :: HS.Spec
-spec = describe "App" $ do
-    describe "MonadHttp"
-        $ appProp "captures all http exceptions as AppErrors"
+vanillaHttpException :: Gen HttpException
+vanillaHttpException = VanillaHttpException <$> arbitrary
+
+jsonParseException :: Gen HttpException
+jsonParseException = JsonHttpException <$> arbitrary
+
+spec :: Spec
+spec = describe "App" $ describe "MonadHttp" $ do
+    prop "captures all vanilla http exceptions as http errors"
+        . monadic runAppProperty
         $ do
-              err <- pick (arbitrary @HttpException)
-              run
-                  $ catchError (handleHttpException err)
-                  $ \(appError :: AppError) -> return True
+              err <- pick vanillaHttpException
+              handleHttpExceptionApp err `shouldThrow` \case
+                  AppGraphiteError (HttpError _) -> return True
+                  _                              -> return False
 
-        -- do
-        --       catchError (handleHttpException err) $ \_ -> fail "Expected exception."
-        --       assert True
-
-    describe "AppError" $ do
-        prop "displays the underlying exception" $ \(SomeException e) ->
-            displayException (AppError e) === displayException e
-
-        prop "show is the same as display exception"
-            $ \(err :: AppError) -> show err === displayException err
+    prop "captures all json parse exceptions as http errors" . monadic runAppProperty $ do
+        err <- pick jsonParseException
+        handleHttpExceptionApp err `shouldThrow` \case
+            AppGraphiteError (ParsingError _) -> return True
+            _ -> return False

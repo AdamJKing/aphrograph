@@ -1,8 +1,5 @@
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module EventsSpec
@@ -11,6 +8,7 @@ module EventsSpec
 where
 
 import           Test.Hspec                    as HS
+import           Test.Hspec.QuickCheck
 import           Brick.Types                   as Brick
 import           Test.QuickCheck
 import           Test.QuickCheck.Monadic
@@ -35,18 +33,26 @@ mouseUp = do
 
 spec :: HS.Spec
 spec = describe "Events" $ do
-    appProp "ignores misc. events that the application doesn't use" $ do
-        event     <- pick (oneof [mouseDown, mouseUp])
-        outcome   <- run (appEventHandler event)
-        testState <- run ask
-        return (outcome `shouldBe` Continue (Active testState))
-
-    appProp "updates the app state from graphite when requested (UpdateEvent)"
+    prop "ignores misc. events that the application doesn't use"
+        . monadic' @Property @(MockApp ActiveState)
         $ do
-              testState <- run ask
-              outcome   <- run (appEventHandler (Brick.AppEvent UpdateEvent))
-              return (outcome `shouldNotBe` Update (Active testState))
+              event                       <- pick (oneof [mouseDown, mouseUp])
+              (Continue (Active outcome)) <- run (appEventHandler event)
+              testState                   <- run ask
+              return $ testState === outcome
 
-    appProp "ends the event loop when an Exit Key is pressed" $ do
-        outcome <- run (appEventHandler (Brick.VtyEvent ExitKey))
-        return (outcome === Stop)
+    prop "updates the app state from graphite when requested (UpdateEvent)"
+        . monadic' @Property @(MockApp (EmptyState ActiveState))
+        $ do
+              (Empty    testState       ) <- run ask
+              (Continue (Active outcome)) <- run
+                  (appEventHandler (Brick.AppEvent UpdateEvent))
+              return $ testState === outcome
+
+    prop "ends the event loop when an Exit Key is pressed"
+        . monadic' @Property @(MockApp ActiveState)
+        $ do
+              outcome <- run (appEventHandler (Brick.VtyEvent ExitKey))
+              return . property $ case outcome of
+                  Stop -> True
+                  _    -> False

@@ -27,7 +27,6 @@ import           Network.HTTP.Req               ( http
                                                 , https
                                                 )
 import           Display.Labels
-import           Control.Exception
 import           App
 import qualified Network.HTTP.Req              as Req
 import qualified Network.HTTP.Client           as Http
@@ -41,21 +40,8 @@ instance Arbitrary ActiveState where
         let _logger = const pass
         return (ActiveState { .. })
 
-instance Arbitrary SomeException where
-    arbitrary = elements
-        [ SomeException Overflow
-        , SomeException AllocationLimitExceeded
-        , SomeException Deadlock
-        , SomeException BlockedIndefinitelyOnSTM
-        , SomeException BlockedIndefinitelyOnMVar
-        , SomeException NestedAtomically
-        , SomeException NonTermination
-        ]
-
-instance Arbitrary AppError where
-    arbitrary = do
-        (SomeException e) <- arbitrary
-        return (AppError e)
+deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
+deriving via (GenArbitrary AppError) instance Arbitrary AppError
 
 deriving via (GenArbitrary AppState) instance Arbitrary AppState
 

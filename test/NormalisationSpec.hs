@@ -7,7 +7,7 @@ import           Normalisation
 import           Test.QuickCheck
 import           Test.Hspec.QuickCheck
 import           Test.Hspec                    as HS
-import           CommonProperties
+import           CommonProperties        hiding ( shouldThrow )
 
 factor :: Gen Double
 factor = getPositive <$> arbitrary
@@ -42,18 +42,16 @@ spec = describe "normalise" $ do
               target <- range @Double
               v      <- choose target
               a      <- arbitrary
-              let
-                  outcome =
-                      evaluateNF (normalise (a, a) target v)
-                          `shouldThrow` anyErrorCall
+              let outcome =
+                      evaluateNF (normalise (a, a) target v) `shouldThrow` anyErrorCall
               return outcome
 
     prop
             "if the origin has no range, then there is an error because it's impossible to determine what it should be the in the target range"
         $ do
               (lowEnd, highEnd) <- range @Double
-              target <- range @Double
-              value <- arbitrary `suchThat` \n -> lowEnd > n || highEnd < n
+              target            <- range @Double
+              value             <- arbitrary `suchThat` \n -> lowEnd > n || highEnd < n
               let outcome =
                       evaluateNF (normalise (lowEnd, highEnd) target value)
                           `shouldThrow` anyErrorCall

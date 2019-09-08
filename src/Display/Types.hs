@@ -17,8 +17,8 @@ dim (width, height) = Dimensions { .. }
 data DisplayError = forall e. (Exception e) => ErrorDuringRender e
 
 instance Show DisplayError where
-    show (ErrorDuringRender underlying) =
-        fmt $ "Error during render: err=" +|| underlying ||+ "."
+  show (ErrorDuringRender underlying) =
+    fmt $ "Error during render: err=" +|| underlying ||+ "."
 
 instance Exception DisplayError where
 

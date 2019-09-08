@@ -11,7 +11,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module App
-  ( App
+  ( AppM
+  , App
   , AppLike
   , AppError(..)
   , AppState(..)
@@ -23,6 +24,7 @@ module App
   , graphData
   , timezone
   , constructDefaultContext
+  , handleHttpExceptionApp
   )
 where
 
@@ -35,21 +37,12 @@ import           Display.Graph
 import           Network.HTTP.Req              as Req
 import           Graphite.Types
 import           Graphite
-import qualified Text.Show                     as TS
 import           Control.Lens.Getter            ( view )
 import           Control.Monad.Log             as Log
 import           Text.Show.Functions            ( )
 
-data AppError = forall e. Exception e => AppError e
-
-instance Exception AppError where
-  displayException (AppError err) = displayException err
-
-instance TS.Show AppError where
-  show = displayException
-
-instance Eq AppError where
-  _ == _ = False
+newtype AppError = AppGraphiteError GraphiteError
+  deriving ( Show, Exception , Generic )
 
 newtype AppM s m a = AppM {
   _runApp :: ReaderT s (ExceptT AppError m) a
@@ -60,19 +53,22 @@ newtype AppM s m a = AppM {
   , MonadIO
   , MonadError AppError
   , MonadReader s
+  , MonadFail
   )
+
+instance MonadTrans ( AppM s ) where
+  lift = AppM . lift . lift
 
 type App = AppM ActiveState IO
 
 type AppLogger = MonadLog Fmt.Builder
 
-type AppLike m
-  = (MonadReader ActiveState m, MonadGraphite m, MonadLog Fmt.Builder m)
+type AppLike m = (MonadReader ActiveState m, MonadGraphite m, MonadLog Fmt.Builder m)
 
 data ActiveState = ActiveState {
      _metricsView :: Maybe [Metric]
    , _graphData :: Graph Time Value
-   , _timezone ::  TimeZone
+   , _timezone ::  Maybe TimeZone
    , _appArgs :: App.Args
    , _logger :: Log.Handler App Text
 } deriving ( Show , Generic )
@@ -80,7 +76,7 @@ data ActiveState = ActiveState {
 
 makeLenses ''ActiveState
 
-runAppM :: ActiveState -> App a -> IO a
+runAppM :: Functor m => s -> AppM s m a -> m a
 runAppM activeState = unsafeHandleError . usingReaderT activeState . _runApp
  where
   unsafeHandleError err = runExceptT err <&> \case
@@ -92,13 +88,13 @@ constructDefaultContext handler args = do
   timezone' <- liftIO getCurrentTimeZone
   return . Active $ ActiveState { _metricsView = Nothing
                                 , _graphData   = mempty
-                                , _timezone    = timezone'
+                                , _timezone    = Just timezone'
                                 , _appArgs     = args
                                 , _logger      = liftIO . handler
                                 }
 
 data AppState = Active ActiveState | Failed AppError
-  deriving ( Generic, Show, Eq )
+  deriving ( Generic, Show )
 
 instance MonadLog Fmt.Builder App where
   logMessageFree addLog =
@@ -107,10 +103,13 @@ instance MonadLog Fmt.Builder App where
           logf <- view logger
           forM_ logs logf
 
+handleHttpExceptionApp :: MonadError AppError m => HttpException -> m a
+handleHttpExceptionApp = throwError . AppGraphiteError . \case
+  (JsonHttpException    reason) -> ParsingError (fromString reason)
+  (VanillaHttpException reason) -> HttpError reason
+
 instance MonadHttp App where
-  handleHttpException = throwError . AppError . \case
-    (JsonHttpException    reason) -> ParsingError (fromString reason)
-    (VanillaHttpException reason) -> HttpError reason
+  handleHttpException = handleHttpExceptionApp
 
 instance MonadGraphite App where
   listMetrics = view (appArgs . graphiteUrl) >>= listMetricsHttp

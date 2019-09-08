@@ -14,34 +14,35 @@ conf_debug:
 
 conf_forward:
   options_ghc:
-  - -XBangPatterns
-  - -XDataKinds
-  - -XDeriveFunctor
-  - -XExplicitForAll
-  - -XFlexibleContexts
-  - -XFlexibleInstances
-  - -XGADTs
-  - -XGeneralizedNewtypeDeriving
-  - -XImplicitParams
-  - -XKindSignatures
-  - -XLambdaCase
-  - -XMultiParamTypeClasses
-  - -XMultiWayIf
-  - -XPatternGuards
-  - -XQuasiQuotes
-  - -XRankNTypes
-  - -XRecursiveDo
-  - -XScopedTypeVariables
-  - -XTemplateHaskell
-  - -XTupleSections
-  - -XViewPatterns
+    - -XBangPatterns
+    - -XDataKinds
+    - -XDeriveFunctor
+    - -XExplicitForAll
+    - -XFlexibleContexts
+    - -XFlexibleInstances
+    - -XGADTs
+    - -XGeneralizedNewtypeDeriving
+    - -XImplicitParams
+    - -XKindSignatures
+    - -XLambdaCase
+    - -XMultiParamTypeClasses
+    - -XMultiWayIf
+    - -XPatternGuards
+    - -XPatternSynonyms
+    - -XQuasiQuotes
+    - -XRankNTypes
+    - -XRecursiveDo
+    - -XScopedTypeVariables
+    - -XTemplateHaskell
+    - -XTupleSections
+    - -XViewPatterns
 
 conf_errorHandling:
   econf_ExactPrintFallback: ExactPrintFallbackModeInline
   econf_Werror: false
   econf_omit_output_valid_check: false
   econf_produceOutputOnErrors: false
-  
+
 conf_preprocessor:
   ppconf_CPPMode: CPPModeAbort
   ppconf_hackAroundIncludes: false
@@ -61,9 +62,9 @@ conf_layout:
   lconfig_importAsColumn: 50
   lconfig_alignmentLimit: 30
   lconfig_indentListSpecial: true
-  lconfig_indentAmount: 4
+  lconfig_indentAmount: 2
   lconfig_alignmentBreakOnMultiline: true
-  lconfig_cols: 80
+  lconfig_cols: 90
   lconfig_indentPolicy: IndentPolicyFree
   lconfig_indentWhereSpecial: true
   lconfig_columnAlignMode:

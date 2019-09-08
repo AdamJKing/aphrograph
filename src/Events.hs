@@ -1,3 +1,7 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
@@ -30,15 +34,18 @@ data EventOutcome s = Update s | Continue s | Stop
 pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
-appEventHandler :: AppLike m => SystemEvent n -> m (EventOutcome AppState)
-appEventHandler (Brick.VtyEvent ExitKey) =
-    logMessage "Recieved stop; quitting." >> return Stop
+class EventHandler e s (m :: * -> *) where
+    handleEvent :: e -> m (EventOutcome s)
 
-appEventHandler (Brick.AppEvent UpdateEvent) = do
-    newGraphData <- updateGraphData
-    updatedState <- asks (graphData .~ newGraphData)
-    logMessage "Producing new state."
-    return (Continue $ Active updatedState)
+instance EventHandler (SystemEvent n) s (AppM s m) where
+    handleEvent (Brick.VtyEvent ExitKey) = 
+        logMessage "Recieved stop; quitting." >> return Stop
+
+    handleEvent (Brick.AppEvent UpdateEvent) = do
+        newGraphData <- updateGraphData
+        updatedState <- asks (graphData .~ newGraphData)
+        logMessage "Producing new state."
+        return (Continue $ Active updatedState)
 
 appEventHandler _ = reader (Continue . Active)
 
