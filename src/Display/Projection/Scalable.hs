@@ -14,15 +14,13 @@ class (Real b) => Scalable b where
     scale :: (Real a) => a -> (a, a) -> (b, b) -> b
 
 scale2Integral :: (Integral b, Real a) => a -> (a, a) -> (b, b) -> b
-scale2Integral v base target = round
-  $ normalise rationalBase rationalTarget (toRational v)
+scale2Integral v base target = round $ normalise rationalBase rationalTarget (toRational v)
  where
   rationalBase   = over each toRational base
   rationalTarget = over each toRational target
 
 scale2Fractional :: (Real a, Real b, Fractional b) => a -> (a, a) -> (b, b) -> b
-scale2Fractional v base target = fromRational
-  $ normalise rationalBase rationalTarget (toRational v)
+scale2Fractional v base target = fromRational $ normalise rationalBase rationalTarget (toRational v)
  where
   rationalBase   = over each toRational base
   rationalTarget = over each toRational target

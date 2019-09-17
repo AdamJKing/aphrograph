@@ -79,8 +79,7 @@ deltaSeconds :: Time -> Time -> Int
 deltaSeconds = deltaTime' 1
 
 deltaTime' :: Time -> Time -> Time -> Int
-deltaTime' step earliest latest =
-  if earliest == latest then 0 else floor $ (latest - earliest) / step
+deltaTime' step earliest latest = if earliest == latest then 0 else floor $ (latest - earliest) / step
 
 newtype Value = Value Decimal
     deriving newtype ( Show, Eq, Ord, Num, Fractional, Real, RealFrac, Scalable )

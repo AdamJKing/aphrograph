@@ -23,16 +23,14 @@ jsonParseException = JsonHttpException <$> arbitrary
 
 spec :: Spec
 spec = describe "App" $ describe "MonadHttp" $ do
-    prop "captures all vanilla http exceptions as http errors"
-        . monadic runAppProperty
-        $ do
-              err <- pick vanillaHttpException
-              handleHttpExceptionApp err `shouldThrow` \case
-                  AppGraphiteError (HttpError _) -> return True
-                  _                              -> return False
+  prop "captures all vanilla http exceptions as http errors" . monadic runAppProperty $ do
+    err <- pick vanillaHttpException
+    handleHttpExceptionApp err `shouldThrow` \case
+      AppGraphiteError (HttpError _) -> return True
+      _                              -> return False
 
-    prop "captures all json parse exceptions as http errors" . monadic runAppProperty $ do
-        err <- pick jsonParseException
-        handleHttpExceptionApp err `shouldThrow` \case
-            AppGraphiteError (ParsingError _) -> return True
-            _ -> return False
+  prop "captures all json parse exceptions as http errors" . monadic runAppProperty $ do
+    err <- pick jsonParseException
+    handleHttpExceptionApp err `shouldThrow` \case
+      AppGraphiteError (ParsingError _) -> return True
+      _ -> return False

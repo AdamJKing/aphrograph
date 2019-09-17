@@ -28,16 +28,14 @@ yBounds = CanvasUpdate . ReaderT $ \canvas -> do
   return (0, h)
 
 readPixel :: (Int, Int) -> CanvasUpdate s Char
-readPixel point =
-  CanvasUpdate . ReaderT $ \(Canvas underlying) -> readArray underlying point
+readPixel point = CanvasUpdate . ReaderT $ \(Canvas underlying) -> readArray underlying point
 
 
 newCanvas :: Dimensions Int -> ST s (Canvas s)
 newCanvas Dimensions {..} = Canvas <$> newArray ((0, 0), (width, height)) ' '
 
 paintPoint :: (Int, Int) -> CanvasUpdate s ()
-paintPoint p =
-  CanvasUpdate . ReaderT $ \(Canvas underlying) -> writeArray underlying p 'X'
+paintPoint p = CanvasUpdate . ReaderT $ \(Canvas underlying) -> writeArray underlying p 'X'
 
 renderToImage :: CanvasUpdate s Vty.Image
 renderToImage = do

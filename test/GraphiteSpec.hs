@@ -15,16 +15,13 @@ spec :: HS.Spec
 spec = describe "Graphite" $ do
   describe "Time" . describe "Time deltas" $ do
     prop "delta days" $ \(Positive (Small n)) earliest ->
-      let latest = earliest + (fromIntegral n * 86400)
-      in  (deltaDays earliest latest === fromIntegral n)
+      let latest = earliest + (fromIntegral n * 86400) in (deltaDays earliest latest === fromIntegral n)
 
     prop "delta hours" $ \(Positive (Small n)) earliest ->
-      let latest = earliest + (fromIntegral n * 3600)
-      in  (deltaHours earliest latest === fromIntegral n)
+      let latest = earliest + (fromIntegral n * 3600) in (deltaHours earliest latest === fromIntegral n)
 
     prop "delta minutes" $ \(Positive (Small n)) earliest ->
-      let latest = earliest + (fromIntegral n * 60)
-      in  (deltaMinutes earliest latest === fromIntegral n)
+      let latest = earliest + (fromIntegral n * 60) in (deltaMinutes earliest latest === fromIntegral n)
 
   describe "JSON Parsing" $ do
     it "decodes metric responses"
@@ -48,16 +45,9 @@ spec = describe "Graphite" $ do
               JSON.Success [MetricsResponse {..}] -> do
                 target `shouldBe` "test"
                 tags `shouldBe` one ("name", "test")
-                datapoints
-                  `shouldMatchList` [ DataPoint 0 1000
-                                    , DataPoint 1 2000
-                                    , DataPoint 2 3000
-                                    ]
-              JSON.Success other ->
-                expectationFailure
-                  $  "Parser returned an unexpected value: "
-                  ++ show other
-              JSON.Error err -> expectationFailure err
+                datapoints `shouldMatchList` [DataPoint 0 1000, DataPoint 1 2000, DataPoint 2 3000]
+              JSON.Success other -> expectationFailure $ "Parser returned an unexpected value: " ++ show other
+              JSON.Error   err   -> expectationFailure err
 
     it "decodes times from JSON entities" $ do
       JSON.decode "12345" `shouldBe` Just (12345 :: Time)
@@ -69,12 +59,9 @@ spec = describe "Graphite" $ do
       JSON.decode "gibberish" `shouldBe` (Nothing :: Maybe Value)
 
     it "decodes data-points from JSON entities" $ do
-      JSON.decode "[ 0.555, 155005500 ]"
-        `shouldBe` Just (DataPoint 0.555 155005500)
+      JSON.decode "[ 0.555, 155005500 ]" `shouldBe` Just (DataPoint 0.555 155005500)
       JSON.decode "[ 0.555 ]" `shouldBe` (Nothing :: Maybe DataPoint)
       JSON.decode "[ 0.555 ]" `shouldBe` (Nothing :: Maybe DataPoint)
       JSON.decode "[ ]" `shouldBe` (Nothing :: Maybe DataPoint)
 
-    it "treats null values as zero"
-      $          JSON.decode "[ null, 155005500 ]"
-      `shouldBe` Just (DataPoint 0.0 155005500)
+    it "treats null values as zero" $ JSON.decode "[ null, 155005500 ]" `shouldBe` Just (DataPoint 0.0 155005500)

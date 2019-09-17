@@ -51,10 +51,8 @@ instance CompileWidget n GraphDisplayWidget where
         verticalAxisWidget   = compile verticalAxis'
     in  arrange graphWidget verticalAxisWidget horizontalAxisWidget
    where
-    arrange g v h = W.vBox
-      [ W.vLimitPercent 90 $ W.hBox [W.hLimitPercent 8 v, g]
-      , W.hBox [W.hLimitPercent 8 cornerPiece, h]
-      ]
+    arrange g v h =
+      W.vBox [W.vLimitPercent 90 $ W.hBox [W.hLimitPercent 8 v, g], W.hBox [W.hLimitPercent 8 cornerPiece, h]]
 
 instance CompileWidget n GraphCanvasWidget where
   compile (GraphCanvas canvasData) = Widget
@@ -70,9 +68,7 @@ drawGraphImage graph (width, height) = if G.null graph
   then Vty.text mempty "No Data"
   else
     foldl' appendNextColumn Vty.emptyImage
-      $! [ M.findWithDefault 0 i (normaliseGraph $ toMap graph)
-         | i <- [0 .. width]
-         ]
+      $! [ M.findWithDefault 0 i (normaliseGraph $ toMap graph) | i <- [0 .. width] ]
  where
   graphX = boundsX graph
 
@@ -84,18 +80,13 @@ drawGraphImage graph (width, height) = if G.null graph
 
   appendNextColumn = (. buildColumn height) . horizJoin
 
-  normaliseGraph =
-    M.map (\v -> scale v (expandIfNeeded graphY) (0, height)) . M.mapKeysWith
-      (\old new -> (old + new) / 2)
-      (\k -> scale k (expandIfNeeded graphX) (0, width))
+  normaliseGraph   = M.map (\v -> scale v (expandIfNeeded graphY) (0, height))
+    . M.mapKeysWith (\old new -> (old + new) / 2) (\k -> scale k (expandIfNeeded graphX) (0, width))
 
 
 
 instance CompileWidget n VerticalAxisWidget where
-  compile (VerticalAxis values) = Widget { hSize  = Brick.Greedy
-                                         , vSize  = Brick.Greedy
-                                         , render = renderImg
-                                         }
+  compile (VerticalAxis values) = Widget { hSize = Brick.Greedy, vSize = Brick.Greedy, render = renderImg }
    where
     expandToFit w img = Vty.pad (w - Vty.imageWidth img) 0 0 0 img
 
@@ -117,10 +108,7 @@ drawVerticalAxisImage height values =
 
 
 instance CompileWidget n HorizontalAxisWidget where
-  compile (HorizontalAxis values tz) = Widget { hSize  = Brick.Greedy
-                                              , vSize  = Brick.Greedy
-                                              , render = renderImg
-                                              }
+  compile (HorizontalAxis values tz) = Widget { hSize = Brick.Greedy, vSize = Brick.Greedy, render = renderImg }
 
    where
     renderImg :: RenderM n (Result n)
@@ -133,8 +121,7 @@ instance CompileWidget n HorizontalAxisWidget where
 drawHorizontalAxisImage :: TimeZone -> Int -> [Time] -> Vty.Image
 drawHorizontalAxisImage tz width values =
   let labels = generateLabelsTime tz values (0, width)
-      axis   = buildImage labels
-        $ \prev (pos, label) -> prev `horizJoin` buildNextBlock prev pos label
+      axis   = buildImage labels $ \prev (pos, label) -> prev `horizJoin` buildNextBlock prev pos label
   in  axis `horizJoin` makeFill (width - Vty.imageWidth axis)
  where
   buildNextBlock = drawLabelledBlock . Vty.imageWidth
@@ -148,36 +135,27 @@ cornerPiece :: Widget n
 cornerPiece = padBottom Max $ padLeft Max $ txt "\9492"
 
 buildColumn :: Int -> Int -> Vty.Image
-buildColumn height value = vertCat
-  $! reverse [ drawPixelAt i | i <- [0 .. height] ]
+buildColumn height value = vertCat $! reverse [ drawPixelAt i | i <- [0 .. height] ]
   where drawPixelAt i = Vty.char mempty (if i == value then 'X' else ' ')
 
 heightAndWidthL :: Getter Brick.Context (Int, Int)
-heightAndWidthL =
-  runGetter $ (,) <$> Getter availWidthL <*> Getter availHeightL
+heightAndWidthL = runGetter $ (,) <$> Getter availWidthL <*> Getter availHeightL
 
 drawLabelledLine :: Int -> Text -> Vty.Image
-drawLabelledLine (fromIntegral -> w) =
-  Vty.text mempty . prependSpace w . (`LT.snoc` '\9508') . fromStrict
+drawLabelledLine (fromIntegral -> w) = Vty.text mempty . prependSpace w . (`LT.snoc` '\9508') . fromStrict
 
 drawDefaultLine :: Int -> Vty.Image
 drawDefaultLine (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
 
 drawLabelledBlock :: Int -> Int -> Text -> Vty.Image
 drawLabelledBlock offset current label =
-  let
-    width = fromIntegral $ max (current - offset) 0
-    topBar =
-      Vty.text mempty $ LT.replicate (width - 1) "\9472" `LT.snoc` '\9516'
-    labelBar = Vty.text mempty $ prependSpace width $ LT.take
-      (width - 1)
-      (fromStrict label)
-  in
-    topBar `vertJoin` labelBar
+  let width    = fromIntegral $ max (current - offset) 0
+      topBar   = Vty.text mempty $ LT.replicate (width - 1) "\9472" `LT.snoc` '\9516'
+      labelBar = Vty.text mempty $ prependSpace width $ LT.take (width - 1) (fromStrict label)
+  in  topBar `vertJoin` labelBar
 
 drawDefaultColumn :: Int -> Vty.Image
-drawDefaultColumn (fromIntegral -> w) =
-  Vty.text mempty $ prependSpace w "\9474"
+drawDefaultColumn (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
 
 prependSpace :: Int64 -> LText -> LText
 prependSpace w = LT.justifyRight w ' '

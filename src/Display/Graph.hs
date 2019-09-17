@@ -37,15 +37,11 @@ instance Graphable DataPoint Time Value where
   extract DataPoint { value = v, time = t } = (t, v)
 
 boundsX :: (Ord x) => Graph x y -> (x, x)
-boundsX (Graph g) = if M.null g
-  then error "boundsX on empty graph"
-  else getBounds (M.keys g)
+boundsX (Graph g) = if M.null g then error "boundsX on empty graph" else getBounds (M.keys g)
   where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 boundsY :: (Num y, Ord y) => Graph x y -> (y, y)
-boundsY (Graph g) = if M.null g
-  then error "boundsY on empty graph"
-  else getBounds (sort (M.elems g))
+boundsY (Graph g) = if M.null g then error "boundsY on empty graph" else getBounds (sort (M.elems g))
   where getBounds ns = (Unsafe.head ns, Unsafe.last ns)
 
 mkGraph :: (Ord x, Ord y) => [(x, y)] -> Graph x y
@@ -66,15 +62,10 @@ mapX f = mapPoints (\(x, y) -> (f x, y))
 null :: Graph x y -> Bool
 null = M.null . _data
 
-mapPoints
-  :: (Ord x', Ord y') => ((x, y) -> (x', y')) -> Graph x y -> Graph x' y'
+mapPoints :: (Ord x', Ord y') => ((x, y) -> (x', y')) -> Graph x y -> Graph x' y'
 mapPoints f g = mkGraph $ f <$> M.toList (_data g)
 
-mapPointsM
-  :: (Monad m, Ord x', Ord y')
-  => ((x, y) -> m (x', y'))
-  -> Graph x y
-  -> m (Graph x' y')
+mapPointsM :: (Monad m, Ord x', Ord y') => ((x, y) -> m (x', y')) -> Graph x y -> m (Graph x' y')
 mapPointsM f g = mkGraph <$> mapM f (M.toList (_data g))
 
 toMap :: (Ord x, Ord y) => Graph x y -> M.Map x y

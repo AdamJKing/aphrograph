@@ -15,12 +15,8 @@ import           Network.HTTP.Req              as Req
 import           Control.Monad.Log
 
 asQueryParams :: GraphiteRequest -> Req.Option s
-asQueryParams RenderRequest {..} = mconcat
-  [ "target" =: _target
-  , "from" =: _from
-  , "to" =: _to
-  , "format" =: ("json" :: Text)
-  ]
+asQueryParams RenderRequest {..} =
+  mconcat ["target" =: _target, "from" =: _from, "to" =: _to, "format" =: ("json" :: Text)]
 
 listMetricsHttp :: MonadHttp m => GraphiteUrl -> m [Metric]
 listMetricsHttp (GraphiteUrl url) = makeRequest $ url /: "metrics/index.json"
@@ -44,14 +40,12 @@ makeRequest' url params = do
 instance MonadIO m => MonadGraphite (ReaderT GraphiteUrl m) where
   listMetrics = ask >>= runReq defaultHttpConfig . listMetricsHttp
 
-  getMetrics request =
-    ask >>= \url -> runReq defaultHttpConfig (getMetricsHttp url request)
+  getMetrics request = ask >>= \url -> runReq defaultHttpConfig (getMetricsHttp url request)
 
 instance (IsString msg,  MonadGraphite m) => MonadGraphite (LoggingT msg m) where
   listMetrics = logMessage "Listing available metrics" >> lift listMetrics
 
-  getMetrics request =
-    logMessage "Requesting metrics" >> lift (getMetrics request)
+  getMetrics request = logMessage "Requesting metrics" >> lift (getMetrics request)
 
 instance MonadGraphite m => MonadGraphite (ReaderT r m) where
   listMetrics = lift listMetrics

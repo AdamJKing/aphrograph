@@ -25,8 +25,7 @@ newtype Projected2D a b c d m t = Projected2D {
 }
 
 instance Bifunctor ProjectionContext where
-  bimap f g ProjectionContext {..} =
-    ProjectionContext (over each f origin) (over each g projection)
+  bimap f g ProjectionContext {..} = ProjectionContext (over each f origin) (over each g projection)
 
 class MonadProjector a b m where
   project :: a -> m b

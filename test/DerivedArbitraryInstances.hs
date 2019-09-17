@@ -22,7 +22,7 @@ import           GHC.Generics                  as GHC
 newtype GenArbitrary a = GenArbitrary a deriving Generic
 
 instance (Arbitrary a, GArbitrary (GHC.Rep a), Generic a) => Arbitrary (GenArbitrary a) where
-    arbitrary = GenArbitrary <$> genericArbitrary
+  arbitrary = GenArbitrary <$> genericArbitrary
 
 --- --- --- Arbitrary --- --- ---
 deriving instance Arbitrary Value
@@ -42,16 +42,14 @@ deriving via (Positive Int64) instance Arbitrary Elapsed
 deriving instance Generic DataPoint
 
 instance (Arbitrary i) => Arbitrary (DecimalRaw i) where
-    arbitrary = applyArbitrary2 Decimal
+  arbitrary = applyArbitrary2 Decimal
 
 instance (Random i, Integral i, Show i) => Random (DecimalRaw i) where
-    randomR (a, b) gen =
-        let
-            places    = max (decimalPlaces a) (decimalPlaces b)
-            a'        = roundTo places a
-            b'        = roundTo places b
-            (d, gen') = randomR (decimalMantissa a', decimalMantissa b') gen
-        in
-            (Decimal places d, gen')
+  randomR (a, b) gen =
+    let places    = max (decimalPlaces a) (decimalPlaces b)
+        a'        = roundTo places a
+        b'        = roundTo places b
+        (d, gen') = randomR (decimalMantissa a', decimalMantissa b') gen
+    in  (Decimal places d, gen')
 
-    random = randomR (0, 1)
+  random = randomR (0, 1)

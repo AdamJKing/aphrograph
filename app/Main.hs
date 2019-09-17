@@ -29,21 +29,20 @@ import           Graphics.Vty.Attributes
 main :: IO ()
 main = do
   eventQueue <- Brick.newBChan 10
-  void $ App.withCommandLineArguments $ \args ->
-    withFile "aphrograph.log" WriteMode $ \logfile ->
-      withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
-        _ <- forkIO . forever $ do
-          threadDelay 30000000
-          Brick.writeBChan eventQueue UpdateEvent
-        startState <- constructDefaultContext (prettier handler) args
-        initialVty <- getVty
-        Brick.customMain initialVty getVty (Just eventQueue) mkApp startState
+  void $ App.withCommandLineArguments $ \args -> withFile "aphrograph.log" WriteMode $ \logfile ->
+    withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
+      _ <- forkIO . forever $ do
+        threadDelay 30000000
+        Brick.writeBChan eventQueue UpdateEvent
+      startState <- constructDefaultContext (prettier handler) args
+      initialVty <- getVty
+      Brick.customMain initialVty getVty (Just eventQueue) mkApp startState
   where prettier f = f . Doc.pretty . toString
 
 getVty :: MonadIO m => m Vty.Vty
 getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
 
-mkApp :: Brick.App AppState AppEvent AppComponent
+mkApp :: MultiReader '[AppLogger] (Brick.App AppState AppEvent AppComponent)
 mkApp = Brick.App
   { appDraw         = compileLayered . constructDom
   , appChooseCursor = Brick.neverShowCursor
@@ -56,23 +55,6 @@ mkApp = Brick.App
                           logMessage "Producing new state."
                           return (Active (st & graphData .~ newGraphData))
                         Failed err -> return (Failed err)
-  , appAttrMap      = \_ -> attrMap
-                        defAttr
-                        [ ("metric" <> "selected"  , black `on` blue)
-                        , ("metric" <> "unselected", blue `on` black)
-                        ]
+  , appAttrMap      =
+    \_ -> attrMap defAttr [("metric" <> "selected", black `on` blue), ("metric" <> "unselected", blue `on` black)]
   }
-
-handleAppEvent
-  :: ActiveState
-  -> SystemEvent AppComponent
-  -> Brick.EventM AppComponent (Brick.Next AppState)
-handleAppEvent currentState event = handleResult
-  =<< liftIO (runAppM currentState (appEventHandler event))
-
- where
-  handleResult = \case
-    (Continue (Failed err)) -> Brick.halt (Failed err)
-    (Continue sameState   ) -> Brick.continue sameState
-    (Update   newState    ) -> Brick.continue newState
-    Stop                    -> Brick.halt (Active currentState)
