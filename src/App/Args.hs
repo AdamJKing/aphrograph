@@ -2,6 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module App.Args where
@@ -11,15 +12,8 @@ import           Graphite.Types          hiding ( value )
 import           Paths_aphrograph               ( version )
 import           Data.Version                   ( showVersion )
 import           Network.HTTP.Req
+import           App.Config
 
-
-data Args =
-    Args
-    { fromTime :: From
-    , toTime :: Maybe To
-    , targetArg :: Text
-    , graphiteUrl :: GraphiteUrl
-   } deriving (Show, Eq)
 
 fromTimeArgument :: Parser From
 fromTimeArgument = strOption $ long "from" <> help
@@ -44,10 +38,15 @@ httpParser = maybeReader $ \input -> parseUrl (fromString input) <&> \case
 debugArgument :: Parser Bool
 debugArgument = switch $ long "debug" <> hidden
 
-arguments :: Parser Args
-arguments = Args <$> fromTimeArgument <*> optional toTimeArgument <*> targetArgument <*> graphiteUrlArgument
+arguments :: Parser AppConfig
+arguments = do
+  fromTime    <- fromTimeArgument
+  toTime      <- optional toTimeArgument
+  targetArg   <- targetArgument
+  graphiteUrl <- graphiteUrlArgument
+  return (AppConfig $ GraphiteConfig { .. })
 
-withCommandLineArguments :: (Args -> IO b) -> IO b
+withCommandLineArguments :: (AppConfig -> IO b) -> IO b
 withCommandLineArguments f =
   let version'    = showVersion version
       title       = "△phrograph"

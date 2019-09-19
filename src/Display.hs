@@ -3,9 +3,9 @@
 
 module Display where
 
-import           App
 import           Display.Graph.Widget
 import           Display.Widgets
+import           App
 import qualified Brick.Widgets.Core            as Widget
 import           Data.Vector.Lens               ( vector )
 import           Control.Lens

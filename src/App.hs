@@ -1,40 +1,21 @@
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module App
-  ( AppError(..)
-  , AppState(..)
-  , ActiveState(..)
-  , AppLogger
-  , metricsView
-  , graphData
-  , timezone
-  , constructDefaultContext
-  , handleHttpExceptionApp
-  )
-where
+module App where
 
+import           Data.HList.ContainsType
 import           Fmt
 import           Control.Monad.Trans.MultiReader.Lazy
-import           App.Config
-import qualified App.Args                      as App
 import           Control.Lens
 import           Control.Monad.Except    hiding ( runExceptT )
 import           Data.Time.LocalTime
@@ -43,6 +24,7 @@ import           Network.HTTP.Req              as Req
 import           Graphite.Types
 import           Control.Monad.Log             as Log
 import           Text.Show.Functions            ( )
+import           App.Config
 
 newtype AppError = AppGraphiteError GraphiteError
   deriving ( Show, Exception , Generic )
@@ -57,7 +39,7 @@ data ActiveState = ActiveState {
 
 makeLenses ''ActiveState
 
-constructDefaultContext :: App.Args -> IO AppState
+constructDefaultContext :: AppConfig -> IO AppState
 constructDefaultContext _ = do
   _timezone <- getTimezone `catchError` defaultToUtc
   let _metricsView = mempty
@@ -70,13 +52,20 @@ constructDefaultContext _ = do
 data AppState = Active ActiveState | Failed AppError
   deriving ( Generic, Show )
 
-type AppDependencies = '[AppConfig, AppLogger IO, AppState]
+type AppDependencies m = '[AppConfig, AppLogger m]
 
-newtype AppT a = AppT ( MultiReaderT AppDependencies IO a )
-  deriving (Functor, Applicative, Monad, MonadIO, MonadMultiReader AppConfig, MonadMultiReader (AppLogger IO))
+newtype AppT m a = AppT ( MultiReaderT ( AppDependencies  m) m a )
+  deriving (Functor, Applicative, Monad, MonadIO)
 
-instance MonadLog Fmt.Builder AppT where
-  logMessageFree addLog = mAsk @(AppLogger IO) >>= \logger -> liftIO $ logger (addLog (\msg -> [fmt msg]))
+instance MonadTrans AppT where
+  lift = AppT . lift
+
+instance {-# OVERLAPPING #-} (ContainsType a ( AppDependencies m ),  Monad m ) => MonadMultiReader a (AppT m) where
+  mAsk = AppT mAsk
+
+instance Monad m => MonadLog Fmt.Builder (AppT m)  where
+  logMessageFree addLog = mAsk @(AppLogger m) >>= lift . ($ addLog (one . fmt))
+
 
 -- instance Monad m => MonadError AppError (AppT m) where
 --   throwError err = state (const (Failed err))
@@ -96,9 +85,10 @@ handleHttpExceptionApp = throwError . AppGraphiteError . \case
 --     url <- view (graphiteConfig . graphiteUrl)
 --     getMetricsHttp url request
 
---   AppDraw ::AppT c (s -> [Brick.Widget n] )
---   AppChooseCursor ::AppT c (s -> [Brick.CursorLocation n] -> Maybe (Brick.CursorLocation n))
---   AppHandleEvent ::AppT c (s -> BrickEvent n e -> Brick.EventM n (Brick.Next s))
---   AppStateEvent ::AppT c (s -> Brick.EventM n s )
---   AppAttrMap ::AppT c (s -> Brick.AttrMap )
---   AppAttrMap ::AppT c (s -> Brick.AttrMap )
+-- data AppF r m where
+--   MkAppDraw ::l -> c -> (s -> [Brick.Widget n] )
+--   MkAppChooseCursor ::l -> c -> (s -> [Brick.CursorLocation n] -> Maybe (Brick.CursorLocation n))
+--   MkAppHandleEvent ::l -> c -> (s -> BrickEvent n e -> Brick.EventM n (Brick.Next s))
+--   MkAppStateEvent ::l -> c (s -> Brick.EventM n s )
+--   MkAppAttrMap ::AppT c (s -> Brick.AttrMap )
+

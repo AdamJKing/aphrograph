@@ -1,14 +1,10 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Events where
 
@@ -66,3 +62,6 @@ handleAppEvent (Stop     endState ) = lift (Brick.halt (Active endState))
 handleAppEvent (Update previousState) =
     (ask >>= updateGraphData >>= applyUpdate) `catchError` (lift . Brick.halt . Failed)
     where applyUpdate ug = lift $ Brick.continue $ Active (previousState & graphData .~ ug)
+
+class MonadEventHandler s e m | m -> e where
+    handleEvent :: s -> e -> m s
