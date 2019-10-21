@@ -12,6 +12,7 @@ tests:
       - quickcheck-arbitrary-adt
       - random
       - quickcheck-instances
+      - quickcheck-transformer
 
 ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS -fno-print-expanded-synonyms
 dependencies:
@@ -50,6 +51,7 @@ dependencies:
   - vty
 default-extensions:
   - RecordWildCards
+  - LambdaCase
   - OverloadedStrings
 name: aphrograph
 version: 0.1.0.0

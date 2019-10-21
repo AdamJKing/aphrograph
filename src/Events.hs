@@ -1,67 +1,40 @@
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 module Events where
 
-import           App
-import           App.Config
 import qualified Brick.Types                   as Brick
 import qualified Brick.Main                    as Brick
-import           Control.Lens
+import           Brick.Types                    ( BrickEvent )
 import           Control.Monad.Log
-import           Control.Monad.Except
-
 import qualified Display.Graph                 as Graph
 import           Display.Graph                  ( Graph )
-
 import qualified Graphics.Vty.Input.Events     as Vty
-
 import           Graphite.Types
+import qualified App.Config                    as App
+import           App
 
-data AppEvent = UpdateEvent
+data AppEvent = UpdateEvent | ExitEvent
     deriving ( Show, Eq )
 
 newtype SystemEvent n = SystemEvent ( Brick.BrickEvent n AppEvent )
 
-data EventOutcome s = Update s | Continue s | Stop s
+data EventOutcome s = Continue s | Stop s
     deriving ( Show, Eq )
 
 pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
-appEventHandler :: SystemEvent n -> ActiveState -> EventOutcome AppState
-appEventHandler (SystemEvent (Brick.VtyEvent ExitKey)) = Stop . Active
-appEventHandler (SystemEvent (Brick.AppEvent UpdateEvent)) = Update . Active
-appEventHandler _ = Continue . Active
-
-updateGraphData :: (IsString msg, MonadLog msg m, MonadGraphite m) => AppConfig -> m (Graph Time Value)
-updateGraphData (AppConfig GraphiteConfig {..}) = do
+updateGraphData :: (IsString msg, MonadLog msg m, MonadGraphite m) => App.Config -> m (Graph Time Value)
+updateGraphData (App.Config App.GraphiteConfig {..}) = do
     let request = RenderRequest { _from = fromTime, _to = toTime, _target = targetArg }
     data' <- getMetrics request
     logMessage "Populating graph."
     return (Graph.extractGraph data')
 
-handleAppEvent
-    :: ( MonadTrans t
-       , m ~ t (Brick.EventM n)
-       , MonadReader AppConfig m
-       , MonadError AppError m
-       , IsString msg
-       , MonadLog msg m
-       , MonadGraphite m
-       )
-    => EventOutcome ActiveState
-    -> t (Brick.EventM n) (Brick.Next AppState)
-handleAppEvent (Continue sameState) = lift (Brick.continue (Active sameState))
-handleAppEvent (Stop     endState ) = lift (Brick.halt (Active endState))
-handleAppEvent (Update previousState) =
-    (ask >>= updateGraphData >>= applyUpdate) `catchError` (lift . Brick.halt . Failed)
-    where applyUpdate ug = lift $ Brick.continue $ Active (previousState & graphData .~ ug)
-
-class MonadEventHandler s e m | m -> e where
-    handleEvent :: s -> e -> m s
+handleBrickEvents :: BrickEvent n AppEvent -> s -> AppM (Brick.Next s)
+handleBrickEvents (Brick.VtyEvent ExitKey    ) = App.liftEventM . Brick.halt
+handleBrickEvents (Brick.AppEvent UpdateEvent) = App.liftEventM . Brick.continue
+handleBrickEvents _                            = App.liftEventM . Brick.continue

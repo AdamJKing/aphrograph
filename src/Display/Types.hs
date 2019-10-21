@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs #-}
 
@@ -8,11 +7,8 @@ import           Fmt
 import           Text.Show
 
 
-data Dimensions i = Dimensions { width :: !i, height :: !i }
-    deriving (Eq, Show, Functor)
-
-dim :: (i, i) -> Dimensions i
-dim (width, height) = Dimensions { .. }
+data Dimensions = Dims { width :: !Natural, height :: !Natural }
+    deriving (Eq, Show)
 
 data DisplayError = forall e. (Exception e) => ErrorDuringRender e
 

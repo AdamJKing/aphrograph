@@ -12,7 +12,7 @@ import           Graphite.Types          hiding ( value )
 import           Paths_aphrograph               ( version )
 import           Data.Version                   ( showVersion )
 import           Network.HTTP.Req
-import           App.Config
+import           App.Config                    as App
 
 
 fromTimeArgument :: Parser From
@@ -38,15 +38,15 @@ httpParser = maybeReader $ \input -> parseUrl (fromString input) <&> \case
 debugArgument :: Parser Bool
 debugArgument = switch $ long "debug" <> hidden
 
-arguments :: Parser AppConfig
+arguments :: Parser App.Config
 arguments = do
   fromTime    <- fromTimeArgument
   toTime      <- optional toTimeArgument
   targetArg   <- targetArgument
   graphiteUrl <- graphiteUrlArgument
-  return (AppConfig $ GraphiteConfig { .. })
+  return (App.Config $ GraphiteConfig { .. })
 
-withCommandLineArguments :: (AppConfig -> IO b) -> IO b
+withCommandLineArguments :: (App.Config -> IO b) -> IO b
 withCommandLineArguments f =
   let version'    = showVersion version
       title       = "△phrograph"

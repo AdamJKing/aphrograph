@@ -18,15 +18,31 @@ import           Graphite.Types                as Graphite
 import           Test.QuickCheck.Instances.Text ( )
 import           Test.QuickCheck.Arbitrary.ADT
 import           GHC.Generics                  as GHC
+import           Display.Types
+import           App.Config                    as App
+import           Network.HTTP.Req               ( http
+                                                , https
+                                                )
 
 newtype GenArbitrary a = GenArbitrary a deriving Generic
 
 instance (Arbitrary a, GArbitrary (GHC.Rep a), Generic a) => Arbitrary (GenArbitrary a) where
   arbitrary = GenArbitrary <$> genericArbitrary
 
+instance Arbitrary Natural where
+  arbitrary = arbitrarySizedNatural
+
+instance Arbitrary Dimensions where
+  arbitrary = Dims <$> arbitrary <*> arbitrary
+
+instance Arbitrary GraphiteUrl where
+  arbitrary = oneof [return (GraphiteUrl (http "example.com")), return (GraphiteUrl (https "example.com"))]
+
 --- --- --- Arbitrary --- --- ---
 deriving instance Arbitrary Value
 deriving instance Arbitrary Seconds
+deriving via (GenArbitrary GraphiteConfig) instance Arbitrary App.GraphiteConfig
+deriving instance Arbitrary App.Config
 
 deriving via Text instance Arbitrary Metric
 deriving via Text instance Arbitrary Graphite.From

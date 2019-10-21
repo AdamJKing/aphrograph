@@ -27,7 +27,6 @@ import           Brick.Types                   as Brick
 import           Brick.Widgets.Core            as W
 import           Data.Time.LocalTime
 import           Display.Widgets
-import           Display.Types
 import           Display.Labels
 
 data HorizontalAxisWidget = HorizontalAxis [Time] TimeZone deriving Show
@@ -109,11 +108,10 @@ drawVerticalAxisImage height values =
 
 instance CompileWidget n HorizontalAxisWidget where
   compile (HorizontalAxis values tz) = Widget { hSize = Brick.Greedy, vSize = Brick.Greedy, render = renderImg }
-
    where
     renderImg :: RenderM n (Result n)
     renderImg = do
-      Dimensions {..} <- views heightAndWidthL dim
+      (width, height) <- view heightAndWidthL
       let img       = drawHorizontalAxisImage tz width values
       let paddedImg = Vty.pad 0 0 0 (height - Vty.imageHeight img) img
       return (set imageL paddedImg emptyResult)

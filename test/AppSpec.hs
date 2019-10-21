@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE LambdaCase #-}
 
 module AppSpec where
@@ -10,7 +11,7 @@ import           Test.Hspec.QuickCheck          ( prop )
 import           Test.QuickCheck
 import           Test.QuickCheck.Monadic
 import           ArbitraryInstances             ( )
-import           App
+import           App.State
 import           Network.HTTP.Req
 import           CommonProperties
 import           Graphite.Types
@@ -23,14 +24,14 @@ jsonParseException = JsonHttpException <$> arbitrary
 
 spec :: Spec
 spec = describe "App" $ describe "MonadHttp" $ do
-  prop "captures all vanilla http exceptions as http errors" . monadic runAppProperty $ do
+  prop "captures all vanilla http exceptions as http errors" . monadicApp $ do
     err <- pick vanillaHttpException
-    handleHttpExceptionApp err `shouldThrow` \case
-      AppGraphiteError (HttpError _) -> return True
-      _                              -> return False
+    handleHttpException err `shouldThrow` \case
+      AppGraphiteError _ -> return True
+      _                  -> return False
 
-  prop "captures all json parse exceptions as http errors" . monadic runAppProperty $ do
+  prop "captures all json parse exceptions as http errors" . monadicApp $ do
     err <- pick jsonParseException
-    handleHttpExceptionApp err `shouldThrow` \case
+    handleHttpException err `shouldThrow` \case
       AppGraphiteError (ParsingError _) -> return True
       _ -> return False

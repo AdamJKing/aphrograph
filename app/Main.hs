@@ -1,20 +1,22 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE PolyKinds #-}
 
 module Main where
 
-import           Control.Monad.Trans.MultiReader.Lazy
 import           App
 import qualified App.Args                      as App
-import           App.Config
+import qualified App.State                     as App
+import qualified App.Config                     as App
 import           Prelude                 hiding ( on )
 import qualified Brick.BChan                   as Brick
-import qualified Brick.Types                   as Brick
 import qualified Brick.Main                    as Brick
+import qualified Brick.AttrMap                 as Brick
+import           Brick.Util                     ( on )
 import           Display
 import           Control.Concurrent             ( forkIO
                                                 , threadDelay
@@ -25,7 +27,6 @@ import           Display.Widgets
 import qualified Data.Text.Prettyprint.Doc     as Doc
 import           Events
 import qualified Graphics.Vty                  as Vty
-import           Data.HList.HList
 
 main :: IO ()
 main = do
@@ -35,43 +36,26 @@ main = do
       _ <- forkIO . forever $ do
         threadDelay 30000000
         Brick.writeBChan eventQueue UpdateEvent
-      startState <- constructDefaultContext args
+      startState <- App.constructDefaultContext args
       initialVty <- getVty
-      let deps = prettier handler :+: args :+: HNil
-      app <- runMultiReaderTNil $ withMultiReaders deps mkApp
+      let app = mkApp (liftIO . prettier handler) args
       Brick.customMain initialVty getVty (Just eventQueue) app startState
   where prettier f = f . Doc.pretty . fmap toString
 
 getVty :: MonadIO m => m Vty.Vty
 getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
 
+appTheme :: Brick.AttrMap
+appTheme =
+  let selectedTheme   = ("metric" <> "selected", Vty.black `on` Vty.blue)
+      unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
+  in  Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-class WithEnv r where
-  withEnvironment' :: (Monad (t m)) => (r -> m a) -> (t m) (r -> m a)
-  withEnvironment' = return
-
-instance WithEnv (r -> r' -> m a) where
-  withEnvironment' = return . ($)
-
--- f :: ??? m => a -> m b
-
-
-mkApp :: MultiReaderT '[AppLogger IO, AppConfig] IO (Brick.App AppState AppEvent AppComponent)
-mkApp = do
+mkApp :: Logger -> App.Config -> Brick.App App.ActiveState AppEvent AppComponent
+mkApp appLogger conf =
   let appDraw         = compileLayered . constructDom
-  let appChooseCursor = Brick.neverShowCursor
-  appHandleEvent <- withEnvironment' handleEvent
-  return (Brick.App { .. })
-
-  -- Brick.App
-  -- { appDraw         = compileLayered . constructDom
-  -- , appChooseCursor = Brick.neverShowCursor
-  -- , appHandleEvent  =   -- , appStartEvent   = \case
-  --                       Active st -> liftIO . runAppM st $ do
-  --                         newGraphData <- updateGraphData
-  --                         logMessage "Producing new state."
-  --                         return (Active (st & graphData .~ newGraphData))
-  --                       Failed err -> return (Failed err)
-  -- , appAttrMap      =
-  --   \_ -> attrMap defAttr [("metric" <> "selected", black `on` blue), ("metric" <> "unselected", blue `on` black)]
-  -- }
+      appChooseCursor = Brick.neverShowCursor
+      appHandleEvent s e = runApp appLogger conf (handleBrickEvents e s)
+      appAttrMap    = const appTheme
+      appStartEvent = return
+  in  (Brick.App { .. })

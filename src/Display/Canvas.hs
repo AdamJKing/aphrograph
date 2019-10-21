@@ -12,29 +12,29 @@ import           Display.Types
 import qualified Graphics.Vty                  as Vty
 
 
-newtype Canvas s = Canvas { underlying :: STUArray s (Int, Int) Char }
+newtype Canvas s = Canvas { underlying :: STUArray s (Natural, Natural) Char }
 
 newtype CanvasUpdate s a = CanvasUpdate ( ReaderT (Canvas s) (ST s) a )
   deriving (Functor, Applicative, Monad, MonadReader (Canvas s))
 
-xBounds :: CanvasUpdate s (Int, Int)
+xBounds :: CanvasUpdate s (Natural, Natural)
 xBounds = CanvasUpdate . ReaderT $ \canvas -> do
   (_, (w, _)) <- getBounds (underlying canvas)
   return (0, w)
 
-yBounds :: CanvasUpdate s (Int, Int)
+yBounds :: CanvasUpdate s (Natural, Natural)
 yBounds = CanvasUpdate . ReaderT $ \canvas -> do
   (_, (_, h)) <- getBounds (underlying canvas)
   return (0, h)
 
-readPixel :: (Int, Int) -> CanvasUpdate s Char
+readPixel :: (Natural, Natural) -> CanvasUpdate s Char
 readPixel point = CanvasUpdate . ReaderT $ \(Canvas underlying) -> readArray underlying point
 
 
-newCanvas :: Dimensions Int -> ST s (Canvas s)
-newCanvas Dimensions {..} = Canvas <$> newArray ((0, 0), (width, height)) ' '
+newCanvas :: Dimensions -> ST s (Canvas s)
+newCanvas Dims {..} = Canvas <$> newArray ((0, 0), (width, height)) ' '
 
-paintPoint :: (Int, Int) -> CanvasUpdate s ()
+paintPoint :: (Natural, Natural) -> CanvasUpdate s ()
 paintPoint p = CanvasUpdate . ReaderT $ \(Canvas underlying) -> writeArray underlying p 'X'
 
 renderToImage :: CanvasUpdate s Vty.Image

@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module App.Config where
 
@@ -10,7 +11,9 @@ data GraphiteConfig = GraphiteConfig {
     , toTime :: Maybe To
     , targetArg :: Text
     , graphiteUrl :: GraphiteUrl }
+    deriving ( Show, Generic )
 
 makeLenses ''GraphiteConfig
 
-newtype AppConfig = AppConfig GraphiteConfig
+newtype Config = Config GraphiteConfig
+    deriving ( Show, Generic )

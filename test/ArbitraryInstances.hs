@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
@@ -8,50 +7,33 @@
 
 module ArbitraryInstances where
 
-import           App.Args                      as App
-                                                ( Args(..) )
 import           DerivedArbitraryInstances
 import           Display.Graph                 as Graph
-import           Display.Types
-
 import           Graphics.Vty.Input.Events     as Vty
-
 import           Graphite.Types                as Graphite
-
 import           System.Random
-
 import           Test.QuickCheck
 import           Test.QuickCheck.Arbitrary.ADT
 import           Test.QuickCheck.Instances.Time ( )
-import           Network.HTTP.Req               ( http
-                                                , https
-                                                )
 import           Display.Labels
-import           App
 import qualified Network.HTTP.Req              as Req
 import qualified Network.HTTP.Client           as Http
+import           App.State
 
-instance Arbitrary ActiveState where
-  arbitrary = do
-    _metricsView <- arbitrary
-    _graphData   <- arbitrary
-    _timezone    <- arbitrary
-    return (ActiveState { .. })
+-- instance Arbitrary ActiveState where
+--   arbitrary = do
+--     _metricsView <- arbitrary
+--     _graphData   <- arbitrary
+--     _timezone    <- arbitrary
+--     return (ActiveState { .. })
 
 deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
-deriving via (GenArbitrary AppError) instance Arbitrary AppError
-
-deriving via (GenArbitrary AppState) instance Arbitrary AppState
+deriving via (GenArbitrary ActiveState) instance Arbitrary ActiveState
 
 instance Arbitrary DataPoint where
   arbitrary = genericArbitrary
 
 instance Arbitrary GraphiteRequest where
-  arbitrary = genericArbitrary
-
-deriving instance (Generic n) => Generic (Dimensions n)
-
-instance (Generic n, Arbitrary n) => Arbitrary (Dimensions n) where
   arbitrary = genericArbitrary
 
 instance (Ord x, Arbitrary x, Ord y, Arbitrary y) => Arbitrary (Graph x y) where
@@ -92,13 +74,13 @@ instance Random Time where
 
   random = randomR (0, 1)
 
-instance Arbitrary App.Args where
-  arbitrary = do
-    fromTime    <- arbitrary
-    toTime      <- arbitrary
-    targetArg   <- arbitrary
-    graphiteUrl <- oneof [return (GraphiteUrl (http "example.com")), return (GraphiteUrl (https "example.com"))]
-    return (App.Args fromTime toTime targetArg graphiteUrl)
+-- instance Arbitrary App.Args where
+--   arbitrary = do
+--     fromTime    <- arbitrary
+--     toTime      <- arbitrary
+--     targetArg   <- arbitrary
+--     graphiteUrl <- oneof [return (GraphiteUrl (http "example.com")), return (GraphiteUrl (https "example.com"))]
+--     return (App.Args fromTime toTime targetArg graphiteUrl)
 
 instance Arbitrary Http.HttpException where
   arbitrary = frequency
