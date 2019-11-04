@@ -7,13 +7,15 @@ import           Graphite.Types
 import           Control.Lens.TH
 
 data GraphiteConfig = GraphiteConfig {
-      fromTime :: From
-    , toTime :: Maybe To
-    , targetArg :: Text
-    , graphiteUrl :: GraphiteUrl }
+      _fromTime :: From
+    , _toTime :: Maybe To
+    , _targetArg :: Text
+    , _graphiteUrl :: GraphiteUrl }
     deriving ( Show, Generic )
 
 makeLenses ''GraphiteConfig
 
-newtype Config = Config GraphiteConfig
+newtype Config = Config { _graphiteConfig :: GraphiteConfig }
     deriving ( Show, Generic )
+
+makeLenses ''Config

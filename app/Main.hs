@@ -11,10 +11,11 @@ module Main where
 import           App
 import qualified App.Args                      as App
 import qualified App.State                     as App
-import qualified App.Config                     as App
+import qualified App.Config                    as App
 import           Prelude                 hiding ( on )
 import qualified Brick.BChan                   as Brick
 import qualified Brick.Main                    as Brick
+import qualified Brick.Types                   as Brick
 import qualified Brick.AttrMap                 as Brick
 import           Brick.Util                     ( on )
 import           Display
@@ -51,11 +52,11 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
   in  Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Logger -> App.Config -> Brick.App App.ActiveState AppEvent AppComponent
+mkApp :: Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.ActiveState AppEvent AppComponent
 mkApp appLogger conf =
   let appDraw         = compileLayered . constructDom
       appChooseCursor = Brick.neverShowCursor
-      appHandleEvent s e = runApp appLogger conf (handleBrickEvents e s)
+      appHandleEvent s = runApp appLogger conf . flip handleEvent' s
       appAttrMap    = const appTheme
       appStartEvent = return
   in  (Brick.App { .. })

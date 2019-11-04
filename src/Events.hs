@@ -1,3 +1,5 @@
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
@@ -6,35 +8,52 @@
 module Events where
 
 import qualified Brick.Types                   as Brick
-import qualified Brick.Main                    as Brick
-import           Brick.Types                    ( BrickEvent )
-import           Control.Monad.Log
 import qualified Display.Graph                 as Graph
-import           Display.Graph                  ( Graph )
 import qualified Graphics.Vty.Input.Events     as Vty
-import           Graphite.Types
 import qualified App.Config                    as App
-import           App
+import qualified App.State                     as App
+import           Control.Monad.Log
+import           Display.Graph                  ( Graph )
+import           Graphite
+import           Graphite.Types
+import           Display.Widgets
+import           Control.Monad.Except           ( MonadError(throwError) )
+import           App.Logging
+import           Control.Lens.Setter
 
 data AppEvent = UpdateEvent | ExitEvent
     deriving ( Show, Eq )
 
-newtype SystemEvent n = SystemEvent ( Brick.BrickEvent n AppEvent )
-
-data EventOutcome s = Continue s | Stop s
-    deriving ( Show, Eq )
+type SystemEvent = Brick.BrickEvent AppComponent AppEvent
 
 pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
-updateGraphData :: (IsString msg, MonadLog msg m, MonadGraphite m) => App.Config -> m (Graph Time Value)
-updateGraphData (App.Config App.GraphiteConfig {..}) = do
-    let request = RenderRequest { _from = fromTime, _to = toTime, _target = targetArg }
-    data' <- getMetrics request
+updateGraphData
+    :: (MonadError App.Error m, MonadIO m, Logger msg m, MonadReader App.GraphiteConfig m) => m (Graph Time Value)
+updateGraphData = do
+    App.GraphiteConfig {..} <- ask
+    data' <- runGraphite _graphiteUrl
+                         (getMetrics $ RenderRequest { _from = _fromTime, _to = _toTime, _target = _targetArg })
     logMessage "Populating graph."
-    return (Graph.extractGraph data')
+    either (throwError . App.AppGraphiteError) (return . Graph.extractGraph) data'
 
-handleBrickEvents :: BrickEvent n AppEvent -> s -> AppM (Brick.Next s)
-handleBrickEvents (Brick.VtyEvent ExitKey    ) = App.liftEventM . Brick.halt
-handleBrickEvents (Brick.AppEvent UpdateEvent) = App.liftEventM . Brick.continue
-handleBrickEvents _                            = App.liftEventM . Brick.continue
+data EventHandler s m f = EventHandler {
+    continue :: s -> m (f s),
+    ignore :: s -> m (f s),
+    stop :: s -> m (f s)
+}
+
+handleEvent
+    :: (MonadError App.Error m, MonadIO m, MonadReader App.GraphiteConfig m, Logger msg m)
+    => EventHandler App.ActiveState m f
+    -> Brick.BrickEvent n AppEvent
+    -> App.ActiveState
+    -> m (f App.ActiveState)
+handleEvent EventHandler {..} event state' = case event of
+    (Brick.VtyEvent ExitKey    ) -> stop state'
+    (Brick.AppEvent UpdateEvent) -> do
+        newGraph <- updateGraphData
+        continue (state' & App.graphData .~ newGraph)
+
+    _ -> ignore state'

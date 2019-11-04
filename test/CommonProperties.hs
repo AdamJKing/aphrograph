@@ -5,13 +5,13 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties where
 
-import qualified Brick.Types                    as Brick
-import qualified Test.QuickCheck.GenT          as Gen
 import           ArbitraryInstances             ( )
 import           Test.QuickCheck.Property
 import           Test.QuickCheck.Arbitrary
@@ -24,8 +24,9 @@ import           Test.QuickCheck.Monadic
 import           App
 import           Test.Hspec.QuickCheck          ( prop )
 import           Control.Monad.Except           ( MonadError(catchError) )
-import           Data.Typeable
+import           Control.Lens.Extras            ( is )
 import           Data.Time.LocalTime            ( utc )
+import           Control.Lens.Prism
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
@@ -58,32 +59,27 @@ appProp desc = prop desc . mockApp
 noExceptionThrown :: Property
 noExceptionThrown = property $ failed { reason = "Expected an exception but no exception was thrown" }
 
-unexpectedException :: Exception e => e -> Property
-unexpectedException err =
-  property $ failed { reason = "Unexpected exception was thrown", theException = Just (SomeException err) }
+-- shouldThrow :: (Show e, Eq e, MonadError e m) => m a -> e -> PropertyM m Property
+-- shouldThrow testOp expectedError = testOp `shouldThrowMatching` (=== expectedError)
 
-shouldThrow :: (Testable prop, MonadError e m, Exception e) => m a -> (e -> m prop) -> PropertyM m Property
-shouldThrow test matcher = run $ failOnNoError test `catchError` identifyError
- where
-  failOnNoError = (>> return (property noExceptionThrown))
-  identifyError thrownError = case cast thrownError of
-    Just identifiedError -> property <$> matcher identifiedError
-    Nothing              -> return (unexpectedException thrownError)
+-- shouldThrowMatching :: MonadError e m => m a -> (e -> Property) -> PropertyM m Property
+-- shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError` (return . errorMatcher)
+--   where failOnNoError = (>> return noExceptionThrown)
+
+shouldThrowMatching :: MonadError e m => m a -> APrism' e a -> PropertyM m Property
+shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError` (return . property . is errorMatcher)
+  where failOnNoError = (>> return noExceptionThrown)
 
 newtype EmptyState s = Empty { unEmpty :: s }
 
 instance Arbitrary (EmptyState ActiveState) where
   arbitrary = return . Empty $ ActiveState { _metricsView = Nothing, _graphData = mempty, _timezone = utc }
 
-monadicApp :: Testable t => PropertyM AppM t -> Gen (AppM Property)
+monadicApp :: (Monad m, Testable t) => PropertyM (AppT m) t -> Gen (AppT m Property)
 monadicApp = monadic'
 
 instance (Testable prop, Exception e) => Testable (Either e prop) where
   property (Right outcome) = property outcome
   property (Left  failure) = property $ failed { reason = "Unexpected exception: " ++ displayException failure }
 
-instance Gen.MonadGen ( Brick.EventM n ) where
-
-instance Testable t => Testable (AppM t) where
-  property testApp = monadic' (run testApp)
-    -- let noOpLogger = (return . pass) in property (\conf -> idempotentIOProperty $ runApp noOpLogger conf testApp)
+newtype Test a = Test a

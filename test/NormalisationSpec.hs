@@ -7,7 +7,7 @@ import           Normalisation
 import           Test.QuickCheck
 import           Test.Hspec.QuickCheck
 import           Test.Hspec                    as HS
-import           CommonProperties        hiding ( shouldThrow )
+import           CommonProperties
 
 factor :: Gen Double
 factor = getPositive <$> arbitrary

@@ -1,5 +1,5 @@
+{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DataKinds #-}
@@ -7,46 +7,48 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module App where
 
 import qualified App.Config                    as App
 import qualified App.State                     as App
 import qualified Network.HTTP.Req              as Req
-import           Data.HList.ContainsType
+import qualified Brick.Types                   as Brick
+import qualified Brick.Main                    as Brick
+import           Events
 import           Fmt
-import           Control.Monad.Trans.MultiReader
 import           Control.Monad.Log             as Log
 import           Text.Show.Functions            ( )
-import           Data.HList.HList
 import           Control.Monad.Except           ( MonadError(throwError) )
-import qualified Brick.Types                   as Brick
-import           Display.Widgets                ( AppComponent )
+import           Control.Lens.Zoom
+import           Control.Lens.Internal.Zoom     ( Effect(..) )
 
-type Logger = Log.Handler AppM [Text]
+type Logger m = Log.Handler m Text
 
-type AppDependencies = '[App.Config, Logger]
+newtype AppT r m a = MkAppT { _unApp :: ReaderT r (  ExceptT App.Error (LoggingT Fmt.Builder m ) ) a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadLog Fmt.Builder, MonadReader r, MonadError App.Error)
 
-newtype AppM a = AppM { _unApp :: ExceptT App.Error ( MultiReaderT AppDependencies (Brick.EventM AppComponent) ) a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadError App.Error)
+instance MonadTrans ( AppT r ) where
+  lift = MkAppT . lift . lift . lift
 
-liftEventM :: Brick.EventM AppComponent a -> AppM a
-liftEventM = AppM . lift . lift
+runApp :: Monad m => Logger m -> App.Config -> AppT App.Config m a -> m a
+runApp logger conf action = convertToRuntimeError
+  <$> runLoggingT (runExceptT (usingReaderT conf (_unApp action))) (logger . fmt)
+  where convertToRuntimeError = either (error . ("Unhandled app error: " <>) . toText . displayException) id
 
-runApp :: Logger -> App.Config -> AppM a -> Brick.EventM AppComponent a
-runApp logger conf app = do
-  let deps = conf :+: logger :+: HNil
-  runMultiReaderTNil (withMultiReaders deps (runExceptT (_unApp app))) <&> \case
-    Right ret -> ret
-    Left  err -> error ("Unhandled app error: " <> toText (displayException err))
-
-instance {-# OVERLAPPING #-} (ContainsType a AppDependencies) => MonadMultiReader a AppM where
-  mAsk = AppM mAsk
-
-instance MonadLog Fmt.Builder AppM  where
-  logMessageFree addLog = do
-    appLogger <- mAsk @Logger
-    appLogger $ addLog $ \logLine -> one (fmt logLine)
-
-instance Req.MonadHttp AppM where
+instance MonadIO m => Req.MonadHttp (AppT r m) where
   handleHttpException = throwError . App.HttpError
+
+type instance Magnified (AppT r m) = Effect (ExceptT App.Error (LoggingT Fmt.Builder m))
+
+instance (Monad m, MonadReader a (AppT a m), MonadReader b (AppT b m)) => Magnify (AppT b m) (AppT a m) b a where
+  magnify lens (MkAppT op) = MkAppT $ magnify lens op
+
+handleEvent'
+  :: Brick.BrickEvent n AppEvent -> App.ActiveState -> AppT App.Config (Brick.EventM n) (Brick.Next App.ActiveState)
+handleEvent' event =
+  magnify App.graphiteConfig
+    . handleEvent
+        (EventHandler { continue = lift . Brick.continue, ignore = lift . Brick.continue, stop = lift . Brick.halt })
+        event

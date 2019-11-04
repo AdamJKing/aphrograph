@@ -4,6 +4,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeApplications #-}
@@ -23,9 +24,25 @@ import           Network.HTTP.Req
 import           Network.HTTP.Client           as HTTP
 import           Data.Typeable
 import qualified Text.Show                     as TS
+import           Control.Lens.TH                ( makePrisms )
 
 newtype Time = Time { timestamp :: POSIXTime }
     deriving newtype ( Show, Eq, Ord, Num, Real, Enum, Fractional, RealFrac, Scalable )
+
+newtype Value = Value Decimal
+    deriving newtype ( Show, Eq, Ord, Num, Fractional, Real, RealFrac, Scalable )
+    deriving Generic
+
+data DataPoint = DataPoint { value :: Value, time :: Time }
+    deriving ( Show, Eq )
+
+newtype From = From Text
+    deriving newtype ( Show, Eq, IsString , ToHttpApiData)
+
+newtype To = To Text
+    deriving newtype ( Show, Eq, IsString , ToHttpApiData)
+
+type Target = Text
 
 data GraphiteRequest = RenderRequest {
   _from :: From,
@@ -47,7 +64,7 @@ data GraphiteError = HttpError HTTP.HttpException | ParsingError Text
   deriving ( Show, Generic )
   deriving anyclass Exception
 
-type Target = Text
+makePrisms ''GraphiteError
 
 instance FormatTime Time where
   formatCharacter char = do
@@ -80,19 +97,6 @@ deltaSeconds = deltaTime' 1
 
 deltaTime' :: Time -> Time -> Time -> Int
 deltaTime' step earliest latest = if earliest == latest then 0 else floor $ (latest - earliest) / step
-
-newtype Value = Value Decimal
-    deriving newtype ( Show, Eq, Ord, Num, Fractional, Real, RealFrac, Scalable )
-    deriving Generic
-
-data DataPoint = DataPoint { value :: Value, time :: Time }
-    deriving ( Show, Eq )
-
-newtype From = From Text
-    deriving newtype ( Show, Eq, IsString , ToHttpApiData)
-
-newtype To = To Text
-    deriving newtype ( Show, Eq, IsString , ToHttpApiData)
 
 instance JSON.FromJSON Time where
   parseJSON = fmap Time . JSON.parseJSON @NominalDiffTime

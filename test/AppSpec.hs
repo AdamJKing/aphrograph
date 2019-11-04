@@ -1,6 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module AppSpec where
 
@@ -11,10 +12,12 @@ import           Test.Hspec.QuickCheck          ( prop )
 import           Test.QuickCheck
 import           Test.QuickCheck.Monadic
 import           ArbitraryInstances             ( )
-import           App.State
 import           Network.HTTP.Req
 import           CommonProperties
 import           Graphite.Types
+import           Graphite                       ( runGraphite
+                                                , GraphiteT
+                                                )
 
 vanillaHttpException :: Gen HttpException
 vanillaHttpException = VanillaHttpException <$> arbitrary
@@ -22,16 +25,14 @@ vanillaHttpException = VanillaHttpException <$> arbitrary
 jsonParseException :: Gen HttpException
 jsonParseException = JsonHttpException <$> arbitrary
 
+type MockGraphite = PropertyM (GraphiteT IO)
+
 spec :: Spec
 spec = describe "App" $ describe "MonadHttp" $ do
-  prop "captures all vanilla http exceptions as http errors" . monadicApp $ do
+  prop "captures all vanilla http exceptions as http errors" . monadic (idempotentIOProperty . runGraphite) $ do
     err <- pick vanillaHttpException
-    handleHttpException err `shouldThrow` \case
-      AppGraphiteError _ -> return True
-      _                  -> return False
+    handleHttpException err `shouldThrowMatching` _HttpError
 
-  prop "captures all json parse exceptions as http errors" . monadicApp $ do
+  prop "captures all json parse exceptions as http errors" . monadic (idempotentIOProperty . runGraphite) $ do
     err <- pick jsonParseException
-    handleHttpException err `shouldThrow` \case
-      AppGraphiteError (ParsingError _) -> return True
-      _ -> return False
+    handleHttpException err `shouldThrowMatching` _ParsingError

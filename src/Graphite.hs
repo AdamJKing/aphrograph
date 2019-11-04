@@ -1,7 +1,9 @@
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -9,10 +11,10 @@
 
 module Graphite where
 
+import           Control.Monad.Except           ( MonadError(throwError) )
 import           Data.Aeson                    as JSON
 import           Graphite.Types
 import           Network.HTTP.Req              as Req
-import           Control.Monad.Log
 
 asQueryParams :: GraphiteRequest -> Req.Option s
 asQueryParams RenderRequest {..} =
@@ -37,16 +39,19 @@ makeRequest' url params = do
   resp <- req GET url NoReqBody jsonResponse params
   return (responseBody resp)
 
-instance MonadIO m => MonadGraphite (ReaderT GraphiteUrl m) where
-  listMetrics = ask >>= runReq defaultHttpConfig . listMetricsHttp
+newtype GraphiteT m a = GraphiteT { _runGraphite :: ReaderT GraphiteUrl (ExceptT GraphiteError m) a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadError GraphiteError, MonadReader GraphiteUrl)
 
-  getMetrics request = ask >>= \url -> runReq defaultHttpConfig (getMetricsHttp url request)
+instance MonadTrans GraphiteT where
+  lift = GraphiteT . lift . lift
 
-instance (IsString msg,  MonadGraphite m) => MonadGraphite (LoggingT msg m) where
-  listMetrics = logMessage "Listing available metrics" >> lift listMetrics
+instance MonadIO m => MonadGraphite (GraphiteT m) where
+  listMetrics = ask >>= listMetricsHttp
+  getMetrics  = (ask >>=) . (getMetricsHttp ??)
 
-  getMetrics request = logMessage "Requesting metrics" >> lift (getMetrics request)
+instance MonadIO m => MonadHttp (GraphiteT m) where
+  handleHttpException (VanillaHttpException err   ) = throwError (HttpError err)
+  handleHttpException (JsonHttpException    reason) = throwError (ParsingError (toText reason))
 
-instance MonadGraphite m => MonadGraphite (ReaderT r m) where
-  listMetrics = lift listMetrics
-  getMetrics request = lift (getMetrics request)
+runGraphite :: GraphiteUrl -> GraphiteT m a -> m (Either GraphiteError a)
+runGraphite url = runExceptT . usingReaderT url . _runGraphite
