@@ -12,6 +12,7 @@ tests:
       - quickcheck-arbitrary-adt
       - random
       - quickcheck-instances
+      - quickcheck-transformer
 
 ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS -fno-print-expanded-synonyms
 dependencies:

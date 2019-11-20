@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -8,12 +9,16 @@ module EventsSpec
 where
 
 import           Test.Hspec                    as HS
-import           Test.Hspec.QuickCheck
 import           Brick.Types                   as Brick
 import           Test.QuickCheck
 import           Test.QuickCheck.Monadic
 import           ArbitraryInstances             ( )
-import           Events                        as E
+import qualified Events                        as E
+import qualified App.State                     as App
+import qualified App.Config                    as App
+import           CommonProperties
+import           Test.Orphans                   ( )
+import qualified Display.Graph                 as Graph
 
 data DummyComponent = DummyComponent deriving (Eq, Show)
 
@@ -31,15 +36,43 @@ mouseUp = do
 
 spec :: HS.Spec
 spec = describe "Events" $ do
-  prop "ignores misc. brick events that the application doesn't use" $ forAll (oneof [mouseDown, mouseUp]) $ \e ->
-    let handler = EventHandler { continue = const (return $ Just False)
-                               , ignore   = const (return $ Just True)
-                               , stop     = const (return Nothing)
-                               }
-    in  monadic runIdentity $ run (handleEvent handler e False)
+  appProp "ignores misc. brick events that the application doesn't use"
+    $ (forAllEnvs @App.Config)
+    $ (throwingErrors @App.Error)
+    $ ignoreLogging
+    $ withMockGraphite
+    $ do
+        event      <- pick $ oneof [mouseDown, mouseUp]
+        startState <- pick arbitrary
+        state'     <- pick arbitrary
+        let handler = E.EventHandler { continue = const (return Nothing)
+                                     , ignore   = const (return $ Just state')
+                                     , stop     = const (return Nothing)
+                                     }
+        result <- run (E.handleEvent handler event startState)
+        return (result === Just state')
 
-  it "updates the app state from graphite when requested (UpdateEvent)" pending
+  appProp "updates the app state from graphite when requested (UpdateEvent)"
+    $ (forAllEnvs @App.Config)
+    $ (throwingErrors @App.Error)
+    $ ignoreLogging
+    $ withMockGraphite
+    $ do
+        (_, update) <- lift get
+        result      <- run E.updateGraphData
+        return (result `shouldBe` Graph.extractGraph update)
 
-  it "ends the event loop when an Exit Key is pressed"                  pending
-    -- $          handleBrickEvents (Brick.VtyEvent E.ExitKey) 
-    -- `shouldBe` Just ExitEvent
+  appProp "ends the event loop when an Exit Key is pressed"
+    $ (forAllEnvs @App.Config)
+    $ (throwingErrors @App.Error)
+    $ ignoreLogging
+    $ withMockGraphite
+    $ do
+        startState <- pick arbitrary
+        state'     <- pick arbitrary
+        let handler = E.EventHandler { continue = const (return Nothing)
+                                     , ignore   = const (return Nothing)
+                                     , stop     = const (return $ Just state')
+                                     }
+        result <- run (E.handleEvent handler (VtyEvent E.ExitKey) startState)
+        return (result === Just state')

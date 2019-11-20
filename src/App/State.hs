@@ -14,7 +14,7 @@ import           Data.Time.LocalTime
 import qualified App.Config                    as App
 import qualified Network.HTTP.Req              as Req
 
-data Error = AppGraphiteError GraphiteError | HttpError Req.HttpException
+newtype Error = HttpError Req.HttpException
   deriving ( Show, Generic )
   deriving anyclass Exception
 
@@ -22,7 +22,7 @@ data ActiveState = ActiveState {
      _metricsView :: Maybe [Metric]
    , _graphData :: Graph Time Value
    , _timezone ::  TimeZone
-} deriving ( Show , Generic )
+} deriving ( Show , Eq, Generic )
 
 makeLenses ''ActiveState
 

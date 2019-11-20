@@ -21,34 +21,30 @@ import           Fmt
 import           Control.Monad.Log             as Log
 import           Text.Show.Functions            ( )
 import           Control.Monad.Except           ( MonadError(throwError) )
-import           Control.Lens.Zoom
-import           Control.Lens.Internal.Zoom     ( Effect(..) )
+import           Control.Lens.Getter
+import           Graphite.Types
+import           Graphite
 
 type Logger m = Log.Handler m Text
 
-newtype AppT r m a = MkAppT { _unApp :: ReaderT r (  ExceptT App.Error (LoggingT Fmt.Builder m ) ) a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadLog Fmt.Builder, MonadReader r, MonadError App.Error)
+newtype AppT m a = MkAppT { _unApp :: ReaderT App.Config (  ExceptT App.Error (LoggingT Fmt.Builder m ) ) a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadLog Fmt.Builder, MonadReader App.Config, MonadError App.Error)
 
-instance MonadTrans ( AppT r ) where
+instance MonadTrans AppT where
   lift = MkAppT . lift . lift . lift
 
-runApp :: Monad m => Logger m -> App.Config -> AppT App.Config m a -> m a
+runApp :: Monad m => Logger m -> App.Config -> AppT m a -> m a
 runApp logger conf action = convertToRuntimeError
   <$> runLoggingT (runExceptT (usingReaderT conf (_unApp action))) (logger . fmt)
   where convertToRuntimeError = either (error . ("Unhandled app error: " <>) . toText . displayException) id
 
-instance MonadIO m => Req.MonadHttp (AppT r m) where
+instance MonadIO m => Req.MonadHttp (AppT m) where
   handleHttpException = throwError . App.HttpError
 
-type instance Magnified (AppT r m) = Effect (ExceptT App.Error (LoggingT Fmt.Builder m))
+instance MonadIO m => MonadGraphite (AppT m) where
+  listMetrics = view (App.graphiteConfig . App.graphiteUrl) >>= listMetricsHttp
+  getMetrics request = view (App.graphiteConfig . App.graphiteUrl) >>= getMetricsHttp ?? request
 
-instance (Monad m, MonadReader a (AppT a m), MonadReader b (AppT b m)) => Magnify (AppT b m) (AppT a m) b a where
-  magnify lens (MkAppT op) = MkAppT $ magnify lens op
-
-handleEvent'
-  :: Brick.BrickEvent n AppEvent -> App.ActiveState -> AppT App.Config (Brick.EventM n) (Brick.Next App.ActiveState)
-handleEvent' event =
-  magnify App.graphiteConfig
-    . handleEvent
-        (EventHandler { continue = lift . Brick.continue, ignore = lift . Brick.continue, stop = lift . Brick.halt })
-        event
+handleEvent' :: Brick.BrickEvent n AppEvent -> App.ActiveState -> AppT (Brick.EventM n) (Brick.Next App.ActiveState)
+handleEvent' = handleEvent
+  (EventHandler { continue = lift . Brick.continue, ignore = lift . Brick.continue, stop = lift . Brick.halt })

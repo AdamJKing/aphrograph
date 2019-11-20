@@ -41,7 +41,7 @@ main = do
       initialVty <- getVty
       let app = mkApp (liftIO . prettier handler) args
       Brick.customMain initialVty getVty (Just eventQueue) app startState
-  where prettier f = f . Doc.pretty . fmap toString
+  where prettier f = f . Doc.pretty
 
 getVty :: MonadIO m => m Vty.Vty
 getVty = liftIO (Vty.userConfig >>= Vty.mkVty)

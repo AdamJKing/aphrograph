@@ -40,10 +40,10 @@ debugArgument = switch $ long "debug" <> hidden
 
 arguments :: Parser App.Config
 arguments = do
-  fromTime    <- fromTimeArgument
-  toTime      <- optional toTimeArgument
-  targetArg   <- targetArgument
-  graphiteUrl <- graphiteUrlArgument
+  _fromTime    <- fromTimeArgument
+  _toTime      <- optional toTimeArgument
+  _targetArg   <- targetArgument
+  _graphiteUrl <- graphiteUrlArgument
   return (App.Config $ GraphiteConfig { .. })
 
 withCommandLineArguments :: (App.Config -> IO b) -> IO b

@@ -14,12 +14,12 @@ import qualified App.Config                    as App
 import qualified App.State                     as App
 import           Control.Monad.Log
 import           Display.Graph                  ( Graph )
-import           Graphite
 import           Graphite.Types
 import           Display.Widgets
-import           Control.Monad.Except           ( MonadError(throwError) )
+import           Control.Monad.Except           ( MonadError() )
 import           App.Logging
 import           Control.Lens.Setter
+import           Control.Lens.Getter
 
 data AppEvent = UpdateEvent | ExitEvent
     deriving ( Show, Eq )
@@ -30,13 +30,13 @@ pattern ExitKey :: Vty.Event
 pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 
 updateGraphData
-    :: (MonadError App.Error m, MonadIO m, Logger msg m, MonadReader App.GraphiteConfig m) => m (Graph Time Value)
+    :: (MonadError App.Error m, Logger msg m, MonadReader App.Config m, MonadGraphite m) => m (Graph Time Value)
 updateGraphData = do
-    App.GraphiteConfig {..} <- ask
-    data' <- runGraphite _graphiteUrl
-                         (getMetrics $ RenderRequest { _from = _fromTime, _to = _toTime, _target = _targetArg })
+    App.GraphiteConfig{..} <- view App.graphiteConfig
+    let request = RenderRequest { _from = _fromTime, _to = _toTime, _target = _targetArg }
+    data' <- getMetrics request
     logMessage "Populating graph."
-    either (throwError . App.AppGraphiteError) (return . Graph.extractGraph) data'
+    return (Graph.extractGraph data')
 
 data EventHandler s m f = EventHandler {
     continue :: s -> m (f s),
@@ -45,7 +45,7 @@ data EventHandler s m f = EventHandler {
 }
 
 handleEvent
-    :: (MonadError App.Error m, MonadIO m, MonadReader App.GraphiteConfig m, Logger msg m)
+    :: (MonadGraphite m, MonadError App.Error m, MonadReader App.Config m, Logger msg m)
     => EventHandler App.ActiveState m f
     -> Brick.BrickEvent n AppEvent
     -> App.ActiveState

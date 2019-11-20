@@ -19,12 +19,12 @@ import           Data.List                      ( maximum
                                                 , minimum
                                                 )
 
-genUniqueNonEmptyListSorted :: forall a . (Ord a, Arbitrary a) => Gen [a]
+genUniqueNonEmptyListSorted :: forall  a . (Ord a, Arbitrary a) => Gen [a]
 genUniqueNonEmptyListSorted = do
   distinct <- arbitrary @(Set a) `suchThat` (not . S.null)
   return $ sort . toList $ distinct
 
-uniqueFstTupleList' :: forall a b . (Ord a, Arbitrary a, Arbitrary b) => Gen (SortedList (a, b))
+uniqueFstTupleList' :: forall  a b . (Ord a, Arbitrary a, Arbitrary b) => Gen (SortedList (a, b))
 uniqueFstTupleList' = do
   distinct <- arbitrary @(Set a)
   values   <- arbitrary @(InfiniteList b)
