@@ -4,7 +4,10 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TupleSections #-}
 
-module Display.GraphSpec where
+module Display.GraphSpec
+  ( spec
+  )
+where
 
 import           Display.Graph                 as Graph
 import           ArbitraryInstances             ( )

@@ -1,7 +1,10 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module NormalisationSpec where
+module NormalisationSpec
+  ( spec
+  )
+where
 
 import           Normalisation
 import           Test.QuickCheck

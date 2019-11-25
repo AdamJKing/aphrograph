@@ -2,4 +2,11 @@ flags: {}
 packages:
   - .
 extra-deps: []
-resolver: nightly-2019-05-11
+resolver: lts-14.16
+
+ghc-options:
+  {
+    "$locals": -ddump-to-file -ddump-hi,
+    "$targets": -Wall -Wno-type-defaults -j4 -fno-print-expanded-synonyms,
+    "$everything": -O2 -threaded,
+  }

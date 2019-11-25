@@ -12,7 +12,17 @@
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module CommonProperties where
+module CommonProperties
+  ( shouldThrowMatching
+  , withMockGraphite
+  , forAllEnvs
+  , throwingErrors
+  , ignoreLogging
+  , appProp
+  , daysFrom
+  , range
+  )
+where
 
 import           ArbitraryInstances             ( )
 import           Test.QuickCheck.Property       ( Testable(..)
@@ -50,7 +60,7 @@ shouldThrowMatching :: MonadError e m => m a -> (e -> Property) -> PropertyM m P
 shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError` (return . property . errorMatcher)
   where failOnNoError = (>> return noExceptionThrown)
 
-newtype EmptyState s = Empty { unEmpty :: s }
+newtype EmptyState s = Empty s
 
 instance Arbitrary (EmptyState ActiveState) where
   arbitrary = return . Empty $ ActiveState { _metricsView = Nothing, _graphData = mempty, _timezone = utc }
@@ -68,10 +78,6 @@ readerProp r = hoistLiftedPropertyM (`runReaderT` r)
 
 forAllEnvs :: (Arbitrary r, Show r, Monad m) => PropertyM (ReaderT r m) a -> PropertyM m a
 forAllEnvs op = pick arbitrary >>= (readerProp ?? op)
-
-eitherProp :: (Show b, Testable a) => Either b a -> Property
-eitherProp (Right p) = property p
-eitherProp (Left  p) = property $ failed { reason = "Excpected Right, got Left(" ++ show p ++ ")" }
 
 hoistGen :: (forall x . n x -> m x) -> Gen (n a) -> Gen (m a)
 hoistGen nat (MkGen f) = MkGen $ \gen -> nat . f gen

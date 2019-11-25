@@ -1,11 +1,46 @@
 library:
   source-dirs: src
+  dependencies:
+    - aeson
+    - array
+    - base-noprelude >= 4.12.0.0
+    - brick
+    - containers
+    - Decimal
+    - fmt >= 0.6.1.1
+    - http-api-data
+    - http-client
+    - lens
+    - logging-effect
+    - mtl
+    - optparse-simple
+    - relude
+    - req
+    - singletons
+    - text
+    - time
+    - transformers
+    - vector
+    - vty
+
 tests:
   aphrograph-test:
     source-dirs: test
     main: Spec.hs
-    ghc-options: -Wno-orphans
     dependencies:
+      - base-noprelude >= 4.12.0.0
+      - relude
+      - req
+      - hourglass
+      - Decimal
+      - vty
+      - http-client
+      - aeson
+      - containers
+      - time
+      - mtl
+      - brick
+      - fmt
       - aphrograph
       - hspec
       - QuickCheck
@@ -13,54 +48,26 @@ tests:
       - random
       - quickcheck-instances
       - quickcheck-transformer
+      - logging-effect
 
-ghc-options: -Wall -Wno-type-defaults -Werror -j4 +RTS -A32m -RTS -fno-print-expanded-synonyms
-dependencies:
-  - aeson
-  - array
-  - base-noprelude >= 4.12.0.0
-  - brick
-  - comonad
-  - containers
-  - Decimal
-  - exceptions
-  - fmt >= 0.6.1.1
-  - hourglass
-  - http-api-data
-  - http-client
-  - interpolate
-  - lens
-  - lens-aeson
-  - logging-effect
-  - mmorph
-  - monad-control
-  - monad-loops
-  - mtl
-  - optparse-simple
-  - prettyprinter
-  - relude
-  - req
-  - scientific
-  - singletons
-  - text
-  - time
-  - transformers
-  - transformers-base
-  - vector
-  - vty
 default-extensions:
   - RecordWildCards
   - LambdaCase
   - OverloadedStrings
+
 name: aphrograph
 version: 0.1.0.0
 extra-source-files:
   - README.md
-  - ChangeLog.md
+
 executables:
   aphrograph:
     source-dirs: app
     main: Main.hs
-    ghc-options: -threaded -rtsopts -with-rtsopts=-N
     dependencies:
       - aphrograph
+      - base-noprelude >= 4.12.0.0
+      - vty
+      - brick
+      - prettyprinter
+      - logging-effect

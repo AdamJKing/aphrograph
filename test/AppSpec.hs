@@ -3,7 +3,10 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 
-module AppSpec where
+module AppSpec
+  ( spec
+  )
+where
 
 import           Test.Hspec                     ( Spec
                                                 , describe
