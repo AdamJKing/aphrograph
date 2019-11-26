@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -27,7 +28,9 @@ getMetricsHttp :: MonadHttp m => GraphiteUrl -> GraphiteRequest -> m [DataPoint]
 getMetricsHttp (GraphiteUrl url) renderRequest =
   let parameters = asQueryParams renderRequest
       renderUrl  = url /: "render"
-  in  datapoints <$> makeRequest' renderUrl parameters
+  in  makeRequest' renderUrl parameters <&> \case
+        [MetricsResponse { datapoints }] -> datapoints
+        _ -> []
 
 makeRequest :: (MonadHttp m, JSON.FromJSON a) => Url s -> m a
 makeRequest url = do
