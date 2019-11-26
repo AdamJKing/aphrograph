@@ -49,8 +49,8 @@ getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
 
 appTheme :: Brick.AttrMap
 appTheme =
-  let selectedTheme   = ("metric" <> "selected", Vty.black `on` Vty.blue)
-      unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
+  let selectedTheme    = ("metric" <> "selected", Vty.black `on` Vty.blue)
+      unselectedTheme  = ("metric" <> "unselected", Vty.blue `on` Vty.black)
   in  Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
 mkApp :: Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent

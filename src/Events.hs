@@ -29,8 +29,11 @@ data AppEvent = UpdateEvent | ExitEvent
 
 type SystemEvent = Brick.BrickEvent AppComponent AppEvent
 
+pattern KeyDown :: Char -> Vty.Event
+pattern KeyDown k = Vty.EvKey (Vty.KChar k) []
+
 pattern ExitKey :: Vty.Event
-pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
+pattern ExitKey = KeyDown 'q'
 
 updateGraphData
     :: (MonadError App.Error m, Logger msg m, MonadReader App.Config m, MonadGraphite m) => m (Graph Time Value)
@@ -55,6 +58,9 @@ handleEvent
     -> m (f App.CurrentState)
 handleEvent EventHandler {..} event state' = case event of
     (Brick.VtyEvent ExitKey    ) -> stop state'
+
+    (Brick.VtyEvent (KeyDown 'm')) -> continue $ over (_Right . App.metricsView) toggleMetricView state'
+
     (Brick.AppEvent UpdateEvent) -> processUpdate `catchError` continueWithFailure
     _                            -> ignore state'
   where
@@ -63,3 +69,5 @@ handleEvent EventHandler {..} event state' = case event of
         continue $ set (_Right . App.graphData) newGraph state'
 
     continueWithFailure = continue . Left . App.FailedState
+
+    toggleMetricView = maybe (Just ["Example"]) (const Nothing)

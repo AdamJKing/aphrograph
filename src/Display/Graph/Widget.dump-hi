@@ -1,0 +1,442 @@
+
+==================== FINAL INTERFACE ====================
+2019-11-26 19:34:38.773410427 UTC
+
+interface main:Display.Graph.Widget [hpc] 8065
+  interface hash: 697b582996f5ecff65cfa2a411ba98f2
+  ABI hash: 60b7c84b940940049bfc0e691ace10ee
+  export-list hash: 8f50fa0483163ba838d6d191591fd2de
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: 890a95b9725c47f47e1c9520d9888692
+  opt_hash: d0a78e7b344f95c7406be35c9b75e196
+  hpc_hash: 93b885adfe0da089cdf634904fd59f71
+  plugin_hash: ad164012d6b1e14942349d58b1132007
+  sig of: Nothing
+  used TH splices: False
+  where
+exports:
+  Display.Graph.Widget.graphDisplayWidget
+  Display.Graph.Widget.GraphDisplayWidget
+module dependencies: Display.Graph Display.Labels
+                     Display.Projection.Scalable Display.Widgets Graphite.Types
+                     Normalisation Prelude
+package dependencies: Decimal-0.5.1 RSA-2.3.1 SHA-1.6.4.4
+                      StateVar-1.2 adjunctions-4.4 aeson-1.4.6.0 array-0.5.3.0
+                      asn1-encoding-0.9.6 asn1-parse-0.9.5 asn1-types-0.3.3 async-2.2.2
+                      attoparsec-0.13.2.3 attoparsec-iso8601-1.0.1.0
+                      authenticate-oauth-1.6.0.1 base-4.12.0.0 base-compat-0.10.5
+                      base-orphans-0.8.1 base64-bytestring-1.0.0.2 basement-0.0.11
+                      bifunctors-5.5.5 binary-0.8.6.0 blaze-builder-0.4.1.0 brick-0.47.1
+                      bytestring-0.10.8.2 call-stack-0.1.0 case-insensitive-1.2.0.11
+                      cereal-0.5.8.1 comonad-5.0.5 connection-0.3.1 containers-0.6.0.1
+                      contravariant-1.5.2 cookie-0.4.5 crypto-api-0.13.3
+                      crypto-pubkey-types-0.4.3 cryptonite-0.25 data-default-0.7.1.1
+                      data-default-class-0.1.2.0 data-default-instances-containers-0.0.1
+                      data-default-instances-dlist-0.0.1
+                      data-default-instances-old-locale-0.0.1 deepseq-1.4.4.0
+                      directory-1.3.3.0 distributive-0.6.1 dlist-0.8.0.7 entropy-0.4.1.5
+                      exceptions-0.10.3 filepath-1.4.2.1 fmt-0.6.1.2 formatting-6.3.7
+                      free-5.1.2 ghc-boot-th-8.6.5 ghc-prim-0.5.3 hashable-1.2.7.0
+                      hourglass-0.2.12 http-api-data-0.4.1.1 http-client-0.6.4
+                      http-client-tls-0.3.5.3 http-types-0.12.3 integer-gmp-1.0.2.0
+                      integer-logarithms-1.0.3 kan-extensions-5.2 lens-4.17.1
+                      memory-0.14.18 microlens-0.4.10 microlens-mtl-0.1.11.1
+                      microlens-th-0.4.2.3 mime-types-0.1.0.9 monad-control-1.0.2.3
+                      mtl-2.2.2 network-2.8.0.1 network-uri-2.6.1.0 old-locale-1.0.0.7
+                      parsec-3.1.14.0 pem-0.2.4 pretty-1.1.3.6 primitive-0.6.4.0
+                      profunctors-5.3 random-1.1 reflection-2.1.5 relude-0.5.0 req-2.1.0
+                      retry-0.8.1.0 safe-0.3.17 scientific-0.3.6.2 semigroupoids-5.3.3
+                      singletons-2.5.1 socks-0.6.1 stm-2.5.0.0 streaming-commons-0.2.1.1
+                      syb-0.7.1 tagged-0.8.6 template-haskell-2.14.0.0 terminfo-0.4.1.2
+                      text-1.2.3.1 th-abstraction-0.3.1.0 th-desugar-1.9
+                      th-expand-syns-0.4.5.0 th-lift-0.8.0.1 th-lift-instances-0.1.14
+                      th-orphans-0.13.9 th-reify-many-0.1.9 time-1.8.0.2
+                      time-compat-1.9.2.2 tls-1.4.1 transformers-0.5.6.2
+                      transformers-base-0.4.5.2 transformers-compat-0.6.5 unix-2.7.2.2
+                      unordered-containers-0.2.10.0 utf8-string-1.0.1.1 uuid-types-1.0.3
+                      vector-0.12.0.3 vty-5.25.1 word-wrap-0.4.1 x509-1.7.5
+                      x509-store-1.6.7 x509-system-1.6.6 x509-validation-1.6.11
+                      zlib-0.6.2.1
+orphans: brick-0.47.1:Brick.Types
+         attoparsec-0.13.2.3:Data.Attoparsec.Text.Internal
+         attoparsec-0.13.2.3:Data.Attoparsec.ByteString.Char8
+         time-1.8.0.2:Data.Time.Clock.TAI
+         data-default-instances-containers-0.0.1:Data.Default.Instances.Containers
+         data-default-instances-dlist-0.0.1:Data.Default.Instances.DList
+         data-default-instances-old-locale-0.0.1:Data.Default.Instances.OldLocale
+         RSA-2.3.1:Codec.Crypto.RSA.Pure
+         http-client-0.6.4:Network.HTTP.Client.Request
+         basement-0.0.11:Basement.UArray.Base basement-0.0.11:Basement.Block
+         network-2.8.0.1:Network.Socket reflection-2.1.5:Data.Reflection
+         stm-2.5.0.0:Control.Monad.STM
+         hashable-1.2.7.0:Data.Hashable.Generic
+         relude-0.5.0:Relude.Monad.Either singletons-2.5.1:Data.Singletons
+         singletons-2.5.1:Data.Singletons.Prelude.Monad
+         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+         singletons-2.5.1:Data.Singletons.Prelude.Const
+         singletons-2.5.1:Data.Singletons.Prelude.Functor
+         singletons-2.5.1:Data.Singletons.Prelude.Identity
+         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+         singletons-2.5.1:Data.Singletons.TypeLits
+         singletons-2.5.1:Data.Singletons.ShowSing
+         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+         singletons-2.5.1:Data.Singletons.Prelude.Ord
+         singletons-2.5.1:Data.Singletons.Prelude.Instances
+         singletons-2.5.1:Data.Singletons.Decide
+         th-orphans-0.13.9:Language.Haskell.TH.Instances
+         th-lift-0.8.0.1:Language.Haskell.TH.Lift
+         th-lift-instances-0.1.14:Instances.TH.Lift
+         text-1.2.3.1:Data.Text.Lazy text-1.2.3.1:Data.Text
+         binary-0.8.6.0:Data.Binary.Generic
+         bytestring-0.10.8.2:Data.ByteString.Builder
+         text-1.2.3.1:Data.Text.Show vector-0.12.0.3:Data.Vector.Unboxed
+         vector-0.12.0.3:Data.Vector.Fusion.Bundle
+         syb-0.7.1:Data.Generics.Instances
+         transformers-0.5.6.2:Control.Monad.Trans.Error
+         time-1.8.0.2:Data.Time.Format.Parse
+         time-1.8.0.2:Data.Time.LocalTime.Internal.ZonedTime
+         time-1.8.0.2:Data.Time.LocalTime.Internal.LocalTime
+         time-1.8.0.2:Data.Time.Calendar.Gregorian base-4.12.0.0:GHC.Float
+         base-4.12.0.0:GHC.Base
+family instance modules: adjunctions-4.4:Data.Functor.Rep
+                         aeson-1.4.6.0:Data.Aeson.Types.Internal
+                         attoparsec-0.13.2.3:Data.Attoparsec.Internal.Types
+                         base-4.12.0.0:Control.Applicative base-4.12.0.0:Data.Complex
+                         base-4.12.0.0:Data.Functor.Compose base-4.12.0.0:Data.Functor.Const
+                         base-4.12.0.0:Data.Functor.Identity
+                         base-4.12.0.0:Data.Functor.Product base-4.12.0.0:Data.Functor.Sum
+                         base-4.12.0.0:Data.Monoid base-4.12.0.0:Data.Semigroup
+                         base-4.12.0.0:Data.Semigroup.Internal base-4.12.0.0:Data.Version
+                         base-4.12.0.0:Data.Void base-4.12.0.0:GHC.Exts
+                         base-4.12.0.0:GHC.Generics base-4.12.0.0:GHC.IO.Exception
+                         basement-0.0.11:Basement.Block.Base
+                         basement-0.0.11:Basement.Bounded basement-0.0.11:Basement.Monad
+                         basement-0.0.11:Basement.MutableBuilder
+                         basement-0.0.11:Basement.Nat basement-0.0.11:Basement.NonEmpty
+                         basement-0.0.11:Basement.Numerical.Subtractive
+                         basement-0.0.11:Basement.PrimType basement-0.0.11:Basement.String
+                         basement-0.0.11:Basement.String.Encoding.ASCII7
+                         basement-0.0.11:Basement.String.Encoding.ISO_8859_1
+                         basement-0.0.11:Basement.String.Encoding.UTF16
+                         basement-0.0.11:Basement.String.Encoding.UTF32
+                         basement-0.0.11:Basement.Types.OffsetSize
+                         basement-0.0.11:Basement.UArray.Base
+                         basement-0.0.11:Basement.UTF8.Base
+                         bifunctors-5.5.5:Data.Bifunctor.Biff
+                         bifunctors-5.5.5:Data.Bifunctor.Clown
+                         bifunctors-5.5.5:Data.Bifunctor.Fix
+                         bifunctors-5.5.5:Data.Bifunctor.Flip
+                         bifunctors-5.5.5:Data.Bifunctor.Join
+                         bifunctors-5.5.5:Data.Bifunctor.Joker
+                         bifunctors-5.5.5:Data.Bifunctor.Product
+                         bifunctors-5.5.5:Data.Bifunctor.Sum
+                         bifunctors-5.5.5:Data.Bifunctor.Tannen
+                         bifunctors-5.5.5:Data.Bifunctor.Wrapped brick-0.47.1:Brick.AttrMap
+                         brick-0.47.1:Brick.BorderMap brick-0.47.1:Brick.Types.Common
+                         brick-0.47.1:Brick.Types.Internal
+                         brick-0.47.1:Brick.Widgets.Border.Style
+                         brick-0.47.1:Brick.Widgets.List brick-0.47.1:Data.IMap
+                         containers-0.6.0.1:Data.Graph
+                         containers-0.6.0.1:Data.IntMap.Internal
+                         containers-0.6.0.1:Data.IntSet.Internal
+                         containers-0.6.0.1:Data.Map.Internal
+                         containers-0.6.0.1:Data.Sequence.Internal
+                         containers-0.6.0.1:Data.Set.Internal containers-0.6.0.1:Data.Tree
+                         cryptonite-0.25:Crypto.ECC cryptonite-0.25:Crypto.Error.Types
+                         cryptonite-0.25:Crypto.Hash.Blake2
+                         cryptonite-0.25:Crypto.Hash.Blake2b
+                         cryptonite-0.25:Crypto.Hash.Blake2bp
+                         cryptonite-0.25:Crypto.Hash.Blake2s
+                         cryptonite-0.25:Crypto.Hash.Blake2sp
+                         cryptonite-0.25:Crypto.Hash.Keccak cryptonite-0.25:Crypto.Hash.MD2
+                         cryptonite-0.25:Crypto.Hash.MD4 cryptonite-0.25:Crypto.Hash.MD5
+                         cryptonite-0.25:Crypto.Hash.RIPEMD160
+                         cryptonite-0.25:Crypto.Hash.SHA1 cryptonite-0.25:Crypto.Hash.SHA224
+                         cryptonite-0.25:Crypto.Hash.SHA256 cryptonite-0.25:Crypto.Hash.SHA3
+                         cryptonite-0.25:Crypto.Hash.SHA384
+                         cryptonite-0.25:Crypto.Hash.SHA512
+                         cryptonite-0.25:Crypto.Hash.SHA512t
+                         cryptonite-0.25:Crypto.Hash.SHAKE
+                         cryptonite-0.25:Crypto.Hash.Skein256
+                         cryptonite-0.25:Crypto.Hash.Skein512
+                         cryptonite-0.25:Crypto.Hash.Tiger
+                         cryptonite-0.25:Crypto.Hash.Whirlpool dlist-0.8.0.7:Data.DList
+                         free-5.1.2:Control.Comonad.Cofree
+                         free-5.1.2:Control.Comonad.Trans.Cofree
+                         free-5.1.2:Control.Monad.Free free-5.1.2:Control.Monad.Trans.Free
+                         ghc-boot-th-8.6.5:GHC.ForeignSrcLang.Type
+                         ghc-boot-th-8.6.5:GHC.LanguageExtensions.Type
+                         http-client-0.6.4:Network.HTTP.Client
+                         kan-extensions-5.2:Data.Functor.Day
+                         kan-extensions-5.2:Data.Functor.Yoneda lens-4.17.1:Control.Lens.At
+                         lens-4.17.1:Control.Lens.Internal.Indexed
+                         lens-4.17.1:Control.Lens.Reified lens-4.17.1:Control.Lens.Tuple
+                         lens-4.17.1:Control.Lens.Wrapped lens-4.17.1:Control.Lens.Zoom
+                         main:Display.Labels main:Graphite.Types
+                         microlens-0.4.10:Lens.Micro.Internal
+                         microlens-mtl-0.1.11.1:Lens.Micro.Mtl.Internal
+                         monad-control-1.0.2.3:Control.Monad.Trans.Control
+                         network-uri-2.6.1.0:Network.URI
+                         pretty-1.1.3.6:Text.PrettyPrint.Annotated.HughesPJ
+                         pretty-1.1.3.6:Text.PrettyPrint.HughesPJ
+                         primitive-0.6.4.0:Control.Monad.Primitive
+                         primitive-0.6.4.0:Data.Primitive.Array
+                         primitive-0.6.4.0:Data.Primitive.ByteArray
+                         primitive-0.6.4.0:Data.Primitive.PrimArray
+                         primitive-0.6.4.0:Data.Primitive.SmallArray
+                         primitive-0.6.4.0:Data.Primitive.UnliftedArray
+                         profunctors-5.3:Data.Profunctor.Composition
+                         profunctors-5.3:Data.Profunctor.Rep
+                         relude-0.5.0:Relude.Container.One relude-0.5.0:Relude.Debug
+                         req-2.1.0:Network.HTTP.Req retry-0.8.1.0:Control.Retry
+                         singletons-2.5.1:Data.Singletons
+                         singletons-2.5.1:Data.Singletons.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+                         singletons-2.5.1:Data.Singletons.Prelude.Base
+                         singletons-2.5.1:Data.Singletons.Prelude.Bool
+                         singletons-2.5.1:Data.Singletons.Prelude.Const
+                         singletons-2.5.1:Data.Singletons.Prelude.Either
+                         singletons-2.5.1:Data.Singletons.Prelude.Enum
+                         singletons-2.5.1:Data.Singletons.Prelude.Eq
+                         singletons-2.5.1:Data.Singletons.Prelude.Foldable
+                         singletons-2.5.1:Data.Singletons.Prelude.Functor
+                         singletons-2.5.1:Data.Singletons.Prelude.Identity
+                         singletons-2.5.1:Data.Singletons.Prelude.Instances
+                         singletons-2.5.1:Data.Singletons.Prelude.IsString
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal.Disambiguation
+                         singletons-2.5.1:Data.Singletons.Prelude.Maybe
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+                         singletons-2.5.1:Data.Singletons.Prelude.Num
+                         singletons-2.5.1:Data.Singletons.Prelude.Ord
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Show
+                         singletons-2.5.1:Data.Singletons.Prelude.Traversable
+                         singletons-2.5.1:Data.Singletons.Prelude.Tuple
+                         singletons-2.5.1:Data.Singletons.Syntax
+                         singletons-2.5.1:Data.Singletons.TypeLits
+                         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+                         tagged-0.8.6:Data.Tagged
+                         template-haskell-2.14.0.0:Language.Haskell.TH.Syntax
+                         text-1.2.3.1:Data.Text text-1.2.3.1:Data.Text.Lazy
+                         th-abstraction-0.3.1.0:Language.Haskell.TH.Datatype
+                         th-desugar-1.9:Language.Haskell.TH.Desugar.AST
+                         unordered-containers-0.2.10.0:Data.HashMap.Base
+                         unordered-containers-0.2.10.0:Data.HashSet.Base
+                         uuid-types-1.0.3:Data.UUID.Types.Internal
+                         uuid-types-1.0.3:Data.UUID.Types.Internal.Builder
+                         vector-0.12.0.3:Data.Vector vector-0.12.0.3:Data.Vector.Primitive
+                         vector-0.12.0.3:Data.Vector.Storable
+                         vector-0.12.0.3:Data.Vector.Unboxed
+                         vector-0.12.0.3:Data.Vector.Unboxed.Base
+                         vty-5.25.1:Graphics.Vty.Attributes
+                         vty-5.25.1:Graphics.Vty.Attributes.Color
+                         vty-5.25.1:Graphics.Vty.Image.Internal
+                         vty-5.25.1:Graphics.Vty.Input.Events
+                         zlib-0.6.2.1:Codec.Compression.Zlib.Stream
+import  -/  base-4.12.0.0:Data.Foldable efb37371da929e7bc88d896298d2d979
+import  -/  base-4.12.0.0:Data.Functor 069b2025a03e32fd228e74a86a58a075
+import  -/  base-4.12.0.0:Data.Maybe 9b76a39e833465c3c5b3c078b431417f
+import  -/  base-4.12.0.0:GHC.Base c00b75f0b052d05c55ba6a4dd1c63b26
+import  -/  base-4.12.0.0:GHC.Int 75a738083d98da9ebef0ff75df759462
+import  -/  base-4.12.0.0:GHC.List 4014a3c8a3b7c31c8325f6bcf1feea4a
+import  -/  base-4.12.0.0:GHC.Num c2039f03637c68f47b0bbff4c18ec616
+import  -/  base-4.12.0.0:GHC.Real af2b985dd29515c375fb78b2c9298d42
+import  -/  base-4.12.0.0:GHC.Show 838a5d039379d82d9626aae53dfce276
+import  -/  brick-0.47.1:Brick.Types cb5450813139fcdb3496d4bec1484a96
+import  -/  brick-0.47.1:Brick.Types.Internal 7b7c4440ecdda66213474ecb7edfffc3
+import  -/  brick-0.47.1:Brick.Widgets.Core a4b2f292c9b6a7565fba9951344eaa48
+import  -/  containers-0.6.0.1:Data.Map.Internal fbf8d1bed47de2b3b48e26c406ee4050
+import  -/  containers-0.6.0.1:Data.Map.Strict cdbeca9dfcd61c917272d3c2b8a5e4c8
+import  -/  containers-0.6.0.1:Data.Map.Strict.Internal b2139318e1c1e3d44818931d9d007d9f
+import  -/  ghc-prim-0.5.3:GHC.Classes 0f6fd7d7db53fc48f6e1f01803cc6c9d
+import  -/  lens-4.17.1:Control.Lens 93ec0202dcd420cd6640a72d538e6d61
+import  -/  lens-4.17.1:Control.Lens.Getter 00b8d44f480c54ea20859ba862864289
+import  -/  lens-4.17.1:Control.Lens.Reified 998845ad5dd8c27262df20259f0e9e5b
+import  -/  lens-4.17.1:Control.Lens.Setter 090924b171c10ff091ffdc5414d66a5e
+import  -/  lens-4.17.1:Control.Lens.Type 7e0b4624a68148643df58f14524c165c
+import  -/  Display.Graph 4ba4fbccb2bb962880eee9d2773ba8f6
+  exports: 797483901a463a7554065cea19d9b086
+  Graph 89b937f2af2ebae3c44c6da18fbc59e0
+  boundsX 38fd6b23745bbe27e0fdec67aaebdc5b
+  boundsY 0a1a2fcfcdbeb179bfc7391ec75f18d3
+  horizontalAxis e03935784125b64d7f432795b406ad8e
+  null ee41e144f15d9e7c4671a042aaeb03b3
+  toMap 5ed2fbf5739e7738a588a18e2ecfacf7
+  verticalAxis c245cc866b1ef0489d31c957bcb2893c
+import  -/  Display.Labels eac31476fb3fc208694c893ed1d07b2d
+  exports: 243c8f3f52d8b332df11cbc7d65c1560
+  generateLabelsContinuous e17ec39afd5b433c8acb741eb87ee4f0
+  generateLabelsTime dbc72ac4bac42dd987392732c895e905
+import  -/  Display.Projection.Scalable 27f4788d7abea0ff8e6d95e409d2d099
+  exports: cade0a345d70f98458034798ef81eb6c
+  scale 5ba07b12942d707cdab5a01a9e6e7ad3
+import  -/  Display.Widgets e84d88c43e26930c4912b34be532ab96
+  exports: 3c9fce180b8856db65f5fd1a785828c7
+  CompileWidget d05948692a3f114bc61e23a779dd8bff
+  compile 450f9fa888506d8657e94ae4f388297e
+import  -/  Graphite.Types feb8668d771f67e264ecb2adeba77e05
+  exports: af4f28c267d620c2f54afe59c39ceadd
+  Time 06a2019eadc5d07eba4c5f38bd8e3c8e
+  Value 0ab31d19b79e63c5b1f7a43afcafb082
+import  -/  Prelude eb56433d70ce51255107416a5dd8a27b
+  exports: 6e15d7491c075093daa9efab164ba23e
+import  -/  relude-0.5.0:Relude.String.Conversion 684ea3f1d869a9fa1566bdb880923ef0
+import  -/  text-1.2.3.1:Data.Text e31b81fb349ec0694c028af9d897c500
+import  -/  text-1.2.3.1:Data.Text.Internal 537e168590e8068f673f691833f78483
+import  -/  text-1.2.3.1:Data.Text.Lazy 3ec155792299896bd594434f570556bc
+import  -/  time-1.8.0.2:Data.Time.LocalTime b734e5973a48e5d3c8c5290b5b9b16d1
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.TimeZone 0cc5caae4ecc15531d36257944ed1c09
+import  -/  vty-5.25.1:Graphics.Vty 5e9d4b70ad4ac2aac5a2bd4b37dbab12
+import  -/  vty-5.25.1:Graphics.Vty.Image f2b87ffc23149e4e8ad890a521fdfe1d
+import  -/  vty-5.25.1:Graphics.Vty.Image.Internal a82e799d4956eba1adbb8666d7eeba99
+c83e569764f9078d21295df69a285071
+  $fCompileWidgetnGraphCanvasWidget ::
+    Display.Widgets.CompileWidget
+      n Display.Graph.Widget.GraphCanvasWidget
+  DFunId
+61f6be99e55547437cdeeee042427360
+  $fCompileWidgetnGraphDisplayWidget ::
+    Display.Widgets.CompileWidget
+      n Display.Graph.Widget.GraphDisplayWidget
+  DFunId
+003a164ee4d915da44a268829c621c44
+  $fCompileWidgetnHorizontalAxisWidget ::
+    Display.Widgets.CompileWidget
+      n Display.Graph.Widget.HorizontalAxisWidget
+  DFunId
+8ee4ab5e6c41f1dcf0a223bac1dd5195
+  $fCompileWidgetnVerticalAxisWidget ::
+    Display.Widgets.CompileWidget
+      n Display.Graph.Widget.VerticalAxisWidget
+  DFunId
+c83e569764f9078d21295df69a285071
+  $fShowGraphCanvasWidget ::
+    GHC.Show.Show Display.Graph.Widget.GraphCanvasWidget
+  DFunId
+61f6be99e55547437cdeeee042427360
+  $fShowGraphDisplayWidget ::
+    GHC.Show.Show Display.Graph.Widget.GraphDisplayWidget
+  DFunId
+003a164ee4d915da44a268829c621c44
+  $fShowHorizontalAxisWidget ::
+    GHC.Show.Show Display.Graph.Widget.HorizontalAxisWidget
+  DFunId
+8ee4ab5e6c41f1dcf0a223bac1dd5195
+  $fShowVerticalAxisWidget ::
+    GHC.Show.Show Display.Graph.Widget.VerticalAxisWidget
+  DFunId
+b1169cb44bcd04586f17d92e9e86bc35
+  $tc'GraphCanvas :: GHC.Types.TyCon
+667e00106a6844d55ecf739c02d30eff
+  $tc'GraphDisplay :: GHC.Types.TyCon
+877c9d450842e709215fedf3669f49cd
+  $tc'HorizontalAxis :: GHC.Types.TyCon
+ad8421a7ba1ad099f1c54b598906ad58
+  $tc'NoDataDisplayWidget :: GHC.Types.TyCon
+c309298fe416f010d85c46c72c580371
+  $tc'VerticalAxis :: GHC.Types.TyCon
+9bfa59ea5281d56399eaba17347075f0
+  $tcGraphCanvasWidget :: GHC.Types.TyCon
+958917e66ebebc7eec5acbad9065e3c5
+  $tcGraphDisplayWidget :: GHC.Types.TyCon
+5836f5063dd29573448bc84a417add2f
+  $tcHorizontalAxisWidget :: GHC.Types.TyCon
+7306df9c4c38a67e96ac86bafae2a5c9
+  $tcVerticalAxisWidget :: GHC.Types.TyCon
+9d958ff237a6a5e699dfa313405a1b09
+  $trModule :: GHC.Types.Module
+c83e569764f9078d21295df69a285071
+  newtype GraphCanvasWidget
+    = GraphCanvas (Display.Graph.Graph
+                     Graphite.Types.Time Graphite.Types.Value)
+61f6be99e55547437cdeeee042427360
+  data GraphDisplayWidget
+    = GraphDisplay Display.Graph.Widget.GraphCanvasWidget
+                   Display.Graph.Widget.VerticalAxisWidget
+                   Display.Graph.Widget.HorizontalAxisWidget
+    | NoDataDisplayWidget
+003a164ee4d915da44a268829c621c44
+  data HorizontalAxisWidget
+    = HorizontalAxis [Graphite.Types.Time]
+                     Data.Time.LocalTime.Internal.TimeZone.TimeZone
+8ee4ab5e6c41f1dcf0a223bac1dd5195
+  newtype VerticalAxisWidget = VerticalAxis [Graphite.Types.Value]
+b31e02cec054146c4e174373778ad18b
+  buildColumn ::
+    GHC.Types.Int -> GHC.Types.Int -> Graphics.Vty.Image.Internal.Image
+058cf56df5af507a189d1e0b6b9fbb34
+  cornerPiece :: Brick.Types.Widget n
+e906813746ae86c9cdb9b132a4a93837
+  drawDefaultLine ::
+    GHC.Types.Int -> Graphics.Vty.Image.Internal.Image
+063bbcd391c4b5a55ed290ab85bfec1d
+  drawGraphImage ::
+    Display.Graph.Graph Graphite.Types.Time Graphite.Types.Value
+    -> (GHC.Types.Int, GHC.Types.Int)
+    -> Graphics.Vty.Image.Internal.Image
+55f7e68a6dfa1b2f59b92e4e32e36d4c
+  drawHorizontalAxisImage ::
+    Data.Time.LocalTime.Internal.TimeZone.TimeZone
+    -> GHC.Types.Int
+    -> [Graphite.Types.Time]
+    -> Graphics.Vty.Image.Internal.Image
+e7f40f10ca932f3230f140d18edf5f9a
+  drawLabelledBlock ::
+    GHC.Types.Int
+    -> GHC.Types.Int
+    -> Data.Text.Internal.Text
+    -> Graphics.Vty.Image.Internal.Image
+67d82ace5975809ce2dd4928623991b4
+  drawLabelledLine ::
+    GHC.Types.Int
+    -> Data.Text.Internal.Text -> Graphics.Vty.Image.Internal.Image
+12d2c6bd142b69d075a99ed134571604
+  drawVerticalAxisImage ::
+    GHC.Types.Int
+    -> [Graphite.Types.Value] -> Graphics.Vty.Image.Internal.Image
+1c77bde3683c869b93993c3ff7974161
+  graphDisplayWidget ::
+    Display.Graph.Graph Graphite.Types.Time Graphite.Types.Value
+    -> Data.Time.LocalTime.Internal.TimeZone.TimeZone
+    -> Display.Graph.Widget.GraphDisplayWidget
+704474cbec57b5758d84d9326835eb09
+  heightAndWidthL ::
+    Control.Lens.Type.Getter
+      Brick.Types.Internal.Context (GHC.Types.Int, GHC.Types.Int)
+7cdd124dc8bf17301491f1d0c7b550e6
+  prependSpace ::
+    GHC.Int.Int64
+    -> Relude.String.Conversion.LText -> Relude.String.Conversion.LText
+instance Display.Widgets.CompileWidget [.,
+                                        Display.Graph.Widget.GraphCanvasWidget]
+  = Display.Graph.Widget.$fCompileWidgetnGraphCanvasWidget
+instance Display.Widgets.CompileWidget [.,
+                                        Display.Graph.Widget.GraphDisplayWidget]
+  = Display.Graph.Widget.$fCompileWidgetnGraphDisplayWidget
+instance Display.Widgets.CompileWidget [.,
+                                        Display.Graph.Widget.HorizontalAxisWidget]
+  = Display.Graph.Widget.$fCompileWidgetnHorizontalAxisWidget
+instance Display.Widgets.CompileWidget [.,
+                                        Display.Graph.Widget.VerticalAxisWidget]
+  = Display.Graph.Widget.$fCompileWidgetnVerticalAxisWidget
+instance GHC.Show.Show [Display.Graph.Widget.GraphCanvasWidget]
+  = Display.Graph.Widget.$fShowGraphCanvasWidget
+instance GHC.Show.Show [Display.Graph.Widget.GraphDisplayWidget]
+  = Display.Graph.Widget.$fShowGraphDisplayWidget
+instance GHC.Show.Show [Display.Graph.Widget.HorizontalAxisWidget]
+  = Display.Graph.Widget.$fShowHorizontalAxisWidget
+instance GHC.Show.Show [Display.Graph.Widget.VerticalAxisWidget]
+  = Display.Graph.Widget.$fShowVerticalAxisWidget
+trusted: none
+require own pkg trusted: False
+module header:
+  Nothing
+declaration docs:
+arg docs:
+

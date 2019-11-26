@@ -8,6 +8,7 @@ module Display.Widgets where
 import           Brick.Types                   as B
 import           Brick.Widgets.Core            as BW
 import           Brick.Widgets.List            as WL
+import           Brick.Widgets.Border          as BWB
 import           Graphite.Types
 import           Data.Vector
 import           Prelude                 hiding ( on )
@@ -27,9 +28,9 @@ instance CompileWidget AppComponent MetricsBrowserWidget where
   compile (MetricsBrowser metrics) =
     let hasFocus   = True
         listHeight = 1
-    in  WL.renderList
+    in  BWB.border $ BW.setAvailableSize (25, 10) $ WL.renderList
           (\active (Metric descriptor) ->
-            withAttr ("metric" <> if active then "selected" else "unselcted") (BW.txt descriptor)
+            BW.withAttr ("metric" <> if active then "selected" else "unselcted") (BW.txt descriptor)
           )
           hasFocus
           (WL.list MetricsBrowserComponent metrics listHeight)

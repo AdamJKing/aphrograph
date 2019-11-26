@@ -1,0 +1,270 @@
+
+==================== FINAL INTERFACE ====================
+2019-11-26 19:34:38.303739552 UTC
+
+interface main:Display.Projection [hpc] 8065
+  interface hash: 241af4a68b346d42fe0969e364598047
+  ABI hash: f438a6ca57d03b0f1c320c344038605b
+  export-list hash: 17dd600a3fc8e48439b089be8c40bbb5
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: 9bc5f8ba04d9bc7dd83b251888e89887
+  opt_hash: d0a78e7b344f95c7406be35c9b75e196
+  hpc_hash: 93b885adfe0da089cdf634904fd59f71
+  plugin_hash: ad164012d6b1e14942349d58b1132007
+  sig of: Nothing
+  used TH splices: False
+  where
+exports:
+  Display.Projection.onto
+  Display.Projection.reverseProjection
+  Display.Projection.MonadProjector{Display.Projection.project}
+  Display.Projection.Projected2D{Display.Projection.Projected2D runProjection}
+  Display.Projection.ProjectionContext{Display.Projection.ProjectionContext origin projection}
+  Display.Projection.ProjectionContext2D{Display.Projection.ProjectionContext2D originX originY projectionX projectionY}
+module dependencies: Display.Projection.Scalable Normalisation
+                     Prelude
+package dependencies: Decimal-0.5.1 StateVar-1.2 adjunctions-4.4
+                      array-0.5.3.0 base-4.12.0.0 base-orphans-0.8.1 bifunctors-5.5.5
+                      binary-0.8.6.0 bytestring-0.10.8.2 call-stack-0.1.0 comonad-5.0.5
+                      containers-0.6.0.1 contravariant-1.5.2 deepseq-1.4.4.0
+                      distributive-0.6.1 exceptions-0.10.3 free-5.1.2 ghc-boot-th-8.6.5
+                      ghc-prim-0.5.3 hashable-1.2.7.0 integer-gmp-1.0.2.0
+                      kan-extensions-5.2 lens-4.17.1 mtl-2.2.2 pretty-1.1.3.6
+                      primitive-0.6.4.0 profunctors-5.3 reflection-2.1.5 relude-0.5.0
+                      safe-0.3.17 semigroupoids-5.3.3 singletons-2.5.1 stm-2.5.0.0
+                      syb-0.7.1 tagged-0.8.6 template-haskell-2.14.0.0 text-1.2.3.1
+                      th-abstraction-0.3.1.0 th-desugar-1.9 th-expand-syns-0.4.5.0
+                      th-lift-0.8.0.1 th-lift-instances-0.1.14 th-orphans-0.13.9
+                      th-reify-many-0.1.9 time-1.8.0.2 transformers-0.5.6.2
+                      transformers-base-0.4.5.2 transformers-compat-0.6.5
+                      unordered-containers-0.2.10.0 vector-0.12.0.3
+orphans: relude-0.5.0:Relude.Monad.Either
+         singletons-2.5.1:Data.Singletons
+         singletons-2.5.1:Data.Singletons.Prelude.Monad
+         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+         singletons-2.5.1:Data.Singletons.Prelude.Const
+         singletons-2.5.1:Data.Singletons.Prelude.Functor
+         singletons-2.5.1:Data.Singletons.Prelude.Identity
+         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+         singletons-2.5.1:Data.Singletons.TypeLits
+         singletons-2.5.1:Data.Singletons.ShowSing
+         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+         singletons-2.5.1:Data.Singletons.Prelude.Ord
+         singletons-2.5.1:Data.Singletons.Prelude.Instances
+         singletons-2.5.1:Data.Singletons.Decide
+         th-orphans-0.13.9:Language.Haskell.TH.Instances
+         th-lift-0.8.0.1:Language.Haskell.TH.Lift
+         th-lift-instances-0.1.14:Instances.TH.Lift
+         syb-0.7.1:Data.Generics.Instances
+         time-1.8.0.2:Data.Time.Format.Parse
+         time-1.8.0.2:Data.Time.LocalTime.Internal.ZonedTime
+         time-1.8.0.2:Data.Time.LocalTime.Internal.LocalTime
+         time-1.8.0.2:Data.Time.Calendar.Gregorian
+         reflection-2.1.5:Data.Reflection
+         vector-0.12.0.3:Data.Vector.Unboxed
+         vector-0.12.0.3:Data.Vector.Fusion.Bundle
+         stm-2.5.0.0:Control.Monad.STM
+         transformers-0.5.6.2:Control.Monad.Trans.Error
+         hashable-1.2.7.0:Data.Hashable.Generic text-1.2.3.1:Data.Text.Lazy
+         text-1.2.3.1:Data.Text binary-0.8.6.0:Data.Binary.Generic
+         bytestring-0.10.8.2:Data.ByteString.Builder
+         text-1.2.3.1:Data.Text.Show base-4.12.0.0:GHC.Float
+         base-4.12.0.0:GHC.Base
+family instance modules: adjunctions-4.4:Data.Functor.Rep
+                         base-4.12.0.0:Control.Applicative base-4.12.0.0:Data.Complex
+                         base-4.12.0.0:Data.Functor.Compose base-4.12.0.0:Data.Functor.Const
+                         base-4.12.0.0:Data.Functor.Identity
+                         base-4.12.0.0:Data.Functor.Product base-4.12.0.0:Data.Functor.Sum
+                         base-4.12.0.0:Data.Monoid base-4.12.0.0:Data.Semigroup
+                         base-4.12.0.0:Data.Semigroup.Internal base-4.12.0.0:Data.Version
+                         base-4.12.0.0:Data.Void base-4.12.0.0:GHC.Exts
+                         base-4.12.0.0:GHC.Generics base-4.12.0.0:GHC.IO.Exception
+                         bifunctors-5.5.5:Data.Bifunctor.Biff
+                         bifunctors-5.5.5:Data.Bifunctor.Clown
+                         bifunctors-5.5.5:Data.Bifunctor.Fix
+                         bifunctors-5.5.5:Data.Bifunctor.Flip
+                         bifunctors-5.5.5:Data.Bifunctor.Join
+                         bifunctors-5.5.5:Data.Bifunctor.Joker
+                         bifunctors-5.5.5:Data.Bifunctor.Product
+                         bifunctors-5.5.5:Data.Bifunctor.Sum
+                         bifunctors-5.5.5:Data.Bifunctor.Tannen
+                         bifunctors-5.5.5:Data.Bifunctor.Wrapped
+                         containers-0.6.0.1:Data.Graph
+                         containers-0.6.0.1:Data.IntMap.Internal
+                         containers-0.6.0.1:Data.IntSet.Internal
+                         containers-0.6.0.1:Data.Map.Internal
+                         containers-0.6.0.1:Data.Sequence.Internal
+                         containers-0.6.0.1:Data.Set.Internal containers-0.6.0.1:Data.Tree
+                         free-5.1.2:Control.Comonad.Cofree
+                         free-5.1.2:Control.Comonad.Trans.Cofree
+                         free-5.1.2:Control.Monad.Free free-5.1.2:Control.Monad.Trans.Free
+                         ghc-boot-th-8.6.5:GHC.ForeignSrcLang.Type
+                         ghc-boot-th-8.6.5:GHC.LanguageExtensions.Type
+                         kan-extensions-5.2:Data.Functor.Day
+                         kan-extensions-5.2:Data.Functor.Yoneda lens-4.17.1:Control.Lens.At
+                         lens-4.17.1:Control.Lens.Internal.Indexed
+                         lens-4.17.1:Control.Lens.Reified lens-4.17.1:Control.Lens.Tuple
+                         lens-4.17.1:Control.Lens.Wrapped lens-4.17.1:Control.Lens.Zoom
+                         pretty-1.1.3.6:Text.PrettyPrint.Annotated.HughesPJ
+                         pretty-1.1.3.6:Text.PrettyPrint.HughesPJ
+                         primitive-0.6.4.0:Control.Monad.Primitive
+                         primitive-0.6.4.0:Data.Primitive.Array
+                         primitive-0.6.4.0:Data.Primitive.ByteArray
+                         primitive-0.6.4.0:Data.Primitive.PrimArray
+                         primitive-0.6.4.0:Data.Primitive.SmallArray
+                         primitive-0.6.4.0:Data.Primitive.UnliftedArray
+                         profunctors-5.3:Data.Profunctor.Composition
+                         profunctors-5.3:Data.Profunctor.Rep
+                         relude-0.5.0:Relude.Container.One relude-0.5.0:Relude.Debug
+                         singletons-2.5.1:Data.Singletons
+                         singletons-2.5.1:Data.Singletons.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+                         singletons-2.5.1:Data.Singletons.Prelude.Base
+                         singletons-2.5.1:Data.Singletons.Prelude.Bool
+                         singletons-2.5.1:Data.Singletons.Prelude.Const
+                         singletons-2.5.1:Data.Singletons.Prelude.Either
+                         singletons-2.5.1:Data.Singletons.Prelude.Enum
+                         singletons-2.5.1:Data.Singletons.Prelude.Eq
+                         singletons-2.5.1:Data.Singletons.Prelude.Foldable
+                         singletons-2.5.1:Data.Singletons.Prelude.Functor
+                         singletons-2.5.1:Data.Singletons.Prelude.Identity
+                         singletons-2.5.1:Data.Singletons.Prelude.Instances
+                         singletons-2.5.1:Data.Singletons.Prelude.IsString
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal.Disambiguation
+                         singletons-2.5.1:Data.Singletons.Prelude.Maybe
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+                         singletons-2.5.1:Data.Singletons.Prelude.Num
+                         singletons-2.5.1:Data.Singletons.Prelude.Ord
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Show
+                         singletons-2.5.1:Data.Singletons.Prelude.Traversable
+                         singletons-2.5.1:Data.Singletons.Prelude.Tuple
+                         singletons-2.5.1:Data.Singletons.Syntax
+                         singletons-2.5.1:Data.Singletons.TypeLits
+                         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+                         tagged-0.8.6:Data.Tagged
+                         template-haskell-2.14.0.0:Language.Haskell.TH.Syntax
+                         text-1.2.3.1:Data.Text text-1.2.3.1:Data.Text.Lazy
+                         th-abstraction-0.3.1.0:Language.Haskell.TH.Datatype
+                         th-desugar-1.9:Language.Haskell.TH.Desugar.AST
+                         unordered-containers-0.2.10.0:Data.HashMap.Base
+                         unordered-containers-0.2.10.0:Data.HashSet.Base
+                         vector-0.12.0.3:Data.Vector vector-0.12.0.3:Data.Vector.Primitive
+                         vector-0.12.0.3:Data.Vector.Storable
+                         vector-0.12.0.3:Data.Vector.Unboxed
+                         vector-0.12.0.3:Data.Vector.Unboxed.Base
+import  -/  base-4.12.0.0:Data.Bifunctor c6b94a4350abddc02c676eba95d481f0
+import  -/  base-4.12.0.0:GHC.Base c00b75f0b052d05c55ba6a4dd1c63b26
+import  -/  base-4.12.0.0:GHC.Real af2b985dd29515c375fb78b2c9298d42
+import  -/  lens-4.17.1:Control.Lens 93ec0202dcd420cd6640a72d538e6d61
+import  -/  lens-4.17.1:Control.Lens.Each b987ab5269500f0d1b330ecd69df0180
+import  -/  lens-4.17.1:Control.Lens.Setter 090924b171c10ff091ffdc5414d66a5e
+import  -/  Display.Projection.Scalable 27f4788d7abea0ff8e6d95e409d2d099
+  exports: cade0a345d70f98458034798ef81eb6c
+  Scalable 3b40d6b8738f93d78c5888307964f48d
+  scale 5ba07b12942d707cdab5a01a9e6e7ad3
+import  -/  Prelude eb56433d70ce51255107416a5dd8a27b
+  exports: 6e15d7491c075093daa9efab164ba23e
+import  -/  mtl-2.2.2:Control.Monad.Reader.Class 57cf6a03579b61bbf9b331632b55e65e
+import  -/  transformers-0.5.6.2:Control.Monad.Trans.Reader 047d9523dd0b97f3c42ee03eae49a228
+d1a9074d144ee166c586a2cdc811d204
+  $fBifunctorProjectionContext ::
+    Data.Bifunctor.Bifunctor Display.Projection.ProjectionContext
+  DFunId
+0db2cee83d64f94bc603ff806c04c6e7
+  $fMonadProjectorabReaderT ::
+    (GHC.Real.Real a, Display.Projection.Scalable.Scalable b,
+     GHC.Base.Monad m) =>
+    Display.Projection.MonadProjector
+      a
+      b
+      (Control.Monad.Trans.Reader.ReaderT
+         (Display.Projection.ProjectionContext a b) m)
+  DFunId
+4f10ad18293bb9f151b8e1751fa1e287
+  $tc'C:MonadProjector :: GHC.Types.TyCon
+754b2ee2e5639d0f935756141c2235ae
+  $tc'Projected2D :: GHC.Types.TyCon
+3985025e1dc250b5881a3d71e78decc0
+  $tc'ProjectionContext :: GHC.Types.TyCon
+fe0617446e147bf75fa9fd6eaba352f2
+  $tc'ProjectionContext2D :: GHC.Types.TyCon
+31361e62fe649bf47f593aa371c9c820
+  $tcMonadProjector :: GHC.Types.TyCon
+833475d3c04d0a9fa39014574bba199c
+  $tcProjected2D :: GHC.Types.TyCon
+6bcc169a307289e3a75ae11a3e7f5d6f
+  $tcProjectionContext :: GHC.Types.TyCon
+aaccccbe7b9ea793e4516b7e9fb7a9a5
+  $tcProjectionContext2D :: GHC.Types.TyCon
+82ad88541d2b8586c0446472ed3c590b
+  $trModule :: GHC.Types.Module
+0db2cee83d64f94bc603ff806c04c6e7
+  class MonadProjector a b (m :: * -> *) where
+    project :: a -> m b
+    {-# MINIMAL project #-}
+9434806200aa44e69fe237634252d92f
+  type role Projected2D representational representational nominal nominal representational nominal
+  newtype Projected2D a b c d (m :: * -> *) (t :: * -> * -> *)
+    = Projected2D {runProjection :: Display.Projection.ProjectionContext2D
+                                      a b c d
+                                    -> m (t c d)}
+d1a9074d144ee166c586a2cdc811d204
+  data ProjectionContext a b
+    = ProjectionContext {origin :: (a, a), projection :: (b, b)}
+67ebed447675df453e98d74ab38bc7ba
+  data ProjectionContext2D a b c d
+    = ProjectionContext2D {originX :: (a, a),
+                           originY :: (b, b),
+                           projectionX :: (c, c),
+                           projectionY :: (d, d)}
+81b6e38da08958fca5ccd97a985438d0
+  onto ::
+    (a, a) -> (b, b) -> Display.Projection.ProjectionContext a b
+d1a9074d144ee166c586a2cdc811d204
+  origin :: Display.Projection.ProjectionContext a b -> (a, a)
+  RecSel Left Display.Projection.ProjectionContext
+67ebed447675df453e98d74ab38bc7ba
+  originX :: Display.Projection.ProjectionContext2D a b c d -> (a, a)
+  RecSel Left Display.Projection.ProjectionContext2D
+67ebed447675df453e98d74ab38bc7ba
+  originY :: Display.Projection.ProjectionContext2D a b c d -> (b, b)
+  RecSel Left Display.Projection.ProjectionContext2D
+d1a9074d144ee166c586a2cdc811d204
+  projection :: Display.Projection.ProjectionContext a b -> (b, b)
+  RecSel Left Display.Projection.ProjectionContext
+67ebed447675df453e98d74ab38bc7ba
+  projectionX ::
+    Display.Projection.ProjectionContext2D a b c d -> (c, c)
+  RecSel Left Display.Projection.ProjectionContext2D
+67ebed447675df453e98d74ab38bc7ba
+  projectionY ::
+    Display.Projection.ProjectionContext2D a b c d -> (d, d)
+  RecSel Left Display.Projection.ProjectionContext2D
+f22c4554f3fc7a9883849a41b8fa5e83
+  reverseProjection ::
+    Display.Projection.ProjectionContext a b
+    -> Display.Projection.ProjectionContext b a
+9434806200aa44e69fe237634252d92f
+  runProjection ::
+    Display.Projection.Projected2D a b c d m t
+    -> Display.Projection.ProjectionContext2D a b c d -> m (t c d)
+  RecSel Left Display.Projection.Projected2D
+instance Data.Bifunctor.Bifunctor [Display.Projection.ProjectionContext]
+  = Display.Projection.$fBifunctorProjectionContext
+instance Display.Projection.MonadProjector [., .,
+                                            Control.Monad.Trans.Reader.ReaderT]
+  = Display.Projection.$fMonadProjectorabReaderT
+trusted: none
+require own pkg trusted: False
+module header:
+  Nothing
+declaration docs:
+arg docs:
+

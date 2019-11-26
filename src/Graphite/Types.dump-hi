@@ -1,0 +1,1720 @@
+
+==================== FINAL INTERFACE ====================
+2019-11-26 19:34:38.593951373 UTC
+
+interface main:Graphite.Types [family instance module] [hpc] 8065
+  interface hash: 97bcd09c686a5015d9949d6093ccae2e
+  ABI hash: feb8668d771f67e264ecb2adeba77e05
+  export-list hash: af4f28c267d620c2f54afe59c39ceadd
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: bfe2aec6ff06ed64d916f42b872344bb
+  opt_hash: d0a78e7b344f95c7406be35c9b75e196
+  hpc_hash: 93b885adfe0da089cdf634904fd59f71
+  plugin_hash: ad164012d6b1e14942349d58b1132007
+  sig of: Nothing
+  used TH splices: True
+  where
+exports:
+  Graphite.Types._HttpError
+  Graphite.Types._ParsingError
+  Graphite.Types.deltaDays
+  Graphite.Types.deltaHours
+  Graphite.Types.deltaMinutes
+  Graphite.Types.deltaSeconds
+  Graphite.Types.deltaTime'
+  Graphite.Types.millisecond
+  Graphite.Types.toLocalTime
+  Graphite.Types.toTimeOfDay
+  Graphite.Types.toUTC
+  Graphite.Types.DataPoint{Graphite.Types.DataPoint time value}
+  Graphite.Types.From{Graphite.Types.From}
+  Graphite.Types.GraphiteError{Graphite.Types.HttpError Graphite.Types.ParsingError}
+  Graphite.Types.GraphiteRequest{Graphite.Types.RenderRequest _from _target _to}
+  Graphite.Types.GraphiteUrl{Graphite.Types.GraphiteUrl}
+  Graphite.Types.Metric{Graphite.Types.Metric}
+  Graphite.Types.MetricsResponse{Graphite.Types.MetricsResponse datapoints tags target}
+  Graphite.Types.MonadGraphite{Graphite.Types.getMetrics Graphite.Types.listMetrics}
+  Graphite.Types.Target
+  Graphite.Types.Time{Graphite.Types.Time timestamp}
+  Graphite.Types.To{Graphite.Types.To}
+  Graphite.Types.Value{Graphite.Types.Value}
+module dependencies: Display.Projection.Scalable Normalisation
+                     Prelude
+package dependencies: Decimal-0.5.1 RSA-2.3.1 SHA-1.6.4.4
+                      StateVar-1.2 adjunctions-4.4 aeson-1.4.6.0 array-0.5.3.0
+                      asn1-encoding-0.9.6 asn1-parse-0.9.5 asn1-types-0.3.3 async-2.2.2
+                      attoparsec-0.13.2.3 attoparsec-iso8601-1.0.1.0
+                      authenticate-oauth-1.6.0.1 base-4.12.0.0 base-compat-0.10.5
+                      base-orphans-0.8.1 base64-bytestring-1.0.0.2 basement-0.0.11
+                      bifunctors-5.5.5 binary-0.8.6.0 blaze-builder-0.4.1.0
+                      bytestring-0.10.8.2 call-stack-0.1.0 case-insensitive-1.2.0.11
+                      cereal-0.5.8.1 comonad-5.0.5 connection-0.3.1 containers-0.6.0.1
+                      contravariant-1.5.2 cookie-0.4.5 crypto-api-0.13.3
+                      crypto-pubkey-types-0.4.3 cryptonite-0.25 data-default-0.7.1.1
+                      data-default-class-0.1.2.0 data-default-instances-containers-0.0.1
+                      data-default-instances-dlist-0.0.1
+                      data-default-instances-old-locale-0.0.1 deepseq-1.4.4.0
+                      directory-1.3.3.0 distributive-0.6.1 dlist-0.8.0.7 entropy-0.4.1.5
+                      exceptions-0.10.3 filepath-1.4.2.1 free-5.1.2 ghc-boot-th-8.6.5
+                      ghc-prim-0.5.3 hashable-1.2.7.0 hourglass-0.2.12
+                      http-api-data-0.4.1.1 http-client-0.6.4 http-client-tls-0.3.5.3
+                      http-types-0.12.3 integer-gmp-1.0.2.0 integer-logarithms-1.0.3
+                      kan-extensions-5.2 lens-4.17.1 memory-0.14.18 mime-types-0.1.0.9
+                      monad-control-1.0.2.3 mtl-2.2.2 network-2.8.0.1 network-uri-2.6.1.0
+                      old-locale-1.0.0.7 parsec-3.1.14.0 pem-0.2.4 pretty-1.1.3.6
+                      primitive-0.6.4.0 profunctors-5.3 random-1.1 reflection-2.1.5
+                      relude-0.5.0 req-2.1.0 retry-0.8.1.0 safe-0.3.17 scientific-0.3.6.2
+                      semigroupoids-5.3.3 singletons-2.5.1 socks-0.6.1 stm-2.5.0.0
+                      streaming-commons-0.2.1.1 syb-0.7.1 tagged-0.8.6
+                      template-haskell-2.14.0.0 text-1.2.3.1 th-abstraction-0.3.1.0
+                      th-desugar-1.9 th-expand-syns-0.4.5.0 th-lift-0.8.0.1
+                      th-lift-instances-0.1.14 th-orphans-0.13.9 th-reify-many-0.1.9
+                      time-1.8.0.2 time-compat-1.9.2.2 tls-1.4.1 transformers-0.5.6.2
+                      transformers-base-0.4.5.2 transformers-compat-0.6.5 unix-2.7.2.2
+                      unordered-containers-0.2.10.0 uuid-types-1.0.3 vector-0.12.0.3
+                      x509-1.7.5 x509-store-1.6.7 x509-system-1.6.6
+                      x509-validation-1.6.11 zlib-0.6.2.1
+orphans: relude-0.5.0:Relude.Monad.Either
+         singletons-2.5.1:Data.Singletons
+         singletons-2.5.1:Data.Singletons.Prelude.Monad
+         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+         singletons-2.5.1:Data.Singletons.Prelude.Const
+         singletons-2.5.1:Data.Singletons.Prelude.Functor
+         singletons-2.5.1:Data.Singletons.Prelude.Identity
+         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+         singletons-2.5.1:Data.Singletons.TypeLits
+         singletons-2.5.1:Data.Singletons.ShowSing
+         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+         singletons-2.5.1:Data.Singletons.Prelude.Ord
+         singletons-2.5.1:Data.Singletons.Prelude.Instances
+         singletons-2.5.1:Data.Singletons.Decide
+         th-orphans-0.13.9:Language.Haskell.TH.Instances
+         th-lift-0.8.0.1:Language.Haskell.TH.Lift
+         th-lift-instances-0.1.14:Instances.TH.Lift
+         syb-0.7.1:Data.Generics.Instances
+         attoparsec-0.13.2.3:Data.Attoparsec.Text.Internal
+         attoparsec-0.13.2.3:Data.Attoparsec.ByteString.Char8
+         time-1.8.0.2:Data.Time.Clock.TAI
+         data-default-instances-containers-0.0.1:Data.Default.Instances.Containers
+         data-default-instances-dlist-0.0.1:Data.Default.Instances.DList
+         data-default-instances-old-locale-0.0.1:Data.Default.Instances.OldLocale
+         RSA-2.3.1:Codec.Crypto.RSA.Pure
+         http-client-0.6.4:Network.HTTP.Client.Request
+         basement-0.0.11:Basement.UArray.Base basement-0.0.11:Basement.Block
+         network-2.8.0.1:Network.Socket time-1.8.0.2:Data.Time.Format.Parse
+         time-1.8.0.2:Data.Time.LocalTime.Internal.ZonedTime
+         time-1.8.0.2:Data.Time.LocalTime.Internal.LocalTime
+         time-1.8.0.2:Data.Time.Calendar.Gregorian
+         vector-0.12.0.3:Data.Vector.Unboxed stm-2.5.0.0:Control.Monad.STM
+         vector-0.12.0.3:Data.Vector.Fusion.Bundle
+         reflection-2.1.5:Data.Reflection
+         transformers-0.5.6.2:Control.Monad.Trans.Error
+         hashable-1.2.7.0:Data.Hashable.Generic text-1.2.3.1:Data.Text.Lazy
+         text-1.2.3.1:Data.Text binary-0.8.6.0:Data.Binary.Generic
+         bytestring-0.10.8.2:Data.ByteString.Builder
+         text-1.2.3.1:Data.Text.Show base-4.12.0.0:GHC.Float
+         base-4.12.0.0:GHC.Base
+family instance modules: adjunctions-4.4:Data.Functor.Rep
+                         aeson-1.4.6.0:Data.Aeson.Types.Internal
+                         attoparsec-0.13.2.3:Data.Attoparsec.Internal.Types
+                         base-4.12.0.0:Control.Applicative base-4.12.0.0:Data.Complex
+                         base-4.12.0.0:Data.Functor.Compose base-4.12.0.0:Data.Functor.Const
+                         base-4.12.0.0:Data.Functor.Identity
+                         base-4.12.0.0:Data.Functor.Product base-4.12.0.0:Data.Functor.Sum
+                         base-4.12.0.0:Data.Monoid base-4.12.0.0:Data.Semigroup
+                         base-4.12.0.0:Data.Semigroup.Internal base-4.12.0.0:Data.Version
+                         base-4.12.0.0:Data.Void base-4.12.0.0:GHC.Exts
+                         base-4.12.0.0:GHC.Generics base-4.12.0.0:GHC.IO.Exception
+                         basement-0.0.11:Basement.Block.Base
+                         basement-0.0.11:Basement.Bounded basement-0.0.11:Basement.Monad
+                         basement-0.0.11:Basement.MutableBuilder
+                         basement-0.0.11:Basement.Nat basement-0.0.11:Basement.NonEmpty
+                         basement-0.0.11:Basement.Numerical.Subtractive
+                         basement-0.0.11:Basement.PrimType basement-0.0.11:Basement.String
+                         basement-0.0.11:Basement.String.Encoding.ASCII7
+                         basement-0.0.11:Basement.String.Encoding.ISO_8859_1
+                         basement-0.0.11:Basement.String.Encoding.UTF16
+                         basement-0.0.11:Basement.String.Encoding.UTF32
+                         basement-0.0.11:Basement.Types.OffsetSize
+                         basement-0.0.11:Basement.UArray.Base
+                         basement-0.0.11:Basement.UTF8.Base
+                         bifunctors-5.5.5:Data.Bifunctor.Biff
+                         bifunctors-5.5.5:Data.Bifunctor.Clown
+                         bifunctors-5.5.5:Data.Bifunctor.Fix
+                         bifunctors-5.5.5:Data.Bifunctor.Flip
+                         bifunctors-5.5.5:Data.Bifunctor.Join
+                         bifunctors-5.5.5:Data.Bifunctor.Joker
+                         bifunctors-5.5.5:Data.Bifunctor.Product
+                         bifunctors-5.5.5:Data.Bifunctor.Sum
+                         bifunctors-5.5.5:Data.Bifunctor.Tannen
+                         bifunctors-5.5.5:Data.Bifunctor.Wrapped
+                         containers-0.6.0.1:Data.Graph
+                         containers-0.6.0.1:Data.IntMap.Internal
+                         containers-0.6.0.1:Data.IntSet.Internal
+                         containers-0.6.0.1:Data.Map.Internal
+                         containers-0.6.0.1:Data.Sequence.Internal
+                         containers-0.6.0.1:Data.Set.Internal containers-0.6.0.1:Data.Tree
+                         cryptonite-0.25:Crypto.ECC cryptonite-0.25:Crypto.Error.Types
+                         cryptonite-0.25:Crypto.Hash.Blake2
+                         cryptonite-0.25:Crypto.Hash.Blake2b
+                         cryptonite-0.25:Crypto.Hash.Blake2bp
+                         cryptonite-0.25:Crypto.Hash.Blake2s
+                         cryptonite-0.25:Crypto.Hash.Blake2sp
+                         cryptonite-0.25:Crypto.Hash.Keccak cryptonite-0.25:Crypto.Hash.MD2
+                         cryptonite-0.25:Crypto.Hash.MD4 cryptonite-0.25:Crypto.Hash.MD5
+                         cryptonite-0.25:Crypto.Hash.RIPEMD160
+                         cryptonite-0.25:Crypto.Hash.SHA1 cryptonite-0.25:Crypto.Hash.SHA224
+                         cryptonite-0.25:Crypto.Hash.SHA256 cryptonite-0.25:Crypto.Hash.SHA3
+                         cryptonite-0.25:Crypto.Hash.SHA384
+                         cryptonite-0.25:Crypto.Hash.SHA512
+                         cryptonite-0.25:Crypto.Hash.SHA512t
+                         cryptonite-0.25:Crypto.Hash.SHAKE
+                         cryptonite-0.25:Crypto.Hash.Skein256
+                         cryptonite-0.25:Crypto.Hash.Skein512
+                         cryptonite-0.25:Crypto.Hash.Tiger
+                         cryptonite-0.25:Crypto.Hash.Whirlpool dlist-0.8.0.7:Data.DList
+                         free-5.1.2:Control.Comonad.Cofree
+                         free-5.1.2:Control.Comonad.Trans.Cofree
+                         free-5.1.2:Control.Monad.Free free-5.1.2:Control.Monad.Trans.Free
+                         ghc-boot-th-8.6.5:GHC.ForeignSrcLang.Type
+                         ghc-boot-th-8.6.5:GHC.LanguageExtensions.Type
+                         http-client-0.6.4:Network.HTTP.Client
+                         kan-extensions-5.2:Data.Functor.Day
+                         kan-extensions-5.2:Data.Functor.Yoneda lens-4.17.1:Control.Lens.At
+                         lens-4.17.1:Control.Lens.Internal.Indexed
+                         lens-4.17.1:Control.Lens.Reified lens-4.17.1:Control.Lens.Tuple
+                         lens-4.17.1:Control.Lens.Wrapped lens-4.17.1:Control.Lens.Zoom
+                         monad-control-1.0.2.3:Control.Monad.Trans.Control
+                         network-uri-2.6.1.0:Network.URI
+                         pretty-1.1.3.6:Text.PrettyPrint.Annotated.HughesPJ
+                         pretty-1.1.3.6:Text.PrettyPrint.HughesPJ
+                         primitive-0.6.4.0:Control.Monad.Primitive
+                         primitive-0.6.4.0:Data.Primitive.Array
+                         primitive-0.6.4.0:Data.Primitive.ByteArray
+                         primitive-0.6.4.0:Data.Primitive.PrimArray
+                         primitive-0.6.4.0:Data.Primitive.SmallArray
+                         primitive-0.6.4.0:Data.Primitive.UnliftedArray
+                         profunctors-5.3:Data.Profunctor.Composition
+                         profunctors-5.3:Data.Profunctor.Rep
+                         relude-0.5.0:Relude.Container.One relude-0.5.0:Relude.Debug
+                         req-2.1.0:Network.HTTP.Req retry-0.8.1.0:Control.Retry
+                         singletons-2.5.1:Data.Singletons
+                         singletons-2.5.1:Data.Singletons.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+                         singletons-2.5.1:Data.Singletons.Prelude.Base
+                         singletons-2.5.1:Data.Singletons.Prelude.Bool
+                         singletons-2.5.1:Data.Singletons.Prelude.Const
+                         singletons-2.5.1:Data.Singletons.Prelude.Either
+                         singletons-2.5.1:Data.Singletons.Prelude.Enum
+                         singletons-2.5.1:Data.Singletons.Prelude.Eq
+                         singletons-2.5.1:Data.Singletons.Prelude.Foldable
+                         singletons-2.5.1:Data.Singletons.Prelude.Functor
+                         singletons-2.5.1:Data.Singletons.Prelude.Identity
+                         singletons-2.5.1:Data.Singletons.Prelude.Instances
+                         singletons-2.5.1:Data.Singletons.Prelude.IsString
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal.Disambiguation
+                         singletons-2.5.1:Data.Singletons.Prelude.Maybe
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+                         singletons-2.5.1:Data.Singletons.Prelude.Num
+                         singletons-2.5.1:Data.Singletons.Prelude.Ord
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Show
+                         singletons-2.5.1:Data.Singletons.Prelude.Traversable
+                         singletons-2.5.1:Data.Singletons.Prelude.Tuple
+                         singletons-2.5.1:Data.Singletons.Syntax
+                         singletons-2.5.1:Data.Singletons.TypeLits
+                         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+                         tagged-0.8.6:Data.Tagged
+                         template-haskell-2.14.0.0:Language.Haskell.TH.Syntax
+                         text-1.2.3.1:Data.Text text-1.2.3.1:Data.Text.Lazy
+                         th-abstraction-0.3.1.0:Language.Haskell.TH.Datatype
+                         th-desugar-1.9:Language.Haskell.TH.Desugar.AST
+                         unordered-containers-0.2.10.0:Data.HashMap.Base
+                         unordered-containers-0.2.10.0:Data.HashSet.Base
+                         uuid-types-1.0.3:Data.UUID.Types.Internal
+                         uuid-types-1.0.3:Data.UUID.Types.Internal.Builder
+                         vector-0.12.0.3:Data.Vector vector-0.12.0.3:Data.Vector.Primitive
+                         vector-0.12.0.3:Data.Vector.Storable
+                         vector-0.12.0.3:Data.Vector.Unboxed
+                         vector-0.12.0.3:Data.Vector.Unboxed.Base
+                         zlib-0.6.2.1:Codec.Compression.Zlib.Stream
+import  -/  Decimal-0.5.1:Data.Decimal 386bd393cd5aa4e26ed963ba0cf554ad
+import  -/  aeson-1.4.6.0:Data.Aeson ce3c7d2cd8d8c223f7b849dd159257fc
+import  -/  aeson-1.4.6.0:Data.Aeson.Types 0463ab7e5836c8b82a8ba45dfedd17d9
+import  -/  aeson-1.4.6.0:Data.Aeson.Types.FromJSON 0023f1949cd17736c516e676c103650c
+import  -/  aeson-1.4.6.0:Data.Aeson.Types.Internal 135c5529ac1dd8a681627079bcf6a760
+import  -/  base-4.12.0.0:Control.Monad.Fail e3390d20cbc1146ebe051d327f964e5d
+import  -/  base-4.12.0.0:Data.Either 423bee738f25e5ee983d072216009be8
+import  -/  base-4.12.0.0:Data.Foldable efb37371da929e7bc88d896298d2d979
+import  -/  base-4.12.0.0:Data.Functor 069b2025a03e32fd228e74a86a58a075
+import  -/  base-4.12.0.0:Data.String fa00d4c51cd8d22ee4f54a25f9e9c97d
+import  -/  base-4.12.0.0:Data.Typeable 1095be85dd9009a6503a3981a259490e
+import  -/  base-4.12.0.0:Data.Typeable.Internal e1cb15df401654131814917774d4d7ed
+import  -/  base-4.12.0.0:GHC.Base c00b75f0b052d05c55ba6a4dd1c63b26
+import  -/  base-4.12.0.0:GHC.Enum 87204abed08db8735fc0be5ab48689aa
+import  -/  base-4.12.0.0:GHC.Exception.Type 98b0fca1a406b013cbf2a34ff23be207
+import  -/  base-4.12.0.0:GHC.Generics 2b3b2e72be66983021f8ad0c2edcf290
+import  -/  base-4.12.0.0:GHC.Num c2039f03637c68f47b0bbff4c18ec616
+import  -/  base-4.12.0.0:GHC.Real af2b985dd29515c375fb78b2c9298d42
+import  -/  base-4.12.0.0:GHC.Show 838a5d039379d82d9626aae53dfce276
+import  -/  base-4.12.0.0:Text.Show f831c81bd0bc037552578ae72a898ddd
+import  -/  bytestring-0.10.8.2:Data.ByteString.Builder.Internal 8258443d95d94e3caaed55a182aaa9c6
+import  -/  bytestring-0.10.8.2:Data.ByteString.Internal f8067c0775041a7adb8f53745475ed88
+import  -/  containers-0.6.0.1:Data.Map.Internal fbf8d1bed47de2b3b48e26c406ee4050
+import  -/  ghc-prim-0.5.3:GHC.Classes 0f6fd7d7db53fc48f6e1f01803cc6c9d
+import  -/  ghc-prim-0.5.3:GHC.Types 57064c9f957b09bc2e360061ad5cae0b
+import  -/  http-api-data-0.4.1.1:Web.HttpApiData 944306a461ce7e2f42531a733d1a9ad8
+import  -/  http-api-data-0.4.1.1:Web.Internal.HttpApiData 404afdb34c44385369ac361de4cb7b5a
+import  -/  http-client-0.6.4:Network.HTTP.Client 256263d061f2dd4bea87e8d6c6daaf88
+import  -/  http-client-0.6.4:Network.HTTP.Client.Types ec41ab2db91e8a5c002a8c789d59033e
+import  -/  integer-gmp-1.0.2.0:GHC.Integer.Type 6d87087aea24143d2650f78480d954a3
+import  -/  lens-4.17.1:Control.Lens.Internal.PrismTH 3ef5c44abf65dde40d3850e8be1aacbe
+import  -/  lens-4.17.1:Control.Lens.Prism f049693530958e72c4f288f99dccacf3
+import  -/  lens-4.17.1:Control.Lens.TH 7ba7c66f49864eab70835567b48890e1
+import  -/  lens-4.17.1:Control.Lens.Type 7e0b4624a68148643df58f14524c165c
+import  -/  Display.Projection.Scalable 27f4788d7abea0ff8e6d95e409d2d099
+  exports: cade0a345d70f98458034798ef81eb6c
+  Scalable 3b40d6b8738f93d78c5888307964f48d
+  scale 5ba07b12942d707cdab5a01a9e6e7ad3
+import  -/  Prelude eb56433d70ce51255107416a5dd8a27b
+  exports: 6e15d7491c075093daa9efab164ba23e
+import  -/  relude-0.5.0:Relude.String.Conversion 684ea3f1d869a9fa1566bdb880923ef0
+import  -/  req-2.1.0:Network.HTTP.Req 3ed837cd795dad2eda3d85337e1f6972
+import  -/  text-1.2.3.1:Data.Text.Internal 537e168590e8068f673f691833f78483
+import  -/  time-1.8.0.2:Data.Time.Clock dd84ffe3e1e0efb461fdef5b6c3ef7f0
+import  -/  time-1.8.0.2:Data.Time.Clock.Internal.NominalDiffTime 684fbd4a258a1ec8e3cfc2816ede9e1d
+import  -/  time-1.8.0.2:Data.Time.Clock.Internal.POSIXTime f8fad5d8ba3cdb852b63035e2758b869
+import  -/  time-1.8.0.2:Data.Time.Clock.Internal.UTCTime 1a8a728460c6a46a8a59269afbe00175
+import  -/  time-1.8.0.2:Data.Time.Clock.POSIX b218aa2e53cf1d64758fb39969540701
+import  -/  time-1.8.0.2:Data.Time.Format 99541c5c71daee5f246a504498171b3d
+import  -/  time-1.8.0.2:Data.Time.LocalTime b734e5973a48e5d3c8c5290b5b9b16d1
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.LocalTime 63f61ae92aa93e122334541e93a0a087
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.TimeOfDay c737b7e311a531c38b819f60dc5b6866
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.TimeZone 0cc5caae4ecc15531d36257944ed1c09
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fEnumTime :: GHC.Enum.Enum Graphite.Types.Time
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fEqDataPoint :: GHC.Classes.Eq Graphite.Types.DataPoint
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fEqFrom :: GHC.Classes.Eq Graphite.Types.From
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fEqGraphiteRequest ::
+    GHC.Classes.Eq Graphite.Types.GraphiteRequest
+  DFunId
+5cb5911903f852e78163cbec81178d36
+  $fEqGraphiteUrl :: GHC.Classes.Eq Graphite.Types.GraphiteUrl
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fEqMetric :: GHC.Classes.Eq Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fEqMetricsResponse ::
+    GHC.Classes.Eq Graphite.Types.MetricsResponse
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fEqTime :: GHC.Classes.Eq Graphite.Types.Time
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fEqTo :: GHC.Classes.Eq Graphite.Types.To
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fEqValue :: GHC.Classes.Eq Graphite.Types.Value
+  DFunId
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  $fExceptionGraphiteError ::
+    GHC.Exception.Type.Exception Graphite.Types.GraphiteError
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fFormatTimeTime :: Data.Time.Format.FormatTime Graphite.Types.Time
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fFractionalTime :: GHC.Real.Fractional Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fFractionalValue :: GHC.Real.Fractional Graphite.Types.Value
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fFromJSONDataPoint ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.DataPoint
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fFromJSONMetric ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fFromJSONMetricsResponse ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.MetricsResponse
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fFromJSONTime ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fFromJSONValue ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.Value
+  DFunId
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  $fGenericGraphiteError ::
+    GHC.Generics.Generic Graphite.Types.GraphiteError
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fGenericGraphiteRequest ::
+    GHC.Generics.Generic Graphite.Types.GraphiteRequest
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fGenericMetric :: GHC.Generics.Generic Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fGenericMetricsResponse ::
+    GHC.Generics.Generic Graphite.Types.MetricsResponse
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fGenericValue :: GHC.Generics.Generic Graphite.Types.Value
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fIsStringFrom :: Data.String.IsString Graphite.Types.From
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fIsStringMetric :: Data.String.IsString Graphite.Types.Metric
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fIsStringTo :: Data.String.IsString Graphite.Types.To
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fNumTime :: GHC.Num.Num Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fNumValue :: GHC.Num.Num Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fOrdTime :: GHC.Classes.Ord Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fOrdValue :: GHC.Classes.Ord Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fRealFracTime :: GHC.Real.RealFrac Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fRealFracValue :: GHC.Real.RealFrac Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fRealTime :: GHC.Real.Real Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fRealValue :: GHC.Real.Real Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fScalableTime ::
+    Display.Projection.Scalable.Scalable Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fScalableValue ::
+    Display.Projection.Scalable.Scalable Graphite.Types.Value
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fShowDataPoint :: GHC.Show.Show Graphite.Types.DataPoint
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fShowFrom :: GHC.Show.Show Graphite.Types.From
+  DFunId
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  $fShowGraphiteError :: GHC.Show.Show Graphite.Types.GraphiteError
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fShowGraphiteRequest ::
+    GHC.Show.Show Graphite.Types.GraphiteRequest
+  DFunId
+5cb5911903f852e78163cbec81178d36
+  $fShowGraphiteUrl :: GHC.Show.Show Graphite.Types.GraphiteUrl
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fShowMetric :: GHC.Show.Show Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fShowMetricsResponse ::
+    GHC.Show.Show Graphite.Types.MetricsResponse
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fShowTime :: GHC.Show.Show Graphite.Types.Time
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fShowTo :: GHC.Show.Show Graphite.Types.To
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fShowValue :: GHC.Show.Show Graphite.Types.Value
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fToHttpApiDataFrom ::
+    Web.Internal.HttpApiData.ToHttpApiData Graphite.Types.From
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fToHttpApiDataTo ::
+    Web.Internal.HttpApiData.ToHttpApiData Graphite.Types.To
+  DFunId
+1d5d1732b69ad381bfa9126aa57fa963
+  $tc'C:MonadGraphite :: GHC.Types.TyCon
+70a89b3d9a4cd62dfbe7e615502197b2
+  $tc'DataPoint :: GHC.Types.TyCon
+005f41a48cde06d6d666f0f3f6473001
+  $tc'From :: GHC.Types.TyCon
+78e3220d442b70340ddcd8da99c92c1a
+  $tc'GraphiteUrl :: GHC.Types.TyCon
+4dcf80273c2d628685ffa6118ab1e163
+  $tc'HttpError :: GHC.Types.TyCon
+a3aa9ed357cf46b7831510b175cd5f9a
+  $tc'Metric :: GHC.Types.TyCon
+7bc4812ffc8380f0813c82ad0b472386
+  $tc'MetricsResponse :: GHC.Types.TyCon
+8f9c26da04fcb6408ed8e7c4811866e4
+  $tc'ParsingError :: GHC.Types.TyCon
+8f83a5b3e6c7581cc691c9aaf5e1049a
+  $tc'RenderRequest :: GHC.Types.TyCon
+19fbd2b5f01d1cd581c93e9f12a507e6
+  $tc'Time :: GHC.Types.TyCon
+9b4cfe80eba78fb0ab1790f9883a82e4
+  $tc'To :: GHC.Types.TyCon
+e11d9a1548f1b490aa5e2031a85ce4a1
+  $tc'Value :: GHC.Types.TyCon
+c0c6e30345b0f05a67e8019b3e69a9a9
+  $tcDataPoint :: GHC.Types.TyCon
+249a1330ef3a37f3d9270e8b7f17e136
+  $tcFrom :: GHC.Types.TyCon
+13d9a2f2097444469e8b9aaaba0cb095
+  $tcGraphiteError :: GHC.Types.TyCon
+4ddc33aba397952cdd58f5f704cef639
+  $tcGraphiteRequest :: GHC.Types.TyCon
+6a70a508cd0d9f6787c187c84c34b521
+  $tcGraphiteUrl :: GHC.Types.TyCon
+2be5a9ea905836c94b0d193e38ee8395
+  $tcMetric :: GHC.Types.TyCon
+20c6ba2fa72c93fee4e3ce27461e66b4
+  $tcMetricsResponse :: GHC.Types.TyCon
+08e3b9f47cd9a08e82dbf90fac94f1ad
+  $tcMonadGraphite :: GHC.Types.TyCon
+e8270c00b70c30340f17359c052d0a5f
+  $tcTime :: GHC.Types.TyCon
+bb1db39dc05a7132b04d45e48fb23215
+  $tcTo :: GHC.Types.TyCon
+5fbafa2225e10730ca6fcfb9fb8a0095
+  $tcValue :: GHC.Types.TyCon
+21f8e3452e06061cbcc642a9c92286ca
+  $trModule :: GHC.Types.Module
+019b7ed31b48b2db012a87ce454f595d
+  data DataPoint
+    = DataPoint {value :: Graphite.Types.Value,
+                 time :: Graphite.Types.Time}
+c8d2629e56310aad8e77100ece7581f4
+  newtype From = From Data.Text.Internal.Text
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  data GraphiteError
+    = HttpError Network.HTTP.Client.Types.HttpException
+    | ParsingError Data.Text.Internal.Text
+c8d2629e56310aad8e77100ece7581f4
+  data GraphiteRequest
+    = RenderRequest {_from :: Graphite.Types.From,
+                     _to :: GHC.Maybe.Maybe Graphite.Types.To,
+                     _target :: Graphite.Types.Target}
+5cb5911903f852e78163cbec81178d36
+  data GraphiteUrl where
+    GraphiteUrl :: Data.Typeable.Internal.Typeable s =>
+                   (Network.HTTP.Req.Url s) -> GraphiteUrl
+530ffdf5afb55172c39c41de93c0e221
+  newtype Metric = Metric Data.Text.Internal.Text
+019b7ed31b48b2db012a87ce454f595d
+  data MetricsResponse
+    = MetricsResponse {target :: Data.Text.Internal.Text,
+                       tags :: Data.Map.Internal.Map
+                                 Data.Text.Internal.Text Data.Text.Internal.Text,
+                       datapoints :: [Graphite.Types.DataPoint]}
+967438cf94a145ebdca293d4ce3de8e3
+  class GHC.Base.Monad m => MonadGraphite (m :: * -> *) where
+    listMetrics :: m [Graphite.Types.Metric]
+    getMetrics :: Graphite.Types.GraphiteRequest
+                  -> m [Graphite.Types.DataPoint]
+    {-# MINIMAL listMetrics, getMetrics #-}
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  axiom Graphite.Types.Rep_GraphiteError::
+      GHC.Generics.Rep Graphite.Types.GraphiteError
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "GraphiteError" "Graphite.Types" "main" 'GHC.Types.False)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "HttpError" 'GHC.Generics.PrefixI 'GHC.Types.False)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     'GHC.Maybe.Nothing
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Network.HTTP.Client.Types.HttpException))
+             GHC.Generics.:+: GHC.Generics.C1
+                                ('GHC.Generics.MetaCons
+                                   "ParsingError" 'GHC.Generics.PrefixI 'GHC.Types.False)
+                                (GHC.Generics.S1
+                                   ('GHC.Generics.MetaSel
+                                      'GHC.Maybe.Nothing
+                                      'GHC.Generics.NoSourceUnpackedness
+                                      'GHC.Generics.NoSourceStrictness
+                                      'GHC.Generics.DecidedLazy)
+                                   (GHC.Generics.Rec0 Data.Text.Internal.Text)))
+c8d2629e56310aad8e77100ece7581f4
+  axiom Graphite.Types.Rep_GraphiteRequest::
+      GHC.Generics.Rep Graphite.Types.GraphiteRequest
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "GraphiteRequest" "Graphite.Types" "main" 'GHC.Types.False)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "RenderRequest" 'GHC.Generics.PrefixI 'GHC.Types.True)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     ('GHC.Maybe.Just "_from")
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Graphite.Types.From)
+                GHC.Generics.:*: (GHC.Generics.S1
+                                    ('GHC.Generics.MetaSel
+                                       ('GHC.Maybe.Just "_to")
+                                       'GHC.Generics.NoSourceUnpackedness
+                                       'GHC.Generics.NoSourceStrictness
+                                       'GHC.Generics.DecidedLazy)
+                                    (GHC.Generics.Rec0 (GHC.Maybe.Maybe Graphite.Types.To))
+                                  GHC.Generics.:*: GHC.Generics.S1
+                                                     ('GHC.Generics.MetaSel
+                                                        ('GHC.Maybe.Just "_target")
+                                                        'GHC.Generics.NoSourceUnpackedness
+                                                        'GHC.Generics.NoSourceStrictness
+                                                        'GHC.Generics.DecidedLazy)
+                                                     (GHC.Generics.Rec0 Graphite.Types.Target))))
+530ffdf5afb55172c39c41de93c0e221
+  axiom Graphite.Types.Rep_Metric::
+      GHC.Generics.Rep Graphite.Types.Metric
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "Metric" "Graphite.Types" "main" 'GHC.Types.True)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "Metric" 'GHC.Generics.PrefixI 'GHC.Types.False)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     'GHC.Maybe.Nothing
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Data.Text.Internal.Text)))
+019b7ed31b48b2db012a87ce454f595d
+  axiom Graphite.Types.Rep_MetricsResponse::
+      GHC.Generics.Rep Graphite.Types.MetricsResponse
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "MetricsResponse" "Graphite.Types" "main" 'GHC.Types.False)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "MetricsResponse" 'GHC.Generics.PrefixI 'GHC.Types.True)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     ('GHC.Maybe.Just "target")
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Data.Text.Internal.Text)
+                GHC.Generics.:*: (GHC.Generics.S1
+                                    ('GHC.Generics.MetaSel
+                                       ('GHC.Maybe.Just "tags")
+                                       'GHC.Generics.NoSourceUnpackedness
+                                       'GHC.Generics.NoSourceStrictness
+                                       'GHC.Generics.DecidedLazy)
+                                    (GHC.Generics.Rec0
+                                       (Data.Map.Internal.Map
+                                          Data.Text.Internal.Text Data.Text.Internal.Text))
+                                  GHC.Generics.:*: GHC.Generics.S1
+                                                     ('GHC.Generics.MetaSel
+                                                        ('GHC.Maybe.Just "datapoints")
+                                                        'GHC.Generics.NoSourceUnpackedness
+                                                        'GHC.Generics.NoSourceStrictness
+                                                        'GHC.Generics.DecidedLazy)
+                                                     (GHC.Generics.Rec0
+                                                        [Graphite.Types.DataPoint]))))
+0ab31d19b79e63c5b1f7a43afcafb082
+  axiom Graphite.Types.Rep_Value::
+      GHC.Generics.Rep Graphite.Types.Value
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "Value" "Graphite.Types" "main" 'GHC.Types.True)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "Value" 'GHC.Generics.PrefixI 'GHC.Types.False)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     'GHC.Maybe.Nothing
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Data.Decimal.Decimal)))
+f1ce368577bd8d7accc5e5d8787a45e3
+  type Target = Data.Text.Internal.Text
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  newtype Time
+    = Time {timestamp :: Data.Time.Clock.Internal.POSIXTime.POSIXTime}
+ab25f49515b11b2fac4b3148dcf3e1b0
+  newtype To = To Data.Text.Internal.Text
+0ab31d19b79e63c5b1f7a43afcafb082
+  newtype Value = Value Data.Decimal.Decimal
+8550ea32372de6203c54e217a8b95ebd
+  _HttpError ::
+    Control.Lens.Type.Prism'
+      Graphite.Types.GraphiteError
+      Network.HTTP.Client.Types.HttpException
+ae30173072a491f7226440a8ee64f33c
+  _ParsingError ::
+    Control.Lens.Type.Prism'
+      Graphite.Types.GraphiteError Data.Text.Internal.Text
+c8d2629e56310aad8e77100ece7581f4
+  _from :: Graphite.Types.GraphiteRequest -> Graphite.Types.From
+  RecSel Left Graphite.Types.GraphiteRequest
+c8d2629e56310aad8e77100ece7581f4
+  _target :: Graphite.Types.GraphiteRequest -> Graphite.Types.Target
+  RecSel Left Graphite.Types.GraphiteRequest
+c8d2629e56310aad8e77100ece7581f4
+  _to ::
+    Graphite.Types.GraphiteRequest -> GHC.Maybe.Maybe Graphite.Types.To
+  RecSel Left Graphite.Types.GraphiteRequest
+019b7ed31b48b2db012a87ce454f595d
+  datapoints ::
+    Graphite.Types.MetricsResponse -> [Graphite.Types.DataPoint]
+  RecSel Left Graphite.Types.MetricsResponse
+ad1bca8e39f8275177711a2522b8a398
+  deltaDays ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+f17f24b580cca45e4a8d185c14228106
+  deltaHours ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+24ebc5a2f1692c24c6d6fafb66a07968
+  deltaMinutes ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+c1e83445084796ce9674b54160cb7f9d
+  deltaSeconds ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+0372155c456d027e3da1d3e7eff7a5ab
+  deltaTime' ::
+    Graphite.Types.Time
+    -> Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+bbe3dd48cf2c681cc03143ea583b7f10
+  millisecond :: Graphite.Types.Time
+019b7ed31b48b2db012a87ce454f595d
+  tags ::
+    Graphite.Types.MetricsResponse
+    -> Data.Map.Internal.Map
+         Data.Text.Internal.Text Data.Text.Internal.Text
+  RecSel Left Graphite.Types.MetricsResponse
+019b7ed31b48b2db012a87ce454f595d
+  target :: Graphite.Types.MetricsResponse -> Data.Text.Internal.Text
+  RecSel Left Graphite.Types.MetricsResponse
+019b7ed31b48b2db012a87ce454f595d
+  time :: Graphite.Types.DataPoint -> Graphite.Types.Time
+  RecSel Left Graphite.Types.DataPoint
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  timestamp ::
+    Graphite.Types.Time -> Data.Time.Clock.Internal.POSIXTime.POSIXTime
+  RecSel Left Graphite.Types.Time
+7c11f312323c32b065ed9313dc2d747b
+  toLocalTime ::
+    Data.Time.LocalTime.Internal.TimeZone.TimeZone
+    -> Graphite.Types.Time
+    -> Data.Time.LocalTime.Internal.LocalTime.LocalTime
+fc5c926935f35b1b8da4b35b38072523
+  toTimeOfDay ::
+    Graphite.Types.Time
+    -> Data.Time.LocalTime.Internal.TimeOfDay.TimeOfDay
+f92130ca617430cc7221654904e67095
+  toUTC ::
+    Graphite.Types.Time -> Data.Time.Clock.Internal.UTCTime.UTCTime
+019b7ed31b48b2db012a87ce454f595d
+  value :: Graphite.Types.DataPoint -> Graphite.Types.Value
+  RecSel Left Graphite.Types.DataPoint
+instance GHC.Enum.Enum [Graphite.Types.Time]
+  = Graphite.Types.$fEnumTime
+instance GHC.Classes.Eq [Graphite.Types.DataPoint]
+  = Graphite.Types.$fEqDataPoint
+instance GHC.Classes.Eq [Graphite.Types.From]
+  = Graphite.Types.$fEqFrom
+instance GHC.Classes.Eq [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.$fEqGraphiteRequest
+instance GHC.Classes.Eq [Graphite.Types.GraphiteUrl]
+  = Graphite.Types.$fEqGraphiteUrl
+instance GHC.Classes.Eq [Graphite.Types.Metric]
+  = Graphite.Types.$fEqMetric
+instance GHC.Classes.Eq [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fEqMetricsResponse
+instance GHC.Classes.Eq [Graphite.Types.Time]
+  = Graphite.Types.$fEqTime
+instance GHC.Classes.Eq [Graphite.Types.To] = Graphite.Types.$fEqTo
+instance GHC.Classes.Eq [Graphite.Types.Value]
+  = Graphite.Types.$fEqValue
+instance GHC.Exception.Type.Exception [Graphite.Types.GraphiteError]
+  = Graphite.Types.$fExceptionGraphiteError
+instance Data.Time.Format.FormatTime [Graphite.Types.Time]
+  = Graphite.Types.$fFormatTimeTime
+instance GHC.Real.Fractional [Graphite.Types.Time]
+  = Graphite.Types.$fFractionalTime
+instance GHC.Real.Fractional [Graphite.Types.Value]
+  = Graphite.Types.$fFractionalValue
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.DataPoint]
+  = Graphite.Types.$fFromJSONDataPoint
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.Metric]
+  = Graphite.Types.$fFromJSONMetric
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fFromJSONMetricsResponse
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.Time]
+  = Graphite.Types.$fFromJSONTime
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.Value]
+  = Graphite.Types.$fFromJSONValue
+instance GHC.Generics.Generic [Graphite.Types.GraphiteError]
+  = Graphite.Types.$fGenericGraphiteError
+instance GHC.Generics.Generic [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.$fGenericGraphiteRequest
+instance GHC.Generics.Generic [Graphite.Types.Metric]
+  = Graphite.Types.$fGenericMetric
+instance GHC.Generics.Generic [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fGenericMetricsResponse
+instance GHC.Generics.Generic [Graphite.Types.Value]
+  = Graphite.Types.$fGenericValue
+instance Data.String.IsString [Graphite.Types.From]
+  = Graphite.Types.$fIsStringFrom
+instance Data.String.IsString [Graphite.Types.Metric]
+  = Graphite.Types.$fIsStringMetric
+instance Data.String.IsString [Graphite.Types.To]
+  = Graphite.Types.$fIsStringTo
+instance GHC.Num.Num [Graphite.Types.Time]
+  = Graphite.Types.$fNumTime
+instance GHC.Num.Num [Graphite.Types.Value]
+  = Graphite.Types.$fNumValue
+instance GHC.Classes.Ord [Graphite.Types.Time]
+  = Graphite.Types.$fOrdTime
+instance GHC.Classes.Ord [Graphite.Types.Value]
+  = Graphite.Types.$fOrdValue
+instance GHC.Real.RealFrac [Graphite.Types.Time]
+  = Graphite.Types.$fRealFracTime
+instance GHC.Real.RealFrac [Graphite.Types.Value]
+  = Graphite.Types.$fRealFracValue
+instance GHC.Real.Real [Graphite.Types.Time]
+  = Graphite.Types.$fRealTime
+instance GHC.Real.Real [Graphite.Types.Value]
+  = Graphite.Types.$fRealValue
+instance Display.Projection.Scalable.Scalable [Graphite.Types.Time]
+  = Graphite.Types.$fScalableTime
+instance Display.Projection.Scalable.Scalable [Graphite.Types.Value]
+  = Graphite.Types.$fScalableValue
+instance GHC.Show.Show [Graphite.Types.DataPoint]
+  = Graphite.Types.$fShowDataPoint
+instance GHC.Show.Show [Graphite.Types.From]
+  = Graphite.Types.$fShowFrom
+instance GHC.Show.Show [Graphite.Types.GraphiteError]
+  = Graphite.Types.$fShowGraphiteError
+instance GHC.Show.Show [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.$fShowGraphiteRequest
+instance GHC.Show.Show [Graphite.Types.GraphiteUrl]
+  = Graphite.Types.$fShowGraphiteUrl
+instance GHC.Show.Show [Graphite.Types.Metric]
+  = Graphite.Types.$fShowMetric
+instance GHC.Show.Show [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fShowMetricsResponse
+instance GHC.Show.Show [Graphite.Types.Time]
+  = Graphite.Types.$fShowTime
+instance GHC.Show.Show [Graphite.Types.To]
+  = Graphite.Types.$fShowTo
+instance GHC.Show.Show [Graphite.Types.Value]
+  = Graphite.Types.$fShowValue
+instance Web.Internal.HttpApiData.ToHttpApiData [Graphite.Types.From]
+  = Graphite.Types.$fToHttpApiDataFrom
+instance Web.Internal.HttpApiData.ToHttpApiData [Graphite.Types.To]
+  = Graphite.Types.$fToHttpApiDataTo
+family instance GHC.Generics.Rep [Graphite.Types.MetricsResponse]
+  = Graphite.Types.Rep_MetricsResponse
+family instance GHC.Generics.Rep [Graphite.Types.Metric]
+  = Graphite.Types.Rep_Metric
+family instance GHC.Generics.Rep [Graphite.Types.GraphiteError]
+  = Graphite.Types.Rep_GraphiteError
+family instance GHC.Generics.Rep [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.Rep_GraphiteRequest
+family instance GHC.Generics.Rep [Graphite.Types.Value]
+  = Graphite.Types.Rep_Value
+trusted: none
+require own pkg trusted: False
+module header:
+  Nothing
+declaration docs:
+arg docs:
+
+
+==================== FINAL INTERFACE ====================
+2019-11-26 19:34:50.36400169 UTC
+
+interface main:Graphite.Types [family instance module] [hpc] 8065
+  interface hash: 97bcd09c686a5015d9949d6093ccae2e
+  ABI hash: feb8668d771f67e264ecb2adeba77e05
+  export-list hash: af4f28c267d620c2f54afe59c39ceadd
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: bfe2aec6ff06ed64d916f42b872344bb
+  opt_hash: d0a78e7b344f95c7406be35c9b75e196
+  hpc_hash: 93b885adfe0da089cdf634904fd59f71
+  plugin_hash: ad164012d6b1e14942349d58b1132007
+  sig of: Nothing
+  used TH splices: True
+  where
+exports:
+  Graphite.Types._HttpError
+  Graphite.Types._ParsingError
+  Graphite.Types.deltaDays
+  Graphite.Types.deltaHours
+  Graphite.Types.deltaMinutes
+  Graphite.Types.deltaSeconds
+  Graphite.Types.deltaTime'
+  Graphite.Types.millisecond
+  Graphite.Types.toLocalTime
+  Graphite.Types.toTimeOfDay
+  Graphite.Types.toUTC
+  Graphite.Types.DataPoint{Graphite.Types.DataPoint time value}
+  Graphite.Types.From{Graphite.Types.From}
+  Graphite.Types.GraphiteError{Graphite.Types.HttpError Graphite.Types.ParsingError}
+  Graphite.Types.GraphiteRequest{Graphite.Types.RenderRequest _from _target _to}
+  Graphite.Types.GraphiteUrl{Graphite.Types.GraphiteUrl}
+  Graphite.Types.Metric{Graphite.Types.Metric}
+  Graphite.Types.MetricsResponse{Graphite.Types.MetricsResponse datapoints tags target}
+  Graphite.Types.MonadGraphite{Graphite.Types.getMetrics Graphite.Types.listMetrics}
+  Graphite.Types.Target
+  Graphite.Types.Time{Graphite.Types.Time timestamp}
+  Graphite.Types.To{Graphite.Types.To}
+  Graphite.Types.Value{Graphite.Types.Value}
+module dependencies: Display.Projection.Scalable Normalisation
+                     Prelude
+package dependencies: Decimal-0.5.1 RSA-2.3.1 SHA-1.6.4.4
+                      StateVar-1.2 adjunctions-4.4 aeson-1.4.6.0 array-0.5.3.0
+                      asn1-encoding-0.9.6 asn1-parse-0.9.5 asn1-types-0.3.3 async-2.2.2
+                      attoparsec-0.13.2.3 attoparsec-iso8601-1.0.1.0
+                      authenticate-oauth-1.6.0.1 base-4.12.0.0 base-compat-0.10.5
+                      base-orphans-0.8.1 base64-bytestring-1.0.0.2 basement-0.0.11
+                      bifunctors-5.5.5 binary-0.8.6.0 blaze-builder-0.4.1.0
+                      bytestring-0.10.8.2 call-stack-0.1.0 case-insensitive-1.2.0.11
+                      cereal-0.5.8.1 comonad-5.0.5 connection-0.3.1 containers-0.6.0.1
+                      contravariant-1.5.2 cookie-0.4.5 crypto-api-0.13.3
+                      crypto-pubkey-types-0.4.3 cryptonite-0.25 data-default-0.7.1.1
+                      data-default-class-0.1.2.0 data-default-instances-containers-0.0.1
+                      data-default-instances-dlist-0.0.1
+                      data-default-instances-old-locale-0.0.1 deepseq-1.4.4.0
+                      directory-1.3.3.0 distributive-0.6.1 dlist-0.8.0.7 entropy-0.4.1.5
+                      exceptions-0.10.3 filepath-1.4.2.1 free-5.1.2 ghc-boot-th-8.6.5
+                      ghc-prim-0.5.3 hashable-1.2.7.0 hourglass-0.2.12
+                      http-api-data-0.4.1.1 http-client-0.6.4 http-client-tls-0.3.5.3
+                      http-types-0.12.3 integer-gmp-1.0.2.0 integer-logarithms-1.0.3
+                      kan-extensions-5.2 lens-4.17.1 memory-0.14.18 mime-types-0.1.0.9
+                      monad-control-1.0.2.3 mtl-2.2.2 network-2.8.0.1 network-uri-2.6.1.0
+                      old-locale-1.0.0.7 parsec-3.1.14.0 pem-0.2.4 pretty-1.1.3.6
+                      primitive-0.6.4.0 profunctors-5.3 random-1.1 reflection-2.1.5
+                      relude-0.5.0 req-2.1.0 retry-0.8.1.0 safe-0.3.17 scientific-0.3.6.2
+                      semigroupoids-5.3.3 singletons-2.5.1 socks-0.6.1 stm-2.5.0.0
+                      streaming-commons-0.2.1.1 syb-0.7.1 tagged-0.8.6
+                      template-haskell-2.14.0.0 text-1.2.3.1 th-abstraction-0.3.1.0
+                      th-desugar-1.9 th-expand-syns-0.4.5.0 th-lift-0.8.0.1
+                      th-lift-instances-0.1.14 th-orphans-0.13.9 th-reify-many-0.1.9
+                      time-1.8.0.2 time-compat-1.9.2.2 tls-1.4.1 transformers-0.5.6.2
+                      transformers-base-0.4.5.2 transformers-compat-0.6.5 unix-2.7.2.2
+                      unordered-containers-0.2.10.0 uuid-types-1.0.3 vector-0.12.0.3
+                      x509-1.7.5 x509-store-1.6.7 x509-system-1.6.6
+                      x509-validation-1.6.11 zlib-0.6.2.1
+orphans: relude-0.5.0:Relude.Monad.Either
+         singletons-2.5.1:Data.Singletons
+         singletons-2.5.1:Data.Singletons.Prelude.Monad
+         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+         singletons-2.5.1:Data.Singletons.Prelude.Const
+         singletons-2.5.1:Data.Singletons.Prelude.Functor
+         singletons-2.5.1:Data.Singletons.Prelude.Identity
+         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+         singletons-2.5.1:Data.Singletons.TypeLits
+         singletons-2.5.1:Data.Singletons.ShowSing
+         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+         singletons-2.5.1:Data.Singletons.Prelude.Ord
+         singletons-2.5.1:Data.Singletons.Prelude.Instances
+         singletons-2.5.1:Data.Singletons.Decide
+         th-orphans-0.13.9:Language.Haskell.TH.Instances
+         th-lift-0.8.0.1:Language.Haskell.TH.Lift
+         th-lift-instances-0.1.14:Instances.TH.Lift
+         syb-0.7.1:Data.Generics.Instances
+         attoparsec-0.13.2.3:Data.Attoparsec.Text.Internal
+         attoparsec-0.13.2.3:Data.Attoparsec.ByteString.Char8
+         time-1.8.0.2:Data.Time.Clock.TAI
+         data-default-instances-containers-0.0.1:Data.Default.Instances.Containers
+         data-default-instances-dlist-0.0.1:Data.Default.Instances.DList
+         data-default-instances-old-locale-0.0.1:Data.Default.Instances.OldLocale
+         RSA-2.3.1:Codec.Crypto.RSA.Pure
+         http-client-0.6.4:Network.HTTP.Client.Request
+         basement-0.0.11:Basement.UArray.Base basement-0.0.11:Basement.Block
+         network-2.8.0.1:Network.Socket time-1.8.0.2:Data.Time.Format.Parse
+         time-1.8.0.2:Data.Time.LocalTime.Internal.ZonedTime
+         time-1.8.0.2:Data.Time.LocalTime.Internal.LocalTime
+         time-1.8.0.2:Data.Time.Calendar.Gregorian
+         vector-0.12.0.3:Data.Vector.Unboxed stm-2.5.0.0:Control.Monad.STM
+         vector-0.12.0.3:Data.Vector.Fusion.Bundle
+         reflection-2.1.5:Data.Reflection
+         transformers-0.5.6.2:Control.Monad.Trans.Error
+         hashable-1.2.7.0:Data.Hashable.Generic text-1.2.3.1:Data.Text.Lazy
+         text-1.2.3.1:Data.Text binary-0.8.6.0:Data.Binary.Generic
+         bytestring-0.10.8.2:Data.ByteString.Builder
+         text-1.2.3.1:Data.Text.Show base-4.12.0.0:GHC.Float
+         base-4.12.0.0:GHC.Base
+family instance modules: adjunctions-4.4:Data.Functor.Rep
+                         aeson-1.4.6.0:Data.Aeson.Types.Internal
+                         attoparsec-0.13.2.3:Data.Attoparsec.Internal.Types
+                         base-4.12.0.0:Control.Applicative base-4.12.0.0:Data.Complex
+                         base-4.12.0.0:Data.Functor.Compose base-4.12.0.0:Data.Functor.Const
+                         base-4.12.0.0:Data.Functor.Identity
+                         base-4.12.0.0:Data.Functor.Product base-4.12.0.0:Data.Functor.Sum
+                         base-4.12.0.0:Data.Monoid base-4.12.0.0:Data.Semigroup
+                         base-4.12.0.0:Data.Semigroup.Internal base-4.12.0.0:Data.Version
+                         base-4.12.0.0:Data.Void base-4.12.0.0:GHC.Exts
+                         base-4.12.0.0:GHC.Generics base-4.12.0.0:GHC.IO.Exception
+                         basement-0.0.11:Basement.Block.Base
+                         basement-0.0.11:Basement.Bounded basement-0.0.11:Basement.Monad
+                         basement-0.0.11:Basement.MutableBuilder
+                         basement-0.0.11:Basement.Nat basement-0.0.11:Basement.NonEmpty
+                         basement-0.0.11:Basement.Numerical.Subtractive
+                         basement-0.0.11:Basement.PrimType basement-0.0.11:Basement.String
+                         basement-0.0.11:Basement.String.Encoding.ASCII7
+                         basement-0.0.11:Basement.String.Encoding.ISO_8859_1
+                         basement-0.0.11:Basement.String.Encoding.UTF16
+                         basement-0.0.11:Basement.String.Encoding.UTF32
+                         basement-0.0.11:Basement.Types.OffsetSize
+                         basement-0.0.11:Basement.UArray.Base
+                         basement-0.0.11:Basement.UTF8.Base
+                         bifunctors-5.5.5:Data.Bifunctor.Biff
+                         bifunctors-5.5.5:Data.Bifunctor.Clown
+                         bifunctors-5.5.5:Data.Bifunctor.Fix
+                         bifunctors-5.5.5:Data.Bifunctor.Flip
+                         bifunctors-5.5.5:Data.Bifunctor.Join
+                         bifunctors-5.5.5:Data.Bifunctor.Joker
+                         bifunctors-5.5.5:Data.Bifunctor.Product
+                         bifunctors-5.5.5:Data.Bifunctor.Sum
+                         bifunctors-5.5.5:Data.Bifunctor.Tannen
+                         bifunctors-5.5.5:Data.Bifunctor.Wrapped
+                         containers-0.6.0.1:Data.Graph
+                         containers-0.6.0.1:Data.IntMap.Internal
+                         containers-0.6.0.1:Data.IntSet.Internal
+                         containers-0.6.0.1:Data.Map.Internal
+                         containers-0.6.0.1:Data.Sequence.Internal
+                         containers-0.6.0.1:Data.Set.Internal containers-0.6.0.1:Data.Tree
+                         cryptonite-0.25:Crypto.ECC cryptonite-0.25:Crypto.Error.Types
+                         cryptonite-0.25:Crypto.Hash.Blake2
+                         cryptonite-0.25:Crypto.Hash.Blake2b
+                         cryptonite-0.25:Crypto.Hash.Blake2bp
+                         cryptonite-0.25:Crypto.Hash.Blake2s
+                         cryptonite-0.25:Crypto.Hash.Blake2sp
+                         cryptonite-0.25:Crypto.Hash.Keccak cryptonite-0.25:Crypto.Hash.MD2
+                         cryptonite-0.25:Crypto.Hash.MD4 cryptonite-0.25:Crypto.Hash.MD5
+                         cryptonite-0.25:Crypto.Hash.RIPEMD160
+                         cryptonite-0.25:Crypto.Hash.SHA1 cryptonite-0.25:Crypto.Hash.SHA224
+                         cryptonite-0.25:Crypto.Hash.SHA256 cryptonite-0.25:Crypto.Hash.SHA3
+                         cryptonite-0.25:Crypto.Hash.SHA384
+                         cryptonite-0.25:Crypto.Hash.SHA512
+                         cryptonite-0.25:Crypto.Hash.SHA512t
+                         cryptonite-0.25:Crypto.Hash.SHAKE
+                         cryptonite-0.25:Crypto.Hash.Skein256
+                         cryptonite-0.25:Crypto.Hash.Skein512
+                         cryptonite-0.25:Crypto.Hash.Tiger
+                         cryptonite-0.25:Crypto.Hash.Whirlpool dlist-0.8.0.7:Data.DList
+                         free-5.1.2:Control.Comonad.Cofree
+                         free-5.1.2:Control.Comonad.Trans.Cofree
+                         free-5.1.2:Control.Monad.Free free-5.1.2:Control.Monad.Trans.Free
+                         ghc-boot-th-8.6.5:GHC.ForeignSrcLang.Type
+                         ghc-boot-th-8.6.5:GHC.LanguageExtensions.Type
+                         http-client-0.6.4:Network.HTTP.Client
+                         kan-extensions-5.2:Data.Functor.Day
+                         kan-extensions-5.2:Data.Functor.Yoneda lens-4.17.1:Control.Lens.At
+                         lens-4.17.1:Control.Lens.Internal.Indexed
+                         lens-4.17.1:Control.Lens.Reified lens-4.17.1:Control.Lens.Tuple
+                         lens-4.17.1:Control.Lens.Wrapped lens-4.17.1:Control.Lens.Zoom
+                         monad-control-1.0.2.3:Control.Monad.Trans.Control
+                         network-uri-2.6.1.0:Network.URI
+                         pretty-1.1.3.6:Text.PrettyPrint.Annotated.HughesPJ
+                         pretty-1.1.3.6:Text.PrettyPrint.HughesPJ
+                         primitive-0.6.4.0:Control.Monad.Primitive
+                         primitive-0.6.4.0:Data.Primitive.Array
+                         primitive-0.6.4.0:Data.Primitive.ByteArray
+                         primitive-0.6.4.0:Data.Primitive.PrimArray
+                         primitive-0.6.4.0:Data.Primitive.SmallArray
+                         primitive-0.6.4.0:Data.Primitive.UnliftedArray
+                         profunctors-5.3:Data.Profunctor.Composition
+                         profunctors-5.3:Data.Profunctor.Rep
+                         relude-0.5.0:Relude.Container.One relude-0.5.0:Relude.Debug
+                         req-2.1.0:Network.HTTP.Req retry-0.8.1.0:Control.Retry
+                         singletons-2.5.1:Data.Singletons
+                         singletons-2.5.1:Data.Singletons.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Applicative
+                         singletons-2.5.1:Data.Singletons.Prelude.Base
+                         singletons-2.5.1:Data.Singletons.Prelude.Bool
+                         singletons-2.5.1:Data.Singletons.Prelude.Const
+                         singletons-2.5.1:Data.Singletons.Prelude.Either
+                         singletons-2.5.1:Data.Singletons.Prelude.Enum
+                         singletons-2.5.1:Data.Singletons.Prelude.Eq
+                         singletons-2.5.1:Data.Singletons.Prelude.Foldable
+                         singletons-2.5.1:Data.Singletons.Prelude.Functor
+                         singletons-2.5.1:Data.Singletons.Prelude.Identity
+                         singletons-2.5.1:Data.Singletons.Prelude.Instances
+                         singletons-2.5.1:Data.Singletons.Prelude.IsString
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.List.Internal.Disambiguation
+                         singletons-2.5.1:Data.Singletons.Prelude.Maybe
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad
+                         singletons-2.5.1:Data.Singletons.Prelude.Monad.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Monoid
+                         singletons-2.5.1:Data.Singletons.Prelude.Num
+                         singletons-2.5.1:Data.Singletons.Prelude.Ord
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup
+                         singletons-2.5.1:Data.Singletons.Prelude.Semigroup.Internal
+                         singletons-2.5.1:Data.Singletons.Prelude.Show
+                         singletons-2.5.1:Data.Singletons.Prelude.Traversable
+                         singletons-2.5.1:Data.Singletons.Prelude.Tuple
+                         singletons-2.5.1:Data.Singletons.Syntax
+                         singletons-2.5.1:Data.Singletons.TypeLits
+                         singletons-2.5.1:Data.Singletons.TypeLits.Internal
+                         tagged-0.8.6:Data.Tagged
+                         template-haskell-2.14.0.0:Language.Haskell.TH.Syntax
+                         text-1.2.3.1:Data.Text text-1.2.3.1:Data.Text.Lazy
+                         th-abstraction-0.3.1.0:Language.Haskell.TH.Datatype
+                         th-desugar-1.9:Language.Haskell.TH.Desugar.AST
+                         unordered-containers-0.2.10.0:Data.HashMap.Base
+                         unordered-containers-0.2.10.0:Data.HashSet.Base
+                         uuid-types-1.0.3:Data.UUID.Types.Internal
+                         uuid-types-1.0.3:Data.UUID.Types.Internal.Builder
+                         vector-0.12.0.3:Data.Vector vector-0.12.0.3:Data.Vector.Primitive
+                         vector-0.12.0.3:Data.Vector.Storable
+                         vector-0.12.0.3:Data.Vector.Unboxed
+                         vector-0.12.0.3:Data.Vector.Unboxed.Base
+                         zlib-0.6.2.1:Codec.Compression.Zlib.Stream
+import  -/  Decimal-0.5.1:Data.Decimal 386bd393cd5aa4e26ed963ba0cf554ad
+import  -/  aeson-1.4.6.0:Data.Aeson ce3c7d2cd8d8c223f7b849dd159257fc
+import  -/  aeson-1.4.6.0:Data.Aeson.Types 0463ab7e5836c8b82a8ba45dfedd17d9
+import  -/  aeson-1.4.6.0:Data.Aeson.Types.FromJSON 0023f1949cd17736c516e676c103650c
+import  -/  aeson-1.4.6.0:Data.Aeson.Types.Internal 135c5529ac1dd8a681627079bcf6a760
+import  -/  base-4.12.0.0:Control.Monad.Fail e3390d20cbc1146ebe051d327f964e5d
+import  -/  base-4.12.0.0:Data.Either 423bee738f25e5ee983d072216009be8
+import  -/  base-4.12.0.0:Data.Foldable efb37371da929e7bc88d896298d2d979
+import  -/  base-4.12.0.0:Data.Functor 069b2025a03e32fd228e74a86a58a075
+import  -/  base-4.12.0.0:Data.String fa00d4c51cd8d22ee4f54a25f9e9c97d
+import  -/  base-4.12.0.0:Data.Typeable 1095be85dd9009a6503a3981a259490e
+import  -/  base-4.12.0.0:Data.Typeable.Internal e1cb15df401654131814917774d4d7ed
+import  -/  base-4.12.0.0:GHC.Base c00b75f0b052d05c55ba6a4dd1c63b26
+import  -/  base-4.12.0.0:GHC.Enum 87204abed08db8735fc0be5ab48689aa
+import  -/  base-4.12.0.0:GHC.Exception.Type 98b0fca1a406b013cbf2a34ff23be207
+import  -/  base-4.12.0.0:GHC.Generics 2b3b2e72be66983021f8ad0c2edcf290
+import  -/  base-4.12.0.0:GHC.Num c2039f03637c68f47b0bbff4c18ec616
+import  -/  base-4.12.0.0:GHC.Real af2b985dd29515c375fb78b2c9298d42
+import  -/  base-4.12.0.0:GHC.Show 838a5d039379d82d9626aae53dfce276
+import  -/  base-4.12.0.0:Text.Show f831c81bd0bc037552578ae72a898ddd
+import  -/  bytestring-0.10.8.2:Data.ByteString.Builder.Internal 8258443d95d94e3caaed55a182aaa9c6
+import  -/  bytestring-0.10.8.2:Data.ByteString.Internal f8067c0775041a7adb8f53745475ed88
+import  -/  containers-0.6.0.1:Data.Map.Internal fbf8d1bed47de2b3b48e26c406ee4050
+import  -/  ghc-prim-0.5.3:GHC.Classes 0f6fd7d7db53fc48f6e1f01803cc6c9d
+import  -/  ghc-prim-0.5.3:GHC.Types 57064c9f957b09bc2e360061ad5cae0b
+import  -/  http-api-data-0.4.1.1:Web.HttpApiData 944306a461ce7e2f42531a733d1a9ad8
+import  -/  http-api-data-0.4.1.1:Web.Internal.HttpApiData 404afdb34c44385369ac361de4cb7b5a
+import  -/  http-client-0.6.4:Network.HTTP.Client 256263d061f2dd4bea87e8d6c6daaf88
+import  -/  http-client-0.6.4:Network.HTTP.Client.Types ec41ab2db91e8a5c002a8c789d59033e
+import  -/  integer-gmp-1.0.2.0:GHC.Integer.Type 6d87087aea24143d2650f78480d954a3
+import  -/  lens-4.17.1:Control.Lens.Internal.PrismTH 3ef5c44abf65dde40d3850e8be1aacbe
+import  -/  lens-4.17.1:Control.Lens.Prism f049693530958e72c4f288f99dccacf3
+import  -/  lens-4.17.1:Control.Lens.TH 7ba7c66f49864eab70835567b48890e1
+import  -/  lens-4.17.1:Control.Lens.Type 7e0b4624a68148643df58f14524c165c
+import  -/  Display.Projection.Scalable 27f4788d7abea0ff8e6d95e409d2d099
+  exports: cade0a345d70f98458034798ef81eb6c
+  Scalable 3b40d6b8738f93d78c5888307964f48d
+  scale 5ba07b12942d707cdab5a01a9e6e7ad3
+import  -/  Prelude eb56433d70ce51255107416a5dd8a27b
+  exports: 6e15d7491c075093daa9efab164ba23e
+import  -/  relude-0.5.0:Relude.String.Conversion 684ea3f1d869a9fa1566bdb880923ef0
+import  -/  req-2.1.0:Network.HTTP.Req 3ed837cd795dad2eda3d85337e1f6972
+import  -/  text-1.2.3.1:Data.Text.Internal 537e168590e8068f673f691833f78483
+import  -/  time-1.8.0.2:Data.Time.Clock dd84ffe3e1e0efb461fdef5b6c3ef7f0
+import  -/  time-1.8.0.2:Data.Time.Clock.Internal.NominalDiffTime 684fbd4a258a1ec8e3cfc2816ede9e1d
+import  -/  time-1.8.0.2:Data.Time.Clock.Internal.POSIXTime f8fad5d8ba3cdb852b63035e2758b869
+import  -/  time-1.8.0.2:Data.Time.Clock.Internal.UTCTime 1a8a728460c6a46a8a59269afbe00175
+import  -/  time-1.8.0.2:Data.Time.Clock.POSIX b218aa2e53cf1d64758fb39969540701
+import  -/  time-1.8.0.2:Data.Time.Format 99541c5c71daee5f246a504498171b3d
+import  -/  time-1.8.0.2:Data.Time.LocalTime b734e5973a48e5d3c8c5290b5b9b16d1
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.LocalTime 63f61ae92aa93e122334541e93a0a087
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.TimeOfDay c737b7e311a531c38b819f60dc5b6866
+import  -/  time-1.8.0.2:Data.Time.LocalTime.Internal.TimeZone 0cc5caae4ecc15531d36257944ed1c09
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fEnumTime :: GHC.Enum.Enum Graphite.Types.Time
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fEqDataPoint :: GHC.Classes.Eq Graphite.Types.DataPoint
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fEqFrom :: GHC.Classes.Eq Graphite.Types.From
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fEqGraphiteRequest ::
+    GHC.Classes.Eq Graphite.Types.GraphiteRequest
+  DFunId
+5cb5911903f852e78163cbec81178d36
+  $fEqGraphiteUrl :: GHC.Classes.Eq Graphite.Types.GraphiteUrl
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fEqMetric :: GHC.Classes.Eq Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fEqMetricsResponse ::
+    GHC.Classes.Eq Graphite.Types.MetricsResponse
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fEqTime :: GHC.Classes.Eq Graphite.Types.Time
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fEqTo :: GHC.Classes.Eq Graphite.Types.To
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fEqValue :: GHC.Classes.Eq Graphite.Types.Value
+  DFunId
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  $fExceptionGraphiteError ::
+    GHC.Exception.Type.Exception Graphite.Types.GraphiteError
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fFormatTimeTime :: Data.Time.Format.FormatTime Graphite.Types.Time
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fFractionalTime :: GHC.Real.Fractional Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fFractionalValue :: GHC.Real.Fractional Graphite.Types.Value
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fFromJSONDataPoint ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.DataPoint
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fFromJSONMetric ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fFromJSONMetricsResponse ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.MetricsResponse
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fFromJSONTime ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fFromJSONValue ::
+    Data.Aeson.Types.FromJSON.FromJSON Graphite.Types.Value
+  DFunId
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  $fGenericGraphiteError ::
+    GHC.Generics.Generic Graphite.Types.GraphiteError
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fGenericGraphiteRequest ::
+    GHC.Generics.Generic Graphite.Types.GraphiteRequest
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fGenericMetric :: GHC.Generics.Generic Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fGenericMetricsResponse ::
+    GHC.Generics.Generic Graphite.Types.MetricsResponse
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fGenericValue :: GHC.Generics.Generic Graphite.Types.Value
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fIsStringFrom :: Data.String.IsString Graphite.Types.From
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fIsStringMetric :: Data.String.IsString Graphite.Types.Metric
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fIsStringTo :: Data.String.IsString Graphite.Types.To
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fNumTime :: GHC.Num.Num Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fNumValue :: GHC.Num.Num Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fOrdTime :: GHC.Classes.Ord Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fOrdValue :: GHC.Classes.Ord Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fRealFracTime :: GHC.Real.RealFrac Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fRealFracValue :: GHC.Real.RealFrac Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fRealTime :: GHC.Real.Real Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fRealValue :: GHC.Real.Real Graphite.Types.Value
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fScalableTime ::
+    Display.Projection.Scalable.Scalable Graphite.Types.Time
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fScalableValue ::
+    Display.Projection.Scalable.Scalable Graphite.Types.Value
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fShowDataPoint :: GHC.Show.Show Graphite.Types.DataPoint
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fShowFrom :: GHC.Show.Show Graphite.Types.From
+  DFunId
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  $fShowGraphiteError :: GHC.Show.Show Graphite.Types.GraphiteError
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fShowGraphiteRequest ::
+    GHC.Show.Show Graphite.Types.GraphiteRequest
+  DFunId
+5cb5911903f852e78163cbec81178d36
+  $fShowGraphiteUrl :: GHC.Show.Show Graphite.Types.GraphiteUrl
+  DFunId
+530ffdf5afb55172c39c41de93c0e221
+  $fShowMetric :: GHC.Show.Show Graphite.Types.Metric
+  DFunId
+019b7ed31b48b2db012a87ce454f595d
+  $fShowMetricsResponse ::
+    GHC.Show.Show Graphite.Types.MetricsResponse
+  DFunId
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  $fShowTime :: GHC.Show.Show Graphite.Types.Time
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fShowTo :: GHC.Show.Show Graphite.Types.To
+  DFunId
+0ab31d19b79e63c5b1f7a43afcafb082
+  $fShowValue :: GHC.Show.Show Graphite.Types.Value
+  DFunId
+c8d2629e56310aad8e77100ece7581f4
+  $fToHttpApiDataFrom ::
+    Web.Internal.HttpApiData.ToHttpApiData Graphite.Types.From
+  DFunId
+ab25f49515b11b2fac4b3148dcf3e1b0
+  $fToHttpApiDataTo ::
+    Web.Internal.HttpApiData.ToHttpApiData Graphite.Types.To
+  DFunId
+1d5d1732b69ad381bfa9126aa57fa963
+  $tc'C:MonadGraphite :: GHC.Types.TyCon
+70a89b3d9a4cd62dfbe7e615502197b2
+  $tc'DataPoint :: GHC.Types.TyCon
+005f41a48cde06d6d666f0f3f6473001
+  $tc'From :: GHC.Types.TyCon
+78e3220d442b70340ddcd8da99c92c1a
+  $tc'GraphiteUrl :: GHC.Types.TyCon
+4dcf80273c2d628685ffa6118ab1e163
+  $tc'HttpError :: GHC.Types.TyCon
+a3aa9ed357cf46b7831510b175cd5f9a
+  $tc'Metric :: GHC.Types.TyCon
+7bc4812ffc8380f0813c82ad0b472386
+  $tc'MetricsResponse :: GHC.Types.TyCon
+8f9c26da04fcb6408ed8e7c4811866e4
+  $tc'ParsingError :: GHC.Types.TyCon
+8f83a5b3e6c7581cc691c9aaf5e1049a
+  $tc'RenderRequest :: GHC.Types.TyCon
+19fbd2b5f01d1cd581c93e9f12a507e6
+  $tc'Time :: GHC.Types.TyCon
+9b4cfe80eba78fb0ab1790f9883a82e4
+  $tc'To :: GHC.Types.TyCon
+e11d9a1548f1b490aa5e2031a85ce4a1
+  $tc'Value :: GHC.Types.TyCon
+c0c6e30345b0f05a67e8019b3e69a9a9
+  $tcDataPoint :: GHC.Types.TyCon
+249a1330ef3a37f3d9270e8b7f17e136
+  $tcFrom :: GHC.Types.TyCon
+13d9a2f2097444469e8b9aaaba0cb095
+  $tcGraphiteError :: GHC.Types.TyCon
+4ddc33aba397952cdd58f5f704cef639
+  $tcGraphiteRequest :: GHC.Types.TyCon
+6a70a508cd0d9f6787c187c84c34b521
+  $tcGraphiteUrl :: GHC.Types.TyCon
+2be5a9ea905836c94b0d193e38ee8395
+  $tcMetric :: GHC.Types.TyCon
+20c6ba2fa72c93fee4e3ce27461e66b4
+  $tcMetricsResponse :: GHC.Types.TyCon
+08e3b9f47cd9a08e82dbf90fac94f1ad
+  $tcMonadGraphite :: GHC.Types.TyCon
+e8270c00b70c30340f17359c052d0a5f
+  $tcTime :: GHC.Types.TyCon
+bb1db39dc05a7132b04d45e48fb23215
+  $tcTo :: GHC.Types.TyCon
+5fbafa2225e10730ca6fcfb9fb8a0095
+  $tcValue :: GHC.Types.TyCon
+21f8e3452e06061cbcc642a9c92286ca
+  $trModule :: GHC.Types.Module
+019b7ed31b48b2db012a87ce454f595d
+  data DataPoint
+    = DataPoint {value :: Graphite.Types.Value,
+                 time :: Graphite.Types.Time}
+c8d2629e56310aad8e77100ece7581f4
+  newtype From = From Data.Text.Internal.Text
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  data GraphiteError
+    = HttpError Network.HTTP.Client.Types.HttpException
+    | ParsingError Data.Text.Internal.Text
+c8d2629e56310aad8e77100ece7581f4
+  data GraphiteRequest
+    = RenderRequest {_from :: Graphite.Types.From,
+                     _to :: GHC.Maybe.Maybe Graphite.Types.To,
+                     _target :: Graphite.Types.Target}
+5cb5911903f852e78163cbec81178d36
+  data GraphiteUrl where
+    GraphiteUrl :: Data.Typeable.Internal.Typeable s =>
+                   (Network.HTTP.Req.Url s) -> GraphiteUrl
+530ffdf5afb55172c39c41de93c0e221
+  newtype Metric = Metric Data.Text.Internal.Text
+019b7ed31b48b2db012a87ce454f595d
+  data MetricsResponse
+    = MetricsResponse {target :: Data.Text.Internal.Text,
+                       tags :: Data.Map.Internal.Map
+                                 Data.Text.Internal.Text Data.Text.Internal.Text,
+                       datapoints :: [Graphite.Types.DataPoint]}
+967438cf94a145ebdca293d4ce3de8e3
+  class GHC.Base.Monad m => MonadGraphite (m :: * -> *) where
+    listMetrics :: m [Graphite.Types.Metric]
+    getMetrics :: Graphite.Types.GraphiteRequest
+                  -> m [Graphite.Types.DataPoint]
+    {-# MINIMAL listMetrics, getMetrics #-}
+5823f71ee7efe8bf1b25ecf40a6f6bf6
+  axiom Graphite.Types.Rep_GraphiteError::
+      GHC.Generics.Rep Graphite.Types.GraphiteError
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "GraphiteError" "Graphite.Types" "main" 'GHC.Types.False)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "HttpError" 'GHC.Generics.PrefixI 'GHC.Types.False)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     'GHC.Maybe.Nothing
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Network.HTTP.Client.Types.HttpException))
+             GHC.Generics.:+: GHC.Generics.C1
+                                ('GHC.Generics.MetaCons
+                                   "ParsingError" 'GHC.Generics.PrefixI 'GHC.Types.False)
+                                (GHC.Generics.S1
+                                   ('GHC.Generics.MetaSel
+                                      'GHC.Maybe.Nothing
+                                      'GHC.Generics.NoSourceUnpackedness
+                                      'GHC.Generics.NoSourceStrictness
+                                      'GHC.Generics.DecidedLazy)
+                                   (GHC.Generics.Rec0 Data.Text.Internal.Text)))
+c8d2629e56310aad8e77100ece7581f4
+  axiom Graphite.Types.Rep_GraphiteRequest::
+      GHC.Generics.Rep Graphite.Types.GraphiteRequest
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "GraphiteRequest" "Graphite.Types" "main" 'GHC.Types.False)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "RenderRequest" 'GHC.Generics.PrefixI 'GHC.Types.True)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     ('GHC.Maybe.Just "_from")
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Graphite.Types.From)
+                GHC.Generics.:*: (GHC.Generics.S1
+                                    ('GHC.Generics.MetaSel
+                                       ('GHC.Maybe.Just "_to")
+                                       'GHC.Generics.NoSourceUnpackedness
+                                       'GHC.Generics.NoSourceStrictness
+                                       'GHC.Generics.DecidedLazy)
+                                    (GHC.Generics.Rec0 (GHC.Maybe.Maybe Graphite.Types.To))
+                                  GHC.Generics.:*: GHC.Generics.S1
+                                                     ('GHC.Generics.MetaSel
+                                                        ('GHC.Maybe.Just "_target")
+                                                        'GHC.Generics.NoSourceUnpackedness
+                                                        'GHC.Generics.NoSourceStrictness
+                                                        'GHC.Generics.DecidedLazy)
+                                                     (GHC.Generics.Rec0 Graphite.Types.Target))))
+530ffdf5afb55172c39c41de93c0e221
+  axiom Graphite.Types.Rep_Metric::
+      GHC.Generics.Rep Graphite.Types.Metric
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "Metric" "Graphite.Types" "main" 'GHC.Types.True)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "Metric" 'GHC.Generics.PrefixI 'GHC.Types.False)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     'GHC.Maybe.Nothing
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Data.Text.Internal.Text)))
+019b7ed31b48b2db012a87ce454f595d
+  axiom Graphite.Types.Rep_MetricsResponse::
+      GHC.Generics.Rep Graphite.Types.MetricsResponse
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "MetricsResponse" "Graphite.Types" "main" 'GHC.Types.False)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "MetricsResponse" 'GHC.Generics.PrefixI 'GHC.Types.True)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     ('GHC.Maybe.Just "target")
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Data.Text.Internal.Text)
+                GHC.Generics.:*: (GHC.Generics.S1
+                                    ('GHC.Generics.MetaSel
+                                       ('GHC.Maybe.Just "tags")
+                                       'GHC.Generics.NoSourceUnpackedness
+                                       'GHC.Generics.NoSourceStrictness
+                                       'GHC.Generics.DecidedLazy)
+                                    (GHC.Generics.Rec0
+                                       (Data.Map.Internal.Map
+                                          Data.Text.Internal.Text Data.Text.Internal.Text))
+                                  GHC.Generics.:*: GHC.Generics.S1
+                                                     ('GHC.Generics.MetaSel
+                                                        ('GHC.Maybe.Just "datapoints")
+                                                        'GHC.Generics.NoSourceUnpackedness
+                                                        'GHC.Generics.NoSourceStrictness
+                                                        'GHC.Generics.DecidedLazy)
+                                                     (GHC.Generics.Rec0
+                                                        [Graphite.Types.DataPoint]))))
+0ab31d19b79e63c5b1f7a43afcafb082
+  axiom Graphite.Types.Rep_Value::
+      GHC.Generics.Rep Graphite.Types.Value
+        = GHC.Generics.D1
+            ('GHC.Generics.MetaData
+               "Value" "Graphite.Types" "main" 'GHC.Types.True)
+            (GHC.Generics.C1
+               ('GHC.Generics.MetaCons
+                  "Value" 'GHC.Generics.PrefixI 'GHC.Types.False)
+               (GHC.Generics.S1
+                  ('GHC.Generics.MetaSel
+                     'GHC.Maybe.Nothing
+                     'GHC.Generics.NoSourceUnpackedness
+                     'GHC.Generics.NoSourceStrictness
+                     'GHC.Generics.DecidedLazy)
+                  (GHC.Generics.Rec0 Data.Decimal.Decimal)))
+f1ce368577bd8d7accc5e5d8787a45e3
+  type Target = Data.Text.Internal.Text
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  newtype Time
+    = Time {timestamp :: Data.Time.Clock.Internal.POSIXTime.POSIXTime}
+ab25f49515b11b2fac4b3148dcf3e1b0
+  newtype To = To Data.Text.Internal.Text
+0ab31d19b79e63c5b1f7a43afcafb082
+  newtype Value = Value Data.Decimal.Decimal
+8550ea32372de6203c54e217a8b95ebd
+  _HttpError ::
+    Control.Lens.Type.Prism'
+      Graphite.Types.GraphiteError
+      Network.HTTP.Client.Types.HttpException
+ae30173072a491f7226440a8ee64f33c
+  _ParsingError ::
+    Control.Lens.Type.Prism'
+      Graphite.Types.GraphiteError Data.Text.Internal.Text
+c8d2629e56310aad8e77100ece7581f4
+  _from :: Graphite.Types.GraphiteRequest -> Graphite.Types.From
+  RecSel Left Graphite.Types.GraphiteRequest
+c8d2629e56310aad8e77100ece7581f4
+  _target :: Graphite.Types.GraphiteRequest -> Graphite.Types.Target
+  RecSel Left Graphite.Types.GraphiteRequest
+c8d2629e56310aad8e77100ece7581f4
+  _to ::
+    Graphite.Types.GraphiteRequest -> GHC.Maybe.Maybe Graphite.Types.To
+  RecSel Left Graphite.Types.GraphiteRequest
+019b7ed31b48b2db012a87ce454f595d
+  datapoints ::
+    Graphite.Types.MetricsResponse -> [Graphite.Types.DataPoint]
+  RecSel Left Graphite.Types.MetricsResponse
+ad1bca8e39f8275177711a2522b8a398
+  deltaDays ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+f17f24b580cca45e4a8d185c14228106
+  deltaHours ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+24ebc5a2f1692c24c6d6fafb66a07968
+  deltaMinutes ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+c1e83445084796ce9674b54160cb7f9d
+  deltaSeconds ::
+    Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+0372155c456d027e3da1d3e7eff7a5ab
+  deltaTime' ::
+    Graphite.Types.Time
+    -> Graphite.Types.Time -> Graphite.Types.Time -> GHC.Types.Int
+bbe3dd48cf2c681cc03143ea583b7f10
+  millisecond :: Graphite.Types.Time
+019b7ed31b48b2db012a87ce454f595d
+  tags ::
+    Graphite.Types.MetricsResponse
+    -> Data.Map.Internal.Map
+         Data.Text.Internal.Text Data.Text.Internal.Text
+  RecSel Left Graphite.Types.MetricsResponse
+019b7ed31b48b2db012a87ce454f595d
+  target :: Graphite.Types.MetricsResponse -> Data.Text.Internal.Text
+  RecSel Left Graphite.Types.MetricsResponse
+019b7ed31b48b2db012a87ce454f595d
+  time :: Graphite.Types.DataPoint -> Graphite.Types.Time
+  RecSel Left Graphite.Types.DataPoint
+06a2019eadc5d07eba4c5f38bd8e3c8e
+  timestamp ::
+    Graphite.Types.Time -> Data.Time.Clock.Internal.POSIXTime.POSIXTime
+  RecSel Left Graphite.Types.Time
+7c11f312323c32b065ed9313dc2d747b
+  toLocalTime ::
+    Data.Time.LocalTime.Internal.TimeZone.TimeZone
+    -> Graphite.Types.Time
+    -> Data.Time.LocalTime.Internal.LocalTime.LocalTime
+fc5c926935f35b1b8da4b35b38072523
+  toTimeOfDay ::
+    Graphite.Types.Time
+    -> Data.Time.LocalTime.Internal.TimeOfDay.TimeOfDay
+f92130ca617430cc7221654904e67095
+  toUTC ::
+    Graphite.Types.Time -> Data.Time.Clock.Internal.UTCTime.UTCTime
+019b7ed31b48b2db012a87ce454f595d
+  value :: Graphite.Types.DataPoint -> Graphite.Types.Value
+  RecSel Left Graphite.Types.DataPoint
+instance GHC.Enum.Enum [Graphite.Types.Time]
+  = Graphite.Types.$fEnumTime
+instance GHC.Classes.Eq [Graphite.Types.DataPoint]
+  = Graphite.Types.$fEqDataPoint
+instance GHC.Classes.Eq [Graphite.Types.From]
+  = Graphite.Types.$fEqFrom
+instance GHC.Classes.Eq [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.$fEqGraphiteRequest
+instance GHC.Classes.Eq [Graphite.Types.GraphiteUrl]
+  = Graphite.Types.$fEqGraphiteUrl
+instance GHC.Classes.Eq [Graphite.Types.Metric]
+  = Graphite.Types.$fEqMetric
+instance GHC.Classes.Eq [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fEqMetricsResponse
+instance GHC.Classes.Eq [Graphite.Types.Time]
+  = Graphite.Types.$fEqTime
+instance GHC.Classes.Eq [Graphite.Types.To] = Graphite.Types.$fEqTo
+instance GHC.Classes.Eq [Graphite.Types.Value]
+  = Graphite.Types.$fEqValue
+instance GHC.Exception.Type.Exception [Graphite.Types.GraphiteError]
+  = Graphite.Types.$fExceptionGraphiteError
+instance Data.Time.Format.FormatTime [Graphite.Types.Time]
+  = Graphite.Types.$fFormatTimeTime
+instance GHC.Real.Fractional [Graphite.Types.Time]
+  = Graphite.Types.$fFractionalTime
+instance GHC.Real.Fractional [Graphite.Types.Value]
+  = Graphite.Types.$fFractionalValue
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.DataPoint]
+  = Graphite.Types.$fFromJSONDataPoint
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.Metric]
+  = Graphite.Types.$fFromJSONMetric
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fFromJSONMetricsResponse
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.Time]
+  = Graphite.Types.$fFromJSONTime
+instance Data.Aeson.Types.FromJSON.FromJSON [Graphite.Types.Value]
+  = Graphite.Types.$fFromJSONValue
+instance GHC.Generics.Generic [Graphite.Types.GraphiteError]
+  = Graphite.Types.$fGenericGraphiteError
+instance GHC.Generics.Generic [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.$fGenericGraphiteRequest
+instance GHC.Generics.Generic [Graphite.Types.Metric]
+  = Graphite.Types.$fGenericMetric
+instance GHC.Generics.Generic [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fGenericMetricsResponse
+instance GHC.Generics.Generic [Graphite.Types.Value]
+  = Graphite.Types.$fGenericValue
+instance Data.String.IsString [Graphite.Types.From]
+  = Graphite.Types.$fIsStringFrom
+instance Data.String.IsString [Graphite.Types.Metric]
+  = Graphite.Types.$fIsStringMetric
+instance Data.String.IsString [Graphite.Types.To]
+  = Graphite.Types.$fIsStringTo
+instance GHC.Num.Num [Graphite.Types.Time]
+  = Graphite.Types.$fNumTime
+instance GHC.Num.Num [Graphite.Types.Value]
+  = Graphite.Types.$fNumValue
+instance GHC.Classes.Ord [Graphite.Types.Time]
+  = Graphite.Types.$fOrdTime
+instance GHC.Classes.Ord [Graphite.Types.Value]
+  = Graphite.Types.$fOrdValue
+instance GHC.Real.RealFrac [Graphite.Types.Time]
+  = Graphite.Types.$fRealFracTime
+instance GHC.Real.RealFrac [Graphite.Types.Value]
+  = Graphite.Types.$fRealFracValue
+instance GHC.Real.Real [Graphite.Types.Time]
+  = Graphite.Types.$fRealTime
+instance GHC.Real.Real [Graphite.Types.Value]
+  = Graphite.Types.$fRealValue
+instance Display.Projection.Scalable.Scalable [Graphite.Types.Time]
+  = Graphite.Types.$fScalableTime
+instance Display.Projection.Scalable.Scalable [Graphite.Types.Value]
+  = Graphite.Types.$fScalableValue
+instance GHC.Show.Show [Graphite.Types.DataPoint]
+  = Graphite.Types.$fShowDataPoint
+instance GHC.Show.Show [Graphite.Types.From]
+  = Graphite.Types.$fShowFrom
+instance GHC.Show.Show [Graphite.Types.GraphiteError]
+  = Graphite.Types.$fShowGraphiteError
+instance GHC.Show.Show [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.$fShowGraphiteRequest
+instance GHC.Show.Show [Graphite.Types.GraphiteUrl]
+  = Graphite.Types.$fShowGraphiteUrl
+instance GHC.Show.Show [Graphite.Types.Metric]
+  = Graphite.Types.$fShowMetric
+instance GHC.Show.Show [Graphite.Types.MetricsResponse]
+  = Graphite.Types.$fShowMetricsResponse
+instance GHC.Show.Show [Graphite.Types.Time]
+  = Graphite.Types.$fShowTime
+instance GHC.Show.Show [Graphite.Types.To]
+  = Graphite.Types.$fShowTo
+instance GHC.Show.Show [Graphite.Types.Value]
+  = Graphite.Types.$fShowValue
+instance Web.Internal.HttpApiData.ToHttpApiData [Graphite.Types.From]
+  = Graphite.Types.$fToHttpApiDataFrom
+instance Web.Internal.HttpApiData.ToHttpApiData [Graphite.Types.To]
+  = Graphite.Types.$fToHttpApiDataTo
+family instance GHC.Generics.Rep [Graphite.Types.MetricsResponse]
+  = Graphite.Types.Rep_MetricsResponse
+family instance GHC.Generics.Rep [Graphite.Types.Metric]
+  = Graphite.Types.Rep_Metric
+family instance GHC.Generics.Rep [Graphite.Types.GraphiteError]
+  = Graphite.Types.Rep_GraphiteError
+family instance GHC.Generics.Rep [Graphite.Types.GraphiteRequest]
+  = Graphite.Types.Rep_GraphiteRequest
+family instance GHC.Generics.Rep [Graphite.Types.Value]
+  = Graphite.Types.Rep_Value
+trusted: none
+require own pkg trusted: False
+module header:
+  Nothing
+declaration docs:
+arg docs:
+
