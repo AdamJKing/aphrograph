@@ -9,5 +9,6 @@ import           Test.QuickCheck
 
 spec :: HS.Spec
 spec = describe "Display" $ describe "constructDom" $ prop "choose the right widget for the app state" $ \appState ->
-  case constructDom appState of
-    (DefaultDisplay _ _) -> property True
+  case constructDom (Right appState) of
+    DisplayWidget (Right (DefaultDisplay _ _)) -> property True
+    _ -> property False

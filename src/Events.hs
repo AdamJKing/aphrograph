@@ -16,10 +16,13 @@ import           Control.Monad.Log
 import           Display.Graph                  ( Graph )
 import           Graphite.Types
 import           Display.Widgets
-import           Control.Monad.Except           ( MonadError() )
+import           Control.Monad.Except           ( MonadError()
+                                                , catchError
+                                                )
 import           App.Logging
 import           Control.Lens.Setter
 import           Control.Lens.Getter
+import           Control.Lens.Prism
 
 data AppEvent = UpdateEvent | ExitEvent
     deriving ( Show, Eq )
@@ -32,7 +35,7 @@ pattern ExitKey = Vty.EvKey (Vty.KChar 'q') []
 updateGraphData
     :: (MonadError App.Error m, Logger msg m, MonadReader App.Config m, MonadGraphite m) => m (Graph Time Value)
 updateGraphData = do
-    App.GraphiteConfig{..} <- view App.graphiteConfig
+    App.GraphiteConfig {..} <- view App.graphiteConfig
     let request = RenderRequest { _from = _fromTime, _to = _toTime, _target = _targetArg }
     data' <- getMetrics request
     logMessage "Populating graph."
@@ -46,14 +49,17 @@ data EventHandler s m f = EventHandler {
 
 handleEvent
     :: (MonadGraphite m, MonadError App.Error m, MonadReader App.Config m, Logger msg m)
-    => EventHandler App.ActiveState m f
+    => EventHandler App.CurrentState m f
     -> Brick.BrickEvent n AppEvent
-    -> App.ActiveState
-    -> m (f App.ActiveState)
+    -> App.CurrentState
+    -> m (f App.CurrentState)
 handleEvent EventHandler {..} event state' = case event of
     (Brick.VtyEvent ExitKey    ) -> stop state'
-    (Brick.AppEvent UpdateEvent) -> do
+    (Brick.AppEvent UpdateEvent) -> processUpdate `catchError` continueWithFailure
+    _                            -> ignore state'
+  where
+    processUpdate = do
         newGraph <- updateGraphData
-        continue (state' & App.graphData .~ newGraph)
+        continue $ set (_Right . App.graphData) newGraph state'
 
-    _ -> ignore state'
+    continueWithFailure = continue . Left . App.FailedState

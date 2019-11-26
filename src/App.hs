@@ -45,6 +45,6 @@ instance MonadIO m => MonadGraphite (AppT m) where
   listMetrics = view (App.graphiteConfig . App.graphiteUrl) >>= listMetricsHttp
   getMetrics request = view (App.graphiteConfig . App.graphiteUrl) >>= getMetricsHttp ?? request
 
-handleEvent' :: Brick.BrickEvent n AppEvent -> App.ActiveState -> AppT (Brick.EventM n) (Brick.Next App.ActiveState)
+handleEvent' :: Brick.BrickEvent n AppEvent -> App.CurrentState -> AppT (Brick.EventM n) (Brick.Next App.CurrentState)
 handleEvent' = handleEvent
   (EventHandler { continue = lift . Brick.continue, ignore = lift . Brick.continue, stop = lift . Brick.halt })

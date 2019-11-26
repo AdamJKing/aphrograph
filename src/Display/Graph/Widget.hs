@@ -5,7 +5,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DataKinds #-}
 
-module Display.Graph.Widget where
+module Display.Graph.Widget
+  ( GraphDisplayWidget
+  , graphDisplayWidget
+  )
+where
 
 import           Display.Graph                 as G
 import           Display.Projection.Scalable
@@ -128,7 +132,6 @@ drawHorizontalAxisImage tz width values =
 
   makeFill w = Vty.charFill mempty '\9472' w 1
 
-
 cornerPiece :: Widget n
 cornerPiece = padBottom Max $ padLeft Max $ txt "\9492"
 
@@ -151,9 +154,6 @@ drawLabelledBlock offset current label =
       topBar   = Vty.text mempty $ LT.replicate (width - 1) "\9472" `LT.snoc` '\9516'
       labelBar = Vty.text mempty $ prependSpace width $ LT.take (width - 1) (fromStrict label)
   in  topBar `vertJoin` labelBar
-
-drawDefaultColumn :: Int -> Vty.Image
-drawDefaultColumn (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
 
 prependSpace :: Int64 -> LText -> LText
 prependSpace w = LT.justifyRight w ' '

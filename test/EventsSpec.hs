@@ -46,11 +46,13 @@ spec = describe "Events" $ do
         startState <- pick arbitrary
         state'     <- pick arbitrary
         let handler = E.EventHandler { continue = const (return Nothing)
-                                     , ignore   = const (return $ Just state')
+                                     , ignore   = const (return $ Just (Right state'))
                                      , stop     = const (return Nothing)
                                      }
-        result <- run (E.handleEvent handler event startState)
-        return (result === Just state')
+        result <- run (E.handleEvent handler event (Right startState))
+        case result of
+          Just (Right result') -> return (result' === state')
+          _                    -> return (property False)
 
   appProp "updates the app state from graphite when requested (UpdateEvent)"
     $ (forAllEnvs @App.Config)
@@ -72,7 +74,24 @@ spec = describe "Events" $ do
         state'     <- pick arbitrary
         let handler = E.EventHandler { continue = const (return Nothing)
                                      , ignore   = const (return Nothing)
-                                     , stop     = const (return $ Just state')
+                                     , stop     = const (return $ Just (Right state'))
                                      }
-        result <- run (E.handleEvent handler (VtyEvent E.ExitKey) startState)
-        return (result === Just state')
+        result <- run (E.handleEvent handler (VtyEvent E.ExitKey) (Right startState))
+        case result of
+          Just (Right result') -> return (result' === state')
+          _                    -> return (property False)
+
+  appProp "returns errors as part of the state"
+    $ (forAllEnvs @App.Config)
+    $ (throwingErrors @App.Error)
+    $ ignoreLogging
+    $ withFailingGraphite
+    $ do
+        startState <- pick arbitrary
+        let
+          handler =
+            E.EventHandler { continue = return . Just, ignore = const (return Nothing), stop = const (return Nothing) }
+        result <- run (E.handleEvent handler (Brick.AppEvent E.UpdateEvent) (Right startState))
+        case result of
+          Just (Left _) -> return (property True)
+          _             -> return (property False)

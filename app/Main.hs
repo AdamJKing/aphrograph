@@ -40,7 +40,8 @@ main = do
       startState <- App.constructDefaultContext args
       initialVty <- getVty
       let app = mkApp (liftIO . prettier handler) args
-      Brick.customMain initialVty getVty (Just eventQueue) app startState
+      Brick.writeBChan eventQueue UpdateEvent
+      Brick.customMain initialVty getVty (Just eventQueue) app (Right startState)
   where prettier f = f . Doc.pretty
 
 getVty :: MonadIO m => m Vty.Vty
@@ -52,7 +53,7 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
   in  Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.ActiveState AppEvent AppComponent
+mkApp :: Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
 mkApp appLogger conf =
   let appDraw         = compileLayered . constructDom
       appChooseCursor = Brick.neverShowCursor

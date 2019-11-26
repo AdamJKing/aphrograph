@@ -26,6 +26,11 @@ data ActiveState = ActiveState {
 
 makeLenses ''ActiveState
 
+newtype FailedState = FailedState { failure :: Error }
+  deriving Show
+
+type CurrentState = Either FailedState ActiveState
+
 constructDefaultContext :: MonadIO m => App.Config -> m ActiveState
 constructDefaultContext _ = do
   _timezone <- liftIO (getTimezone `catchError` defaultToUtc)

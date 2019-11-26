@@ -1,4 +1,3 @@
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -9,12 +8,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE PolyKinds #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties
   ( shouldThrowMatching
   , withMockGraphite
+  , withFailingGraphite
   , forAllEnvs
   , throwingErrors
   , ignoreLogging
@@ -35,11 +36,16 @@ import           Test.QuickCheck.Gen            ( Gen(..) )
 import           Test.QuickCheck.GenT
 import           Test.Hspec
 import           Graphite.Types
-import           App.State                     as App
+import qualified App.State                     as App
 import           Test.QuickCheck.Monadic
 import           Test.Hspec.QuickCheck          ( prop )
-import           Control.Monad.Except           ( MonadError(catchError) )
+import           Control.Monad.Except           ( MonadError(throwError,catchError) )
 import           Data.Time.LocalTime            ( utc )
+import qualified Network.HTTP.Req              as Req
+import           Network.HTTP.Client            ( parseRequest_
+                                                , HttpException(HttpExceptionRequest)
+                                                , HttpExceptionContent(ConnectionTimeout)
+                                                )
 import           Control.Monad.Log
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
@@ -62,8 +68,8 @@ shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError
 
 newtype EmptyState s = Empty s
 
-instance Arbitrary (EmptyState ActiveState) where
-  arbitrary = return . Empty $ ActiveState { _metricsView = Nothing, _graphData = mempty, _timezone = utc }
+instance Arbitrary (EmptyState App.ActiveState) where
+  arbitrary = return . Empty $ App.ActiveState { _metricsView = Nothing, _graphData = mempty, _timezone = utc }
 
 throwingErrors :: (Exception e, Monad m) => PropertyM (ExceptT e m) a -> PropertyM m a
 throwingErrors (MkPropertyM op) = MkPropertyM
@@ -115,7 +121,29 @@ withMockGraphite = hoistLiftedPropertyM $ \op -> do
   (result, _) <- runStateT (_run op) (a, b)
   return result
 
-instance Monad m => MonadGraphite ( ArbitraryGraphite m ) where
+instance Monad m => MonadGraphite (ArbitraryGraphite m) where
   listMetrics = fst <$> get
   getMetrics _ = snd <$> get
 
+newtype FailingGraphite m a = FailingGraphite { _runFailingGraphite :: ExceptT App.Error m a }
+  deriving ( Functor
+           , Applicative
+           , Monad
+           , MonadLog log
+           , MonadReader r
+           , MonadError App.Error)
+
+instance MonadTrans FailingGraphite where
+  lift = FailingGraphite . lift
+
+timeoutException :: Req.HttpException
+timeoutException =
+  let request = parseRequest_ "http://www.example.com/path"
+  in  Req.VanillaHttpException (HttpExceptionRequest request ConnectionTimeout)
+
+instance Monad m => MonadGraphite (FailingGraphite m) where
+  listMetrics = throwError (App.HttpError timeoutException)
+  getMetrics _ = throwError (App.HttpError timeoutException)
+
+withFailingGraphite :: MonadGen m => PropertyM (FailingGraphite m) a -> PropertyM m a
+withFailingGraphite = throwingErrors . hoistPropertyM _runFailingGraphite FailingGraphite
