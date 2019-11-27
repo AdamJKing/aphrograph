@@ -7,4 +7,5 @@ out/
 *.iml
 .idea
 *.tix
+*.dump-hi
 stack.yaml.lock
