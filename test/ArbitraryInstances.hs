@@ -18,17 +18,24 @@ import           Test.QuickCheck.Instances.Time ( )
 import           Display.Labels
 import qualified Network.HTTP.Req              as Req
 import qualified Network.HTTP.Client           as Http
-import           App.State
+import qualified App.State                     as App
+import qualified Brick.Widgets.List            as BWL
+import           App.Components
+import           Test.QuickCheck.Instances.Vector
+                                                ( )
 
--- instance Arbitrary ActiveState where
---   arbitrary = do
---     _metricsView <- arbitrary
---     _graphData   <- arbitrary
---     _timezone    <- arbitrary
---     return (ActiveState { .. })
+instance Arbitrary App.ActiveState where
+  arbitrary = do
+    _metricsView <- Just . (BWL.list MetricsBrowserComponent ?? 1) <$> arbitrary
+    _graphData   <- arbitrary
+    _timezone    <- arbitrary
+    return (App.ActiveState { .. })
 
 deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
-deriving via (GenArbitrary ActiveState) instance Arbitrary ActiveState
+
+deriving via (GenArbitrary App.Error) instance Arbitrary App.Error
+deriving via (GenArbitrary App.FailedState) instance Arbitrary App.FailedState
+deriving via (GenArbitrary App.CurrentState) instance Arbitrary App.CurrentState
 
 instance Arbitrary DataPoint where
   arbitrary = genericArbitrary
@@ -74,18 +81,8 @@ instance Random Time where
 
   random = randomR (0, 1)
 
--- instance Arbitrary App.Args where
---   arbitrary = do
---     fromTime    <- arbitrary
---     toTime      <- arbitrary
---     targetArg   <- arbitrary
---     graphiteUrl <- oneof [return (GraphiteUrl (http "example.com")), return (GraphiteUrl (https "example.com"))]
---     return (App.Args fromTime toTime targetArg graphiteUrl)
-
 instance Arbitrary Http.HttpException where
-  arbitrary = frequency
-    [ (10, applyArbitrary2 Http.InvalidUrlException)
-    , (90, return $ Http.HttpExceptionRequest "http://www.example.com" Http.ResponseTimeout)
-    ]
+  arbitrary = return $ Http.HttpExceptionRequest "http://www.example.com" Http.ResponseTimeout
+
 
 deriving via (GenArbitrary Req.HttpException) instance Arbitrary Req.HttpException

@@ -1,21 +1,15 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Graphite where
 
-import           Control.Monad.Except           ( MonadError(throwError) )
 import           Data.Aeson                    as JSON
 import           Graphite.Types
 import           Network.HTTP.Req              as Req
+import qualified App.Config                    as App
 
 asQueryParams :: GraphiteRequest -> Req.Option s
 asQueryParams RenderRequest {..} =
@@ -42,19 +36,23 @@ makeRequest' url params = do
   resp <- req GET url NoReqBody jsonResponse params
   return (responseBody resp)
 
-newtype GraphiteT m a = GraphiteT { _runGraphite :: ReaderT GraphiteUrl (ExceptT GraphiteError m) a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadError GraphiteError, MonadReader GraphiteUrl)
+newtype GraphiteM a = GraphiteM ( ReaderT App.GraphiteConfig ( ExceptT GraphiteError Req.Req ) a )
+  deriving ( Applicative
+           , Functor
+           , Monad
+           , MonadIO
+           , MonadReader App.GraphiteConfig
+           )
 
-instance MonadTrans GraphiteT where
-  lift = GraphiteT . lift . lift
+runGraphite :: MonadIO m => App.GraphiteConfig -> GraphiteM a -> m (Either GraphiteError a)
+runGraphite conf (GraphiteM op) = liftIO $ Req.runReq Req.defaultHttpConfig (runExceptT (usingReaderT conf op))
 
-instance MonadIO m => MonadGraphite (GraphiteT m) where
-  listMetrics = ask >>= listMetricsHttp
-  getMetrics  = (ask >>=) . (getMetricsHttp ??)
+instance Req.MonadHttp GraphiteM where
+  handleHttpException = GraphiteM . lift . lift . handleHttpException
 
-instance MonadIO m => MonadHttp (GraphiteT m) where
-  handleHttpException (VanillaHttpException err   ) = throwError (HttpError err)
-  handleHttpException (JsonHttpException    reason) = throwError (ParsingError (toText reason))
+instance MonadGraphite GraphiteM where
+  getMetrics request = with App.graphiteUrl $ getMetricsHttp ?? request
+  {-# INLINABLE getMetrics #-}
 
-runGraphite :: GraphiteUrl -> GraphiteT m a -> m (Either GraphiteError a)
-runGraphite url = runExceptT . usingReaderT url . _runGraphite
+  listMetrics = with App.graphiteUrl listMetricsHttp
+  {-# INLINABLE listMetrics #-}

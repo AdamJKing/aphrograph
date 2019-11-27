@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -77,6 +76,9 @@ spec = describe "Graph" $ do
     xs <- arbitrary @(Set Int)
     let points = (, y) <$> sort (toList xs)
     return $ assocs (mkGraph points) `shouldBe` points
+
+  prop "order of input datapoints doesn't affect the equality of the graph"
+    $ \(xs :: [(Int, Int)]) -> forAll (shuffle xs) $ \shuffled -> mkGraph xs === mkGraph shuffled
 
   describe "member" . prop "correctly identifies members of a graph" $ \(xs :: Set Int) -> do
     ys <- vectorOf (length xs) arbitrary

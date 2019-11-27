@@ -16,7 +16,6 @@ library:
     - optparse-simple
     - relude
     - req
-    - singletons
     - text
     - time
     - transformers
@@ -39,6 +38,7 @@ tests:
       - containers
       - time
       - mtl
+      - lens
       - brick
       - fmt
       - aphrograph
@@ -54,6 +54,7 @@ default-extensions:
   - RecordWildCards
   - LambdaCase
   - OverloadedStrings
+  - MultiParamTypeClasses
 
 name: aphrograph
 version: 0.1.0.0
@@ -71,3 +72,5 @@ executables:
       - brick
       - prettyprinter
       - logging-effect
+
+ghc-options: -Wall -Werror -Wno-type-defaults

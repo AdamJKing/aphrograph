@@ -9,7 +9,18 @@ import           Graphite.Types
 import qualified Data.Aeson                    as JSON
 import           Data.Aeson                     ( (.=) )
 import           Test.QuickCheck
+import           Test.QuickCheck.Monadic
 import           Test.Hspec.QuickCheck
+import           Network.HTTP.Req
+import           Control.Lens.Extras            ( is )
+import           Graphite
+import           Control.Lens.Prism
+
+vanillaHttpException :: Gen HttpException
+vanillaHttpException = VanillaHttpException <$> arbitrary
+
+jsonParseException :: Gen HttpException
+jsonParseException = JsonHttpException <$> arbitrary
 
 spec :: HS.Spec
 spec = describe "Graphite" $ do
@@ -65,3 +76,16 @@ spec = describe "Graphite" $ do
       JSON.decode "[ ]" `shouldBe` (Nothing :: Maybe DataPoint)
 
     it "treats null values as zero" $ JSON.decode "[ null, 155005500 ]" `shouldBe` Just (DataPoint 0.0 155005500)
+
+  describe "App" $ describe "MonadHttp" $ do
+    prop "captures all vanilla http exceptions as http errors" . monadicIO $ do
+      err    <- pick vanillaHttpException
+      conf   <- pick arbitrary
+      result <- run (runGraphite conf $ handleHttpException err)
+      assert (is (_Left . _HttpError) result)
+
+    prop "captures all json parse exceptions as http errors" . monadicIO $ do
+      err    <- pick jsonParseException
+      conf   <- pick arbitrary
+      result <- run (runGraphite conf $ handleHttpException err)
+      assert (is (_Left . _ParsingError) result)

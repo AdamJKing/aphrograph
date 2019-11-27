@@ -1,12 +1,14 @@
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE PolyKinds #-}
 
@@ -14,14 +16,16 @@
 
 module CommonProperties
   ( shouldThrowMatching
-  , withMockGraphite
-  , withFailingGraphite
   , forAllEnvs
   , throwingErrors
   , ignoreLogging
   , appProp
   , daysFrom
   , range
+  , runMonadicTest
+  , getMetricsResponse
+  , listMetricsResponse
+  , assertAll
   )
 where
 
@@ -37,16 +41,16 @@ import           Test.QuickCheck.GenT
 import           Test.Hspec
 import           Graphite.Types
 import qualified App.State                     as App
-import           Test.QuickCheck.Monadic
+import qualified App.Config                    as App
+import           Test.QuickCheck.Monadic hiding ( stop )
 import           Test.Hspec.QuickCheck          ( prop )
-import           Control.Monad.Except           ( MonadError(throwError,catchError) )
+import           Control.Monad.Except           ( MonadError(throwError, catchError) )
 import           Data.Time.LocalTime            ( utc )
-import qualified Network.HTTP.Req              as Req
-import           Network.HTTP.Client            ( parseRequest_
-                                                , HttpException(HttpExceptionRequest)
-                                                , HttpExceptionContent(ConnectionTimeout)
-                                                )
 import           Control.Monad.Log
+import           Control.Lens.Getter
+import           Control.Lens.TH                ( makeLenses )
+import           Control.Lens.Traversal
+import           Events
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
@@ -62,7 +66,7 @@ deriving instance ( Show r, Arbitrary r, Testable (m a)) => Testable (ReaderT r 
 noExceptionThrown :: Property
 noExceptionThrown = property $ failed { reason = "Expected an exception but no exception was thrown" }
 
-shouldThrowMatching :: MonadError e m => m a -> (e -> Property) -> PropertyM m Property
+shouldThrowMatching :: MonadError e m => m a -> (e -> Bool) -> PropertyM m Property
 shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError` (return . property . errorMatcher)
   where failOnNoError = (>> return noExceptionThrown)
 
@@ -112,38 +116,58 @@ newtype ArbitraryGraphite m a = ArbitraryGraphite { _run :: StateT ([Metric], [D
            , MonadState ([Metric], [DataPoint])
            , MonadError e
            , MonadLog log
-           , MonadReader r)
-
-withMockGraphite :: MonadGen m => PropertyM (ArbitraryGraphite m) a -> PropertyM m a
-withMockGraphite = hoistLiftedPropertyM $ \op -> do
-  a           <- liftGen arbitrary
-  b           <- liftGen arbitrary
-  (result, _) <- runStateT (_run op) (a, b)
-  return result
-
-instance Monad m => MonadGraphite (ArbitraryGraphite m) where
-  listMetrics = fst <$> get
-  getMetrics _ = snd <$> get
-
-newtype FailingGraphite m a = FailingGraphite { _runFailingGraphite :: ExceptT App.Error m a }
-  deriving ( Functor
-           , Applicative
-           , Monad
-           , MonadLog log
            , MonadReader r
-           , MonadError App.Error)
+           )
 
-instance MonadTrans FailingGraphite where
-  lift = FailingGraphite . lift
+newtype TestM a = TestM { _runTest :: DiscardLoggingT LText ( ExceptT App.Error ( StateT MockGraphiteResponses ( ReaderT App.Config Gen ) ) ) a }
+  deriving ( Applicative
+           , Functor
+           , Monad
+           , MonadState MockGraphiteResponses
+           , MonadReader App.Config
+           , MonadError App.Error
+           , MonadLog LText
+           )
 
-timeoutException :: Req.HttpException
-timeoutException =
-  let request = parseRequest_ "http://www.example.com/path"
-  in  Req.VanillaHttpException (HttpExceptionRequest request ConnectionTimeout)
+instance MonadOutcome ((,) EventOutcome) TestM where
+  continue = return . (Continue, )
+  stop     = return . (Stop, )
 
-instance Monad m => MonadGraphite (FailingGraphite m) where
-  listMetrics = throwError (App.HttpError timeoutException)
-  getMetrics _ = throwError (App.HttpError timeoutException)
+data MockGraphiteResponses = MockResponses {
+  _listMetricsResponse :: Either App.Error [Metric],
+  _getMetricsResponse :: Either App.Error [DataPoint]
+}
 
-withFailingGraphite :: MonadGen m => PropertyM (FailingGraphite m) a -> PropertyM m a
-withFailingGraphite = throwingErrors . hoistPropertyM _runFailingGraphite FailingGraphite
+makeLenses ''MockGraphiteResponses
+
+errorOnLeft :: MonadError e m => Either e a -> m a
+errorOnLeft (Right a) = return a
+errorOnLeft (Left  e) = throwError e
+
+instance MonadGraphite TestM where
+  listMetrics = use listMetricsResponse >>= errorOnLeft
+  getMetrics _ = use getMetricsResponse >>= errorOnLeft
+
+instance App.Configured App.Config TestM where
+  getConfig = view
+  {-# INLINE getConfig #-}
+
+runMonadicTest :: Testable a => PropertyM TestM a -> Property
+runMonadicTest = monadic
+  (\test -> property $ do
+    env                   <- arbitrary
+    mockGraphiteResponses <- applyArbitrary2 MockResponses
+    result                <- unwrapTest mockGraphiteResponses env test
+    return (either unexpectedError property result)
+  )
+ where
+  unwrapTest mockGraphiteResponses env =
+    usingReaderT env . evaluatingStateT mockGraphiteResponses . runExceptT . discardLogging . _runTest
+  unexpectedError err = property $ failed { reason = "Unexpected exception.", theException = Just (SomeException err) }
+
+assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
+assertAll predicate = assert . all predicate
+
+instance App.GraphViewer TestM where
+  updateGraph update previousState = traverseOf (App.active . App.graphData) (const update) previousState
+  toggleMetricsView = 

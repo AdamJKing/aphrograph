@@ -12,4 +12,10 @@
 * Make Args part of the app state
 * Remove ExceptT from app monad
 * Make JSON parsing test (GraphiteSpec) property based
+* Use relude map/functions in graph
+* Move graph resizing into Graph module (Graph Ops module?)
+* Http config in graphite config?
+* Combine `failed` and `FailedState` ?
+* Better name for `AppGraphiteError` 
+* Split CommonProperties along TestM/utils
 

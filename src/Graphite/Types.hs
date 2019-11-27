@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE GADTs #-}
@@ -103,13 +104,13 @@ instance JSON.FromJSON Time where
 
 instance JSON.FromJSON Value where
   parseJSON (JSON.Number n) = return $ Value (realFracToDecimal 8 n)
-  parseJSON _               = fail "value"
+  parseJSON _               = Prelude.fail "value"
 
 instance JSON.FromJSON DataPoint where
   parseJSON (JSON.Array arr) = case toList arr of
     [JSON.Null, t] -> DataPoint (Value 0.0) <$> JSON.parseJSON t
     [v        , t] -> DataPoint <$> JSON.parseJSON v <*> JSON.parseJSON t
-    _              -> fail "Couldn't parse datapoint"
+    _              -> Prelude.fail "Couldn't parse datapoint"
   parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
 newtype Metric = Metric Text

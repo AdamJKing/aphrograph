@@ -3,7 +3,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE PolyKinds #-}
 
 module Main where
@@ -18,7 +17,6 @@ import qualified Brick.Main                    as Brick
 import qualified Brick.Types                   as Brick
 import qualified Brick.AttrMap                 as Brick
 import           Brick.Util                     ( on )
-import           Display
 import           Control.Concurrent             ( forkIO
                                                 , threadDelay
                                                 )
@@ -28,6 +26,7 @@ import           Display.Widgets
 import qualified Data.Text.Prettyprint.Doc     as Doc
 import           Events
 import qualified Graphics.Vty                  as Vty
+import           App.Components
 
 main :: IO ()
 main = do
@@ -41,7 +40,7 @@ main = do
       initialVty <- getVty
       let app = mkApp (liftIO . prettier handler) args
       Brick.writeBChan eventQueue UpdateEvent
-      Brick.customMain initialVty getVty (Just eventQueue) app (Right startState)
+      Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
   where prettier f = f . Doc.pretty
 
 getVty :: MonadIO m => m Vty.Vty
@@ -49,15 +48,31 @@ getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
 
 appTheme :: Brick.AttrMap
 appTheme =
-  let selectedTheme    = ("metric" <> "selected", Vty.black `on` Vty.blue)
-      unselectedTheme  = ("metric" <> "unselected", Vty.blue `on` Vty.black)
+  let selectedTheme   = ("metric" <> "selected", Vty.black `on` Vty.blue)
+      unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
   in  Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
+
 mkApp :: Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
-mkApp appLogger conf =
-  let appDraw         = compileLayered . constructDom
-      appChooseCursor = Brick.neverShowCursor
-      appHandleEvent s = runApp appLogger conf . flip handleEvent' s
-      appAttrMap    = const appTheme
-      appStartEvent = return
-  in  (Brick.App { .. })
+mkApp logger conf =
+  let
+    appDraw :: App.CurrentState -> [Brick.Widget AppComponent]
+    appDraw = compileLayered . constructDom
+
+    appChooseCursor
+      :: App.CurrentState -> [Brick.CursorLocation AppComponent] -> Maybe (Brick.CursorLocation AppComponent)
+    appChooseCursor = Brick.neverShowCursor
+
+    appHandleEvent
+      :: App.CurrentState
+      -> Brick.BrickEvent AppComponent AppEvent
+      -> Brick.EventM AppComponent (Brick.Next App.CurrentState)
+    appHandleEvent s e = runApp logger conf $ handleBrickEvent e s
+
+    appStartEvent :: App.CurrentState -> Brick.EventM AppComponent App.CurrentState
+    appStartEvent = return
+
+    appAttrMap :: App.CurrentState -> Brick.AttrMap
+    appAttrMap = const appTheme
+  in
+    (Brick.App { .. })

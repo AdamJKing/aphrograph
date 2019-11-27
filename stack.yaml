@@ -2,11 +2,4 @@ flags: {}
 packages:
   - .
 extra-deps: []
-resolver: lts-14.16
-
-ghc-options:
-  {
-    "$locals": -Wall -Werror -Wall -Werror -Wno-type-defaults -ddump-to-file -ddump-hi,
-    "$targets": -O2 -threaded,
-    "$everything": -j4,
-  }
+resolver: lts-14.18

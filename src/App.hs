@@ -4,7 +4,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -13,38 +12,78 @@ module App where
 
 import qualified App.Config                    as App
 import qualified App.State                     as App
-import qualified Network.HTTP.Req              as Req
-import qualified Brick.Types                   as Brick
-import qualified Brick.Main                    as Brick
-import           Events
 import           Fmt
 import           Control.Monad.Log             as Log
 import           Text.Show.Functions            ( )
-import           Control.Monad.Except           ( MonadError(throwError) )
+import           Control.Monad.Except           ( MonadError
+                                                , throwError
+                                                , catchError
+                                                )
 import           Control.Lens.Getter
-import           Graphite.Types
+import           Control.Lens.Operators  hiding ( (??) )
+import           Control.Lens.Prism             ( _Just )
+import           Control.Lens.Combinators       ( traverseOf )
+import           App.Components
+import           Display.GraphWidget
+import           Events
+import qualified Brick.Main                    as Brick
+import qualified Brick.Types                   as Brick
+import qualified Brick.Widgets.List            as BWL
 import           Graphite
+import           Graphite.Types
 
 type Logger m = Log.Handler m Text
 
 newtype AppT m a = MkAppT { _unApp :: ReaderT App.Config (  ExceptT App.Error (LoggingT Fmt.Builder m ) ) a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadLog Fmt.Builder, MonadReader App.Config, MonadError App.Error)
+  deriving ( Functor
+           , Applicative
+           , Monad
+           , MonadIO
+           , MonadLog Fmt.Builder
+           , MonadReader App.Config
+           , MonadError App.Error
+           )
 
 instance MonadTrans AppT where
   lift = MkAppT . lift . lift . lift
 
+instance Monad m => App.Configured App.Config (AppT m) where
+  getConfig = view
+  {-# INLINE getConfig #-}
+
+instance MonadOutcome Brick.Next (AppT (Brick.EventM n)) where
+  continue = lift . Brick.continue
+  stop     = lift . Brick.halt
+
 runApp :: Monad m => Logger m -> App.Config -> AppT m a -> m a
-runApp logger conf action = convertToRuntimeError
-  <$> runLoggingT (runExceptT (usingReaderT conf (_unApp action))) (logger . fmt)
+runApp logger conf action =
+  fmap convertToRuntimeError $ runLoggingT ?? (logger . fmt) $ runExceptT $ usingReaderT conf $ _unApp action
   where convertToRuntimeError = either (error . ("Unhandled app error: " <>) . toText . displayException) id
 
-instance MonadIO m => Req.MonadHttp (AppT m) where
-  handleHttpException = throwError . App.HttpError
+constructDom :: App.CurrentState -> DisplayWidget App.Error
+constructDom (App.Failed (App.FailedState err)) = DisplayWidget $ Left (ErrorWidget err)
+constructDom (App.Active activeState          ) = DisplayWidget $ Right $ DefaultDisplay
+  { dataDisplay   = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone)
+  , metricBrowser = activeState ^? toMetricBrowser
+  }
+  where toMetricBrowser = App.metricsView . _Just . to MetricsBrowser
+
+instance MonadIO m => App.GraphViewer (AppT m) where
+  updateGraph update previousState =
+    traverseOf (App.active . App.graphData) (const update) previousState
+      `catchError` (return . (App.failed #) . App.FailedState)
 
 instance MonadIO m => MonadGraphite (AppT m) where
-  listMetrics = view (App.graphiteConfig . App.graphiteUrl) >>= listMetricsHttp
-  getMetrics request = view (App.graphiteConfig . App.graphiteUrl) >>= getMetricsHttp ?? request
+  getMetrics req = do
+    conf     <- view App.graphiteConfig
+    response <- runGraphite conf (getMetrics req)
+    case response of
+      Right metrics -> return metrics
+      Left  err     -> throwError (App.AppGraphiteError err)
 
-handleEvent' :: Brick.BrickEvent n AppEvent -> App.CurrentState -> AppT (Brick.EventM n) (Brick.Next App.CurrentState)
-handleEvent' = handleEvent
-  (EventHandler { continue = lift . Brick.continue, ignore = lift . Brick.continue, stop = lift . Brick.halt })
+  listMetrics = do
+    conf     <- view App.graphiteConfig
+    response <- runGraphite conf listMetrics
+    case response of
+      Right metrics -> return metrics
+      Left  err     -> throwError (App.AppGraphiteError err)

@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -9,16 +7,19 @@ module EventsSpec
 where
 
 import           Test.Hspec                    as HS
+import           Test.Hspec.QuickCheck          ( prop )
 import           Brick.Types                   as Brick
 import           Test.QuickCheck
 import           Test.QuickCheck.Monadic
 import           ArbitraryInstances             ( )
 import qualified Events                        as E
 import qualified App.State                     as App
-import qualified App.Config                    as App
 import           CommonProperties
 import           Test.Orphans                   ( )
 import qualified Display.Graph                 as Graph
+import           Control.Lens.Extras            ( is )
+import           Control.Lens.Getter            ( view )
+import           Control.Lens.Setter
 
 data DummyComponent = DummyComponent deriving (Eq, Show)
 
@@ -36,62 +37,40 @@ mouseUp = do
 
 spec :: HS.Spec
 spec = describe "Events" $ do
-  appProp "ignores misc. brick events that the application doesn't use"
-    $ (forAllEnvs @App.Config)
-    $ (throwingErrors @App.Error)
-    $ ignoreLogging
-    $ withMockGraphite
-    $ do
-        event      <- pick $ oneof [mouseDown, mouseUp]
-        startState <- pick arbitrary
-        state'     <- pick arbitrary
-        let handler = E.EventHandler { continue = const (return Nothing)
-                                     , ignore   = const (return $ Just (Right state'))
-                                     , stop     = const (return Nothing)
-                                     }
-        result <- run (E.handleEvent handler event (Right startState))
-        case result of
-          Just (Right result') -> return (result' === state')
-          _                    -> return (property False)
+  prop "ignores misc. Brick events that the application doesn't use" $ runMonadicTest $ do
+    startState                          <- pick arbitrary
+    event                               <- pick $ oneof [mouseDown, mouseUp]
+    (outcome :: E.EventOutcome, result) <- run (E.handleBrickEvent event startState)
+    (secondOutcome            , _     ) <- run (E.handleBrickEvent event startState)
 
-  appProp "updates the app state from graphite when requested (UpdateEvent)"
-    $ (forAllEnvs @App.Config)
-    $ (throwingErrors @App.Error)
-    $ ignoreLogging
-    $ withMockGraphite
-    $ do
-        (_, update) <- lift get
-        result      <- run E.updateGraphData
-        return (result `shouldBe` Graph.extractGraph update)
+    assert $ is App.active result == is App.active startState
+    assert $ outcome == secondOutcome
 
-  appProp "ends the event loop when an Exit Key is pressed"
-    $ (forAllEnvs @App.Config)
-    $ (throwingErrors @App.Error)
-    $ ignoreLogging
-    $ withMockGraphite
-    $ do
-        startState <- pick arbitrary
-        state'     <- pick arbitrary
-        let handler = E.EventHandler { continue = const (return Nothing)
-                                     , ignore   = const (return Nothing)
-                                     , stop     = const (return $ Just (Right state'))
-                                     }
-        result <- run (E.handleEvent handler (VtyEvent E.ExitKey) (Right startState))
-        case result of
-          Just (Right result') -> return (result' === state')
-          _                    -> return (property False)
+  prop "ends the event loop when an Exit Key is pressed" $ runMonadicTest $ do
+    startState   <- pick arbitrary
+    (outcome, _) <- run (E.handleKeyPress E.ExitKey startState)
+    return (outcome === E.Stop)
 
-  appProp "returns errors as part of the state"
-    $ (forAllEnvs @App.Config)
-    $ (throwingErrors @App.Error)
-    $ ignoreLogging
-    $ withFailingGraphite
-    $ do
-        startState <- pick arbitrary
-        let
-          handler =
-            E.EventHandler { continue = return . Just, ignore = const (return Nothing), stop = const (return Nothing) }
-        result <- run (E.handleEvent handler (Brick.AppEvent E.UpdateEvent) (Right startState))
-        case result of
-          Just (Left _) -> return (property True)
-          _             -> return (property False)
+  prop "updates the graph state when given an update event and the state is active"
+    $ runMonadicTest
+    $ forAllM (arbitrary `suchThat` is App.active)
+    $ forAllM arbitrary
+    . \startState datapoints -> do
+        run (assign getMetricsResponse (Right datapoints))
+        (outcome, result) <- run (E.handleBrickEvent (Brick.AppEvent E.UpdateEvent) startState)
+
+        assert (outcome == E.Continue)
+        assert (is App.active result)
+
+        let graph = view (App.active . App.graphData) result
+        assertAll (`Graph.member` graph) (Graph.extract <$> datapoints)
+
+  prop "returns graphite errors as part of the state" $ runMonadicTest $ do
+    startState <- pick arbitrary
+    err        <- pick arbitrary
+    run (assign getMetricsResponse (Left err))
+    (outcome, result) <- run (E.handleBrickEvent (Brick.AppEvent E.UpdateEvent) startState)
+
+    -- app shouldn't halt because of errors
+    assert (outcome == E.Continue)
+    assert (is App.failed result)
