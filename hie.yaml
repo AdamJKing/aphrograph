@@ -1,4 +1,0 @@
-cradle:
-  stack:
-    - path: ./test
-      component: "aphrograph:test:aphrograph-test"

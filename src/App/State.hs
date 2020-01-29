@@ -20,9 +20,9 @@ import qualified Brick.Widgets.List            as BWL
 import           App.Components
 import           Control.Lens.Prism
 import           Control.Lens.Wrapped
+import           Control.Lens.Combinators
 import           Display.Graph                 as Graph
 import           Control.Monad.Except           ( MonadError(catchError) )
-import App.State as State
 
 newtype Error = AppGraphiteError GraphiteError
   deriving ( Show, Generic )
@@ -40,11 +40,11 @@ data ActiveState = ActiveState {
 
 makeLenses ''ActiveState
 
-class GraphViewer m where
-  updateGraph :: m (Graph Time Value) -> CurrentState -> m CurrentState
+updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState -> f CurrentState
+updateGraph update = traverseOf (active . graphData) (const update) 
 
-toggleMetricsView :: CurrentState -> m CurrentState
-toggleMetricsView = traverseOf (App.active . App.metricsView) $ return . \case
+toggleMetricsView :: Applicative m => CurrentState -> m CurrentState
+toggleMetricsView = traverseOf (active . metricsView) $ pure . \case
   Nothing -> (Just (BWL.list MetricsBrowserComponent (fromList ["example", "other.example"]) 1))
   _       -> Nothing
 

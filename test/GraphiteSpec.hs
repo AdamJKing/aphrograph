@@ -77,7 +77,7 @@ spec = describe "Graphite" $ do
 
     it "treats null values as zero" $ JSON.decode "[ null, 155005500 ]" `shouldBe` Just (DataPoint 0.0 155005500)
 
-  describe "App" $ describe "MonadHttp" $ do
+  describe "GraphiteM" $ describe "MonadHttp" $ do
     prop "captures all vanilla http exceptions as http errors" . monadicIO $ do
       err    <- pick vanillaHttpException
       conf   <- pick arbitrary

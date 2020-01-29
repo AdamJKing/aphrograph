@@ -1,5 +1,4 @@
-flags: {}
-packages:
-  - .
-extra-deps: []
-resolver: lts-14.18
+resolver: lts-14.21
+packages: [.]
+ghc-options:
+  "$locals": -Werror

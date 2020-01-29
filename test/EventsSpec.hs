@@ -50,27 +50,3 @@ spec = describe "Events" $ do
     startState   <- pick arbitrary
     (outcome, _) <- run (E.handleKeyPress E.ExitKey startState)
     return (outcome === E.Stop)
-
-  prop "updates the graph state when given an update event and the state is active"
-    $ runMonadicTest
-    $ forAllM (arbitrary `suchThat` is App.active)
-    $ forAllM arbitrary
-    . \startState datapoints -> do
-        run (assign getMetricsResponse (Right datapoints))
-        (outcome, result) <- run (E.handleBrickEvent (Brick.AppEvent E.UpdateEvent) startState)
-
-        assert (outcome == E.Continue)
-        assert (is App.active result)
-
-        let graph = view (App.active . App.graphData) result
-        assertAll (`Graph.member` graph) (Graph.extract <$> datapoints)
-
-  prop "returns graphite errors as part of the state" $ runMonadicTest $ do
-    startState <- pick arbitrary
-    err        <- pick arbitrary
-    run (assign getMetricsResponse (Left err))
-    (outcome, result) <- run (E.handleBrickEvent (Brick.AppEvent E.UpdateEvent) startState)
-
-    -- app shouldn't halt because of errors
-    assert (outcome == E.Continue)
-    assert (is App.failed result)

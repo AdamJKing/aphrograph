@@ -19,6 +19,7 @@ import           Test.QuickCheck.Instances.Text ( )
 import           Test.QuickCheck.Arbitrary.ADT
 import           GHC.Generics                  as GHC
 import           Display.Types
+import           Events
 import           App.Config                    as App
 import           Network.HTTP.Req               ( http
                                                 , https
@@ -47,6 +48,8 @@ deriving instance Arbitrary App.Config
 deriving via Text instance Arbitrary Metric
 deriving via Text instance Arbitrary Graphite.From
 deriving via Text instance Arbitrary Graphite.To
+
+deriving via (GenArbitrary EventOutcome) instance Arbitrary EventOutcome
 
 --- --- ---  Random   --- --- ---
 deriving instance Random Seconds

@@ -18,4 +18,6 @@
 * Combine `failed` and `FailedState` ?
 * Better name for `AppGraphiteError` 
 * Split CommonProperties along TestM/utils
+* Create proper liftGen for TestM
+* Remove tests with multiple assertions, not supported by quickcheck monadic
 

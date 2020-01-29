@@ -42,13 +42,15 @@ newtype GraphiteM a = GraphiteM ( ReaderT App.GraphiteConfig ( ExceptT GraphiteE
            , Monad
            , MonadIO
            , MonadReader App.GraphiteConfig
+           , MonadError GraphiteError
            )
 
 runGraphite :: MonadIO m => App.GraphiteConfig -> GraphiteM a -> m (Either GraphiteError a)
 runGraphite conf (GraphiteM op) = liftIO $ Req.runReq Req.defaultHttpConfig (runExceptT (usingReaderT conf op))
 
 instance Req.MonadHttp GraphiteM where
-  handleHttpException = GraphiteM . lift . lift . handleHttpException
+  handleHttpException (VanillaHttpException err) = throwError (HttpError err)
+  handleHttpException (JsonHttpException    err) = throwError (ParsingError (toText err))
 
 instance MonadGraphite GraphiteM where
   getMetrics request = with App.graphiteUrl $ getMetricsHttp ?? request

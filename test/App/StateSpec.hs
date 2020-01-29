@@ -20,17 +20,12 @@ import           App.State                     as App
 import           CommonProperties
 import           Control.Lens.Extras            ( is )
 import           Control.Lens.Setter
+import           Control.Lens.Operators
 
 spec :: Spec
-spec =
-    describe "App.State"
-        $ describe "Graph updates"
-        $ prop "errors updating the graph results in failed state"
-        $ runMonadicTest
-        $ do
-              startState <- pick arbitrary
-              err        <- pick arbitrary
-              run (assign getMetricsResponse (Left err))
-              result <- run (updateGraph startState)
-
-              assert (is App.failed result)
+spec = describe "App.State" $ describe "Graph updates" $ prop "overwriting existing graph state" $ runMonadicTest $ do
+    newGraph <- pick arbitrary
+    oldState <- pick activeState
+    result   <- run (updateGraph (return newGraph) oldState)
+    assert (is App.active result)
+    assert (result ^? (App.active . App.graphData) == Just newGraph)

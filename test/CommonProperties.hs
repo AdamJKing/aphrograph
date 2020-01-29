@@ -26,6 +26,7 @@ module CommonProperties
   , getMetricsResponse
   , listMetricsResponse
   , assertAll
+  , activeState
   )
 where
 
@@ -50,6 +51,7 @@ import           Control.Monad.Log
 import           Control.Lens.Getter
 import           Control.Lens.TH                ( makeLenses )
 import           Control.Lens.Traversal
+import           Control.Lens.Extras
 import           Events
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
@@ -108,22 +110,10 @@ appProp desc = prop desc . monadic property
 ignoreLogging :: Monad m => PropertyM (DiscardLoggingT msg m) a -> PropertyM m a
 ignoreLogging = hoistLiftedPropertyM discardLogging
 
-newtype ArbitraryGraphite m a = ArbitraryGraphite { _run :: StateT ([Metric], [DataPoint]) m a }
-  deriving ( Functor
-           , Applicative
-           , Monad
-           , MonadTrans
-           , MonadState ([Metric], [DataPoint])
-           , MonadError e
-           , MonadLog log
-           , MonadReader r
-           )
-
-newtype TestM a = TestM { _runTest :: DiscardLoggingT LText ( ExceptT App.Error ( StateT MockGraphiteResponses ( ReaderT App.Config Gen ) ) ) a }
+newtype TestM a = TestM { _runTest :: DiscardLoggingT LText ( ExceptT App.Error ( ReaderT App.Config Gen ) ) a }
   deriving ( Applicative
            , Functor
            , Monad
-           , MonadState MockGraphiteResponses
            , MonadReader App.Config
            , MonadError App.Error
            , MonadLog LText
@@ -144,30 +134,36 @@ errorOnLeft :: MonadError e m => Either e a -> m a
 errorOnLeft (Right a) = return a
 errorOnLeft (Left  e) = throwError e
 
+type instance EventF TestM = (,) EventOutcome
+
+instance MonadEventHandler AppEvent TestM where
+  type EventS TestM = App.CurrentState
+  handleEvent _ _ = TestM $ lift $ lift $ lift arbitrary2
+
 instance MonadGraphite TestM where
-  listMetrics = use listMetricsResponse >>= errorOnLeft
-  getMetrics _ = use getMetricsResponse >>= errorOnLeft
+  listMetrics = TestM $ lift $ lift $ lift arbitrary
+  getMetrics _ = TestM $ lift $ lift $ lift arbitrary
 
 instance App.Configured App.Config TestM where
   getConfig = view
   {-# INLINE getConfig #-}
 
+instance GraphViewer TestM where
+  updateGraph = TestM $ lift $ lift $ lift arbitrary
+
 runMonadicTest :: Testable a => PropertyM TestM a -> Property
 runMonadicTest = monadic
   (\test -> property $ do
-    env                   <- arbitrary
-    mockGraphiteResponses <- applyArbitrary2 MockResponses
-    result                <- unwrapTest mockGraphiteResponses env test
+    env    <- arbitrary
+    result <- unwrapTest env test
     return (either unexpectedError property result)
   )
  where
-  unwrapTest mockGraphiteResponses env =
-    usingReaderT env . evaluatingStateT mockGraphiteResponses . runExceptT . discardLogging . _runTest
+  unwrapTest env = usingReaderT env . runExceptT . discardLogging . _runTest
   unexpectedError err = property $ failed { reason = "Unexpected exception.", theException = Just (SomeException err) }
 
 assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
 assertAll predicate = assert . all predicate
 
-instance App.GraphViewer TestM where
-  updateGraph update previousState = traverseOf (App.active . App.graphData) (const update) previousState
-  toggleMetricsView = 
+activeState :: Gen App.CurrentState
+activeState = arbitrary `suchThat` is App.active

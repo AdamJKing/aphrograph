@@ -28,8 +28,8 @@ import           Display.GraphWidget
 import           Events
 import qualified Brick.Main                    as Brick
 import qualified Brick.Types                   as Brick
-import qualified Brick.Widgets.List            as BWL
 import           Graphite
+import qualified Display.Graph                 as Graph
 import           Graphite.Types
 
 type Logger m = Log.Handler m Text
@@ -51,10 +51,6 @@ instance Monad m => App.Configured App.Config (AppT m) where
   getConfig = view
   {-# INLINE getConfig #-}
 
-instance MonadOutcome Brick.Next (AppT (Brick.EventM n)) where
-  continue = lift . Brick.continue
-  stop     = lift . Brick.halt
-
 runApp :: Monad m => Logger m -> App.Config -> AppT m a -> m a
 runApp logger conf action =
   fmap convertToRuntimeError $ runLoggingT ?? (logger . fmt) $ runExceptT $ usingReaderT conf $ _unApp action
@@ -67,11 +63,6 @@ constructDom (App.Active activeState          ) = DisplayWidget $ Right $ Defaul
   , metricBrowser = activeState ^? toMetricBrowser
   }
   where toMetricBrowser = App.metricsView . _Just . to MetricsBrowser
-
-instance MonadIO m => App.GraphViewer (AppT m) where
-  updateGraph update previousState =
-    traverseOf (App.active . App.graphData) (const update) previousState
-      `catchError` (return . (App.failed #) . App.FailedState)
 
 instance MonadIO m => MonadGraphite (AppT m) where
   getMetrics req = do
@@ -87,3 +78,25 @@ instance MonadIO m => MonadGraphite (AppT m) where
     case response of
       Right metrics -> return metrics
       Left  err     -> throwError (App.AppGraphiteError err)
+
+instance MonadOutcome Brick.Next (AppT (Brick.EventM n)) where
+  continue = lift . Brick.continue
+  stop     = lift . Brick.halt
+
+type instance EventF (AppT (Brick.EventM n)) = Brick.Next
+
+instance MonadIO m => GraphViewer (AppT m) where
+  updateGraph = do
+    fromTime   <- App.getConfig (App.graphiteConfig . App.fromTime)
+    toTime     <- App.getConfig (App.graphiteConfig . App.toTime)
+    target     <- App.getConfig (App.graphiteConfig . App.targetArg)
+
+    datapoints <- getMetrics $ RenderRequest fromTime toTime target
+    return (Graph.mkGraph $ Graph.extract <$> datapoints)
+
+instance MonadEventHandler AppEvent (AppT (Brick.EventM n)) where
+  type EventS (AppT (Brick.EventM n)) = App.CurrentState
+
+  handleEvent UpdateEvent s = do
+    newState <- App.updateGraph updateGraph s `catchError` (return . (App.failed #) . App.FailedState)
+    continue newState

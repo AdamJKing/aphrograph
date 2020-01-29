@@ -18,7 +18,7 @@ import qualified App.StateSpec                  ( spec )
 main :: IO ()
 main = hspec $ do
   describe "App"           AppSpec.spec
-  describe "App.State"     StateSpec.spec
+  -- describe "App.State"     StateSpec.spec
   describe "Display"       DisplaySpec.spec
   describe "Graph"         Display.GraphSpec.spec
   describe "Projection"    Display.ProjectionSpec.spec
