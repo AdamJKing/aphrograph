@@ -1,58 +1,64 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module App.State where
 
-import           Control.Lens.TH
-import           Graphite.Types
-import           Data.Time.LocalTime
-import qualified App.Config                    as App
-import qualified Brick.Widgets.List            as BWL
-import           App.Components
-import           Control.Lens.Prism
-import           Control.Lens.Wrapped
-import           Control.Lens.Combinators
-import           Display.Graph                 as Graph
-import           Control.Monad.Except           ( MonadError(catchError) )
+import App.Components
+import qualified App.Config as App
+import qualified Brick.Widgets.List as BWL
+import Control.Lens.Combinators
+import Control.Monad.Except (MonadError (catchError))
+import Data.Time.LocalTime
+import Display.Graph as Graph
+import Graphite.Types
 
 newtype Error = AppGraphiteError GraphiteError
-  deriving ( Show, Generic )
-  deriving anyclass Exception
+  deriving (Show, Generic)
+  deriving anyclass (Exception)
 
 makePrisms ''Error
 
 type MetricsView = BWL.List AppComponent Metric
 
-data ActiveState = ActiveState {
-     _metricsView :: Maybe MetricsView
-   , _graphData :: Graph Time Value
-   , _timezone ::  !TimeZone
-} deriving ( Show , Generic )
+data ActiveState
+  = ActiveState
+      { _metricsView :: Maybe MetricsView,
+        _graphData :: Graph Time Value,
+        _timezone :: !TimeZone
+      }
+  deriving (Show, Generic)
 
 makeLenses ''ActiveState
 
 updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState -> f CurrentState
-updateGraph update = traverseOf (active . graphData) (const update) 
+updateGraph update = traverseOf (active . graphData) (const update)
 
-toggleMetricsView :: Applicative m => CurrentState -> m CurrentState
-toggleMetricsView = traverseOf (active . metricsView) $ pure . \case
-  Nothing -> (Just (BWL.list MetricsBrowserComponent (fromList ["example", "other.example"]) 1))
-  _       -> Nothing
+setMetricsView :: MonadGraphite m => (MetricsView -> m MetricsView) -> CurrentState -> m CurrentState
+setMetricsView update = traverseOf (active . metricsView) $ \case
+  (Just mv) -> Just <$> update mv
+  _ -> return Nothing
 
-newtype FailedState = FailedState { failure :: Error }
-  deriving ( Show, Generic )
+toggleMetricsView :: MonadGraphite m => CurrentState -> m CurrentState
+toggleMetricsView = traverseOf (active . metricsView) $ \case
+  Nothing -> do
+    availableMetrics <- take 10 <$> listMetrics
+    return (Just (BWL.list MetricsBrowserComponent (fromList availableMetrics) 1))
+  _ -> return Nothing
 
-newtype CurrentState = CurrentState ( Either FailedState ActiveState )
-  deriving ( Generic , Show )
+newtype FailedState = FailedState {failure :: Error}
+  deriving (Show, Generic)
+
+newtype CurrentState = CurrentState (Either FailedState ActiveState)
+  deriving (Generic, Show)
 
 instance Wrapped CurrentState
 
@@ -74,8 +80,8 @@ constructDefaultContext :: MonadIO m => App.Config -> m ActiveState
 constructDefaultContext _ = do
   _timezone <- liftIO (getTimezone `catchError` defaultToUtc)
   let _metricsView = Nothing
-  let _graphData   = mempty
-  return (ActiveState { .. })
- where
-  getTimezone  = liftIO getCurrentTimeZone
-  defaultToUtc = const (pure utc)
+  let _graphData = mempty
+  return (ActiveState {..})
+  where
+    getTimezone = liftIO getCurrentTimeZone
+    defaultToUtc = const (pure utc)

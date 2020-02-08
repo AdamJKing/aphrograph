@@ -74,4 +74,4 @@ generateLabelsContinuous input span =
   where showRounded = fmt . fixedF 4
 
 calcTickNum :: (Int, Int) -> Int
-calcTickNum = floor . sqrt . fromIntegral . delta where delta (mn, mx) = mx - mn
+calcTickNum (mn, mx) = let (totalSpan :: Double) = fromIntegral $ mx - mn in floor (sqrt totalSpan)

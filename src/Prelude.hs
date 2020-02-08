@@ -1,25 +1,26 @@
-
 module Prelude
-  ( module Relude
-  , module Relude.Extra.Newtype
-  , module Relude.Extra.Type
-  , module Control.Monad.Except
-  , groupBy
-  , minMax
-  , with
+  ( module Relude,
+    module Relude.Extra.Newtype,
+    module Relude.Extra.Type,
+    module Control.Monad.Except,
+    groupBy,
+    minMax,
+    with,
   )
 where
 
-import           Relude
-import           Relude.Extra.Newtype
-import           Relude.Extra.Type
-import           Relude.Extra.Group             ( groupBy )
-import           Control.Monad.Except    hiding ( fail
-                                                , runExceptT
-                                                )
-import           Control.Lens.Getter            ( Getting
-                                                , view
-                                                )
+import Control.Lens.Getter
+  ( Getting,
+    view,
+  )
+import Control.Monad.Except hiding
+  ( fail,
+    runExceptT,
+  )
+import Relude
+import Relude.Extra.Group (groupBy)
+import Relude.Extra.Newtype
+import Relude.Extra.Type
 
 minMax :: (Ord a) => NonEmpty a -> (a, a)
 minMax (x :| []) = (x, x)

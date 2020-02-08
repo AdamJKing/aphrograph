@@ -1,4 +1,6 @@
 resolver: lts-14.21
 packages: [.]
 ghc-options:
-  "$locals": -Werror
+  "$locals": -Wall -fexcess-precision -funfolding-use-threshold=16
+  "$targets": -Werror -threaded
+  "$everything": -O2
