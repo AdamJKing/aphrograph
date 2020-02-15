@@ -62,13 +62,15 @@ runApp logger conf action =
     convertToRuntimeError = either (error . ("Unhandled app error: " <>) . toText . displayException) id
 
 constructDom :: App.CurrentState -> DisplayWidget App.Error
-constructDom (App.Failed (App.FailedState err)) = DisplayWidget $ Left (ErrorWidget err)
-constructDom (App.Active activeState) =
-  DisplayWidget $ Right $
-    DefaultDisplay
-      { dataDisplay = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone),
-        metricBrowser = activeState ^? toMetricBrowser
-      }
+constructDom state' =
+  view App.appData state' & \case
+    (Left (App.FailedState err)) -> DisplayWidget $ Left (ErrorWidget err)
+    (Right activeState) ->
+      DisplayWidget $ Right $
+        DefaultDisplay
+          { dataDisplay = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone),
+            metricBrowser = activeState ^? toMetricBrowser
+          }
   where
     toMetricBrowser = App.metricsView . _Just . to MetricsBrowser
 
@@ -105,8 +107,10 @@ instance MonadEventHandler AppEvent (AppT (Brick.EventM n)) where
   type EventS (AppT (Brick.EventM n)) = App.CurrentState
 
   handleEvent UpdateEvent s = do
-    newState <- App.updateGraph updateGraph s `catchError` (return . (App.failed #) . App.FailedState)
+    newState <- App.updateGraph updateGraph s `catchError` buildErrorState
     continue newState
+    where
+      buildErrorState err = return (App.CurrentState (Left (App.FailedState err)) (DisplayWidget (Left (ErrorWidget err))))
 
 instance MonadEventHandler Vty.Event (AppT (Brick.EventM AppComponent)) where
   type EventS (AppT (Brick.EventM AppComponent)) = App.CurrentState

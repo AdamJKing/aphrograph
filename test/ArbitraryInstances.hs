@@ -1,41 +1,58 @@
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE StandaloneDeriving #-}
-
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module ArbitraryInstances where
 
-import           DerivedArbitraryInstances
-import           Display.Graph                 as Graph
-import           Graphics.Vty.Input.Events     as Vty
-import           Graphite.Types                as Graphite
-import           System.Random
-import           Test.QuickCheck
-import           Test.QuickCheck.Arbitrary.ADT
-import           Test.QuickCheck.Instances.Time ( )
-import           Display.Labels
-import qualified Network.HTTP.Req              as Req
-import qualified Network.HTTP.Client           as Http
-import qualified App.State                     as App
-import qualified Brick.Widgets.List            as BWL
-import           App.Components
-import           Test.QuickCheck.Instances.Vector
-                                                ( )
+import App.Components
+import qualified App.State as App
+import qualified Brick.Widgets.List as BWL
+import DerivedArbitraryInstances
+import Display.Graph as Graph
+import Display.Labels
+import Graphics.Vty.Input.Events as Vty
+import Graphite.Types as Graphite
+import qualified Network.HTTP.Client as Http
+import qualified Network.HTTP.Req as Req
+import System.Random
+import Test.QuickCheck
+import Test.QuickCheck.Arbitrary.ADT
+import Test.QuickCheck.Instances.Time ()
+import Test.QuickCheck.Instances.Vector ()
 
 instance Arbitrary App.ActiveState where
   arbitrary = do
     _metricsView <- Just . (BWL.list MetricsBrowserComponent ?? 1) <$> arbitrary
-    _graphData   <- arbitrary
-    _timezone    <- arbitrary
-    return (App.ActiveState { .. })
+    _graphData <- arbitrary
+    _timezone <- arbitrary
+    return (App.ActiveState {..})
 
 deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
 
 deriving via (GenArbitrary App.Error) instance Arbitrary App.Error
+
 deriving via (GenArbitrary App.FailedState) instance Arbitrary App.FailedState
+
 deriving via (GenArbitrary App.CurrentState) instance Arbitrary App.CurrentState
+
+deriving via (GenArbitrary (DisplayWidget App.Error)) instance Arbitrary (DisplayWidget App.Error)
+
+deriving via (GenArbitrary AppWidget) instance Arbitrary AppWidget
+
+deriving via (GenArbitrary GraphDisplayWidget) instance Arbitrary GraphDisplayWidget
+
+instance Arbitrary MetricsBrowserWidget where
+  arbitrary = MetricsBrowser . (BWL.list MetricsBrowserComponent ?? 1) <$> arbitrary
+
+deriving via (GenArbitrary VerticalAxisWidget) instance Arbitrary VerticalAxisWidget
+
+deriving via (GenArbitrary HorizontalAxisWidget) instance Arbitrary HorizontalAxisWidget
+
+deriving via (GenArbitrary GraphCanvasWidget) instance Arbitrary GraphCanvasWidget
+
+deriving via (GenArbitrary (ErrorWidget App.Error)) instance Arbitrary (ErrorWidget App.Error)
 
 instance Arbitrary DataPoint where
   arbitrary = genericArbitrary
@@ -46,8 +63,8 @@ instance Arbitrary GraphiteRequest where
 instance (Ord x, Arbitrary x, Ord y, Arbitrary y) => Arbitrary (Graph x y) where
   arbitrary = Graph.mkGraph <$> arbitrary
 
-data Range i = Range { lower :: i, higher :: i }
-    deriving ( Show, Eq )
+data Range i = Range {lower :: i, higher :: i}
+  deriving (Show, Eq)
 
 deriving instance ToADTArbitrary TimeStep
 
@@ -83,6 +100,5 @@ instance Random Time where
 
 instance Arbitrary Http.HttpException where
   arbitrary = return $ Http.HttpExceptionRequest "http://www.example.com" Http.ResponseTimeout
-
 
 deriving via (GenArbitrary Req.HttpException) instance Arbitrary Req.HttpException
