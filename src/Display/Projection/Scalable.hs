@@ -10,8 +10,8 @@ import Data.Decimal
 import Data.Time.Clock
 import Normalisation
 
-class (Real b) => Scalable b where
-  scale :: (Real a) => a -> (a, a) -> (b, b) -> b
+class Real b => Scalable b where
+  scale :: Real a => a -> (a, a) -> (b, b) -> b
 
 scale2Integral :: (Integral b, Real a) => a -> (a, a) -> (b, b) -> b
 scale2Integral v base target = round $ normalise rationalBase rationalTarget (toRational v)

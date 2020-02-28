@@ -41,22 +41,24 @@ graphDisplayWidget graph timezone =
         (VerticalAxis (verticalAxis graph))
         (HorizontalAxis (horizontalAxis graph) timezone)
 
+normaliseGraph :: (Fractional y, Real y, Scalable x, Scalable i) => (x, x) -> (y, y) -> (i, i) -> Map x y -> Map i i
+normaliseGraph xBounds yBounds (width, height) =
+  M.map (\v -> scale v (expandIfNeeded yBounds) (0, height))
+    . M.mapKeysWith (\old new -> (old + new) / 2) (\k -> scale k (expandIfNeeded xBounds) (0, width))
+  where
+    expandIfNeeded (lower, higher) = if higher - lower == 0 then (lower - 10, higher + 10) else (lower, higher)
+
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
 drawGraphImage graph (width, height) =
   if G.null graph
     then Vty.text mempty "No Data"
     else
       foldl' appendNextColumn Vty.emptyImage
-        $! [M.findWithDefault 0 i (normaliseGraph $ toMap Set.findMin graph) | i <- [0 .. width]]
+        $! [M.findWithDefault 0 i (normaliseGraph graphX graphY (width, height) $ toMap Set.findMin graph) | i <- [0 .. width]]
   where
     graphX = boundsX graph
     graphY = boundsY graph
-    diff (a, b) = b - a
-    expandIfNeeded (a, b) = if diff (a, b) == 0 then (a - 10, b + 10) else (a, b)
     appendNextColumn = (. buildColumn height) . horizJoin
-    normaliseGraph =
-      M.map (\v -> scale v (expandIfNeeded graphY) (0, height))
-        . M.mapKeysWith (\old new -> (old + new) / 2) (\k -> scale k (expandIfNeeded graphX) (0, width))
 
 drawVerticalAxisImage :: Int -> [Value] -> Vty.Image
 drawVerticalAxisImage height values =
