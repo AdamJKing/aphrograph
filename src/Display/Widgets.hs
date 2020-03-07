@@ -35,7 +35,7 @@ instance CompileWidget AppComponent MetricsBrowserWidget where
             hasFocus
             metricsList
 
-instance CompileLayeredWidget AppComponent AppWidget where
+instance CompileLayeredWidget AppComponent (AppWidget e) where
   compileLayered (DefaultDisplay dataDisplay Nothing) = [compile dataDisplay]
   compileLayered (DefaultDisplay dataDisplay (Just mBrowser)) = [compile mBrowser, compile dataDisplay]
 
@@ -46,13 +46,13 @@ instance Exception e => CompileLayeredWidget AppComponent (DisplayWidget e) wher
 instance Exception e => CompileWidget n (ErrorWidget e) where
   compile (ErrorWidget err) = Widget.str (displayException err)
 
-instance CompileWidget n GraphDisplayWidget where
+instance CompileWidget AppComponent GraphDisplayWidget where
   compile NoDataDisplayWidget = Widget.str "NoData"
   compile (GraphDisplay graphCanvas verticalAxis' horizontalAxis') =
     let graphWidget = compile graphCanvas
         horizontalAxisWidget = compile horizontalAxis'
         verticalAxisWidget = compile verticalAxis'
-     in arrange graphWidget verticalAxisWidget horizontalAxisWidget
+     in cached GraphView $ arrange graphWidget verticalAxisWidget horizontalAxisWidget
     where
       arrange g v h =
         Widget.vBox

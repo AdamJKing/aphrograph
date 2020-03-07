@@ -10,22 +10,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module App.State
-  ( metricsView,
-    renderData,
-    appData,
-    timezone,
-    graphData,
-    toggleMetricsView,
-    setMetricsView,
-    updateGraph,
-    constructDefaultContext,
-    CurrentState (..),
-    ActiveState (..),
-    FailedState (..),
-    Error (..),
-  )
-where
+module App.State where
 
 import App.Components
 import qualified App.Config as App
@@ -54,39 +39,48 @@ data ActiveState
 
 makeLenses ''ActiveState
 
-newtype FailedState = FailedState {failure :: Error}
-  deriving (Show, Generic)
-
-data CurrentState
-  = CurrentState
-      { _appData :: Either FailedState ActiveState,
-        _renderData :: DisplayWidget Error
-      }
-  deriving (Generic, Show)
-
-makeLenses ''CurrentState
-
 updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState -> f CurrentState
-updateGraph update = traverseOf (appData . _Right . graphData) (const update)
+updateGraph update = traverseOf (active . graphData) (const update)
 
 setMetricsView :: MonadGraphite m => (MetricsView -> m MetricsView) -> CurrentState -> m CurrentState
-setMetricsView update = traverseOf (appData . _Right . metricsView) $ \case
+setMetricsView update = traverseOf (active . metricsView) $ \case
   (Just mv) -> Just <$> update mv
   _ -> return Nothing
 
 toggleMetricsView :: MonadGraphite m => CurrentState -> m CurrentState
-toggleMetricsView = traverseOf (appData . _Right . metricsView) $ \case
+toggleMetricsView = traverseOf (active . metricsView) $ \case
   Nothing -> do
     availableMetrics <- take 10 <$> listMetrics
     return (Just (BWL.list MetricsBrowserComponent (fromList availableMetrics) 1))
   _ -> return Nothing
+
+newtype FailedState = FailedState {failure :: Error}
+  deriving (Show, Generic)
+
+newtype CurrentState = CurrentState (Either FailedState ActiveState)
+  deriving (Generic, Show)
+
+instance Wrapped CurrentState
+
+active :: Prism' CurrentState ActiveState
+active = _Wrapped' . _Right
+
+failed :: Prism' CurrentState FailedState
+failed = _Wrapped' . _Left
+
+pattern Active :: ActiveState -> CurrentState
+pattern Active s = CurrentState (Right s)
+
+pattern Failed :: FailedState -> CurrentState
+pattern Failed s = CurrentState (Left s)
+
+{-# COMPLETE Active, Failed #-}
 
 constructDefaultContext :: MonadIO m => App.Config -> m ActiveState
 constructDefaultContext _ = do
   _timezone <- liftIO (getTimezone `catchError` defaultToUtc)
   let _metricsView = Nothing
   let _graphData = mempty
-  let _renderData = DisplayWidget $ Right $ DefaultDisplay NoDataDisplayWidget Nothing
   return (ActiveState {..})
   where
     getTimezone = liftIO getCurrentTimeZone

@@ -11,8 +11,8 @@ where
 import App.State as App
 import ArbitraryInstances ()
 import CommonProperties
+import Control.Lens.Extras (is)
 import Control.Lens.Operators
-import Control.Lens.Prism
 import Test.Hspec
   ( Spec,
     describe,
@@ -26,4 +26,5 @@ spec = describe "App.State" $ describe "Graph updates" $ prop "overwriting exist
   newGraph <- pick arbitrary
   oldState <- pick activeState
   result <- run (updateGraph (return newGraph) oldState)
-  assert (result ^? (App.appData . _Right . App.graphData) == Just newGraph)
+  assert (is App.active result)
+  assert (result ^? (App.active . App.graphData) == Just newGraph)

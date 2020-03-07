@@ -32,6 +32,7 @@ where
 import qualified App.Config as App
 import qualified App.State as App
 import ArbitraryInstances ()
+import Control.Lens.Extras
 import Control.Lens.Getter
 import Control.Lens.TH (makeLenses)
 import Control.Monad.Except (MonadError (catchError))
@@ -164,7 +165,4 @@ assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
 assertAll predicate = assert . all predicate
 
 activeState :: Gen App.CurrentState
-activeState = do
-  _appData <- Right <$> arbitrary
-  _renderData <- arbitrary
-  return (App.CurrentState {..})
+activeState = arbitrary `suchThat` is App.active

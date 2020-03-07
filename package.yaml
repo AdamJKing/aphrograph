@@ -72,4 +72,3 @@ executables:
       - brick
       - prettyprinter
       - logging-effect
-      - lens

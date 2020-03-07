@@ -1,35 +1,26 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
-
 module App.Components where
 
-import qualified Brick.Widgets.List as Brick
-import Data.Time.LocalTime
-import Display.Graph
-import qualified Graphite.Types as Graphite
+import qualified Brick.Widgets.List            as Brick
+import qualified Graphite.Types                as Graphite
+import           Data.Time.LocalTime
+import           Display.Graph
 
-data HorizontalAxisWidget = HorizontalAxis [Graphite.Time] TimeZone deriving (Show, Generic)
+data HorizontalAxisWidget = HorizontalAxis [Graphite.Time] TimeZone deriving Show
+newtype VerticalAxisWidget = VerticalAxis [Graphite.Value] deriving Show
+newtype GraphCanvasWidget = GraphCanvas (Graph Graphite.Time Graphite.Value) deriving Show
 
-newtype VerticalAxisWidget = VerticalAxis [Graphite.Value] deriving (Show, Generic)
+data GraphDisplayWidget = GraphDisplay GraphCanvasWidget VerticalAxisWidget HorizontalAxisWidget | NoDataDisplayWidget deriving Show
 
-newtype GraphCanvasWidget = GraphCanvas (Graph Graphite.Time Graphite.Value) deriving (Show, Generic)
-
-data GraphDisplayWidget = GraphDisplay GraphCanvasWidget VerticalAxisWidget HorizontalAxisWidget | NoDataDisplayWidget deriving (Show, Generic)
-
-newtype ErrorWidget e = ErrorWidget e deriving (Show, Generic)
+newtype ErrorWidget e = ErrorWidget e deriving Show
 
 data AppComponent = GraphView | MetricsBrowserComponent
-  deriving (Eq, Ord, Show, Generic)
+    deriving ( Eq, Ord, Show )
 
 newtype MetricsBrowserWidget = MetricsBrowser (Brick.List AppComponent Graphite.Metric)
-  deriving (Show, Generic)
 
-data AppWidget
-  = DefaultDisplay
-      { dataDisplay :: !GraphDisplayWidget,
-        metricBrowser :: Maybe MetricsBrowserWidget
-      }
-  deriving (Show, Generic)
+data AppWidget e = DefaultDisplay {
+    dataDisplay :: !GraphDisplayWidget,
+    metricBrowser :: Maybe MetricsBrowserWidget
+  }
 
-newtype DisplayWidget e = DisplayWidget (Either (ErrorWidget e) AppWidget)
-  deriving (Show, Generic)
+newtype DisplayWidget e = DisplayWidget ( Either ( ErrorWidget e ) ( AppWidget e ) )
