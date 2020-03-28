@@ -12,18 +12,13 @@
 
 module Events where
 
-import App.Components
 import qualified App.Config as App
 import qualified App.State as App
 import qualified Brick.Types as Brick
 import qualified Display.Graph as Graph
+import Events.Types
 import qualified Graphics.Vty.Input.Events as Vty
 import Graphite.Types
-
-data AppEvent = UpdateEvent
-  deriving (Show, Eq)
-
-type SystemEvent = Brick.BrickEvent AppComponent AppEvent
 
 pattern KeyDown :: Char -> Vty.Event
 pattern KeyDown k = Vty.EvKey (Vty.KChar k) []

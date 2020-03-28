@@ -1,7 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms #-}
@@ -16,7 +16,6 @@ import App.Components
 import qualified App.Config as App
 import qualified Brick.Widgets.List as BWL
 import Control.Lens.Combinators
-import Control.Monad.Except (MonadError (catchError))
 import Data.Time.LocalTime
 import Display.Graph as Graph
 import Graphite.Types
@@ -29,10 +28,13 @@ makePrisms ''Error
 
 type MetricsView = BWL.List AppComponent Metric
 
+data GraphData = Missing | Pending | Present (Graph Time Value)
+  deriving (Eq, Show, Generic)
+
 data ActiveState
   = ActiveState
       { _metricsView :: Maybe MetricsView,
-        _graphData :: Graph Time Value,
+        _graphData :: !GraphData,
         _timezone :: !TimeZone
       }
   deriving (Show, Generic)
@@ -40,7 +42,7 @@ data ActiveState
 makeLenses ''ActiveState
 
 updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState -> f CurrentState
-updateGraph update = traverseOf (active . graphData) (const update)
+updateGraph update = traverseOf (active . graphData) (\_ -> Present <$> update)
 
 setMetricsView :: MonadGraphite m => (MetricsView -> m MetricsView) -> CurrentState -> m CurrentState
 setMetricsView update = traverseOf (active . metricsView) $ \case
@@ -80,7 +82,7 @@ constructDefaultContext :: MonadIO m => App.Config -> m ActiveState
 constructDefaultContext _ = do
   _timezone <- liftIO (getTimezone `catchError` defaultToUtc)
   let _metricsView = Nothing
-  let _graphData = mempty
+  let _graphData = Missing
   return (ActiveState {..})
   where
     getTimezone = liftIO getCurrentTimeZone

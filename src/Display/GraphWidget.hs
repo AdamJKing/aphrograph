@@ -7,6 +7,7 @@
 module Display.GraphWidget where
 
 import App.Components
+import App.State
 import Brick.Types as Brick
 import Brick.Widgets.Core as W
 import Control.Lens hiding
@@ -16,7 +17,6 @@ import Control.Lens hiding
 import Data.Foldable (maximum)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
-import qualified Data.Text as T
 import qualified Data.Text.Lazy as LT
 import Data.Time.LocalTime
 import Display.Graph as G
@@ -31,15 +31,17 @@ import Graphics.Vty
 import Graphite.Types
 import Prelude hiding ((<|>))
 
-graphDisplayWidget :: Graph Time Value -> TimeZone -> GraphDisplayWidget
-graphDisplayWidget graph timezone =
+graphDisplayWidget :: GraphData -> TimeZone -> GraphDisplayWidget
+graphDisplayWidget Missing _ = NoDataDisplayWidget
+graphDisplayWidget Pending _ = LoadingDataDisplayWidget
+graphDisplayWidget (Present graph) _timezone =
   if G.null graph
     then NoDataDisplayWidget
     else
       GraphDisplay
         (GraphCanvas graph)
         (VerticalAxis (verticalAxis graph))
-        (HorizontalAxis (horizontalAxis graph) timezone)
+        (HorizontalAxis (horizontalAxis graph) _timezone)
 
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
 drawGraphImage graph (width, height) =
@@ -61,11 +63,12 @@ drawGraphImage graph (width, height) =
 drawVerticalAxisImage :: Int -> [Value] -> Vty.Image
 drawVerticalAxisImage height values =
   let labels = M.fromAscList $ generateLabelsContinuous values (0, height)
-      rows = (`M.lookup` labels) <$> [0 .. height]
-   in vertCat $ buildRow (largest labels) <$> reverse rows
+      width = largest labels
+      rows = (`M.lookup` labels) <$> [height .. 0]
+      buildRow = maybe (drawDefaultLine (fromIntegral width)) (drawLabelledLine (fromIntegral width))
+   in vertCat $ buildRow <$> rows
   where
-    largest = (+ 1) . maximum . fmap T.length
-    buildRow width = maybe (drawDefaultLine width) (drawLabelledLine width)
+    largest = (+ 1) . maximum . (fmap LT.length)
 
 drawHorizontalAxisImage :: TimeZone -> Int -> [Time] -> Vty.Image
 drawHorizontalAxisImage tz width values =
@@ -88,17 +91,17 @@ buildColumn height value = vertCat $! reverse [drawPixelAt i | i <- [0 .. height
 heightAndWidthL :: Getter Brick.Context (Int, Int)
 heightAndWidthL = runGetter $ (,) <$> Getter availWidthL <*> Getter availHeightL
 
-drawLabelledLine :: Int -> Text -> Vty.Image
-drawLabelledLine (fromIntegral -> w) = Vty.text mempty . prependSpace w . (`LT.snoc` '\9508') . fromStrict
+drawLabelledLine :: Int -> LText -> Vty.Image
+drawLabelledLine (fromIntegral -> w) = Vty.text mempty . prependSpace w . (`LT.snoc` '\9508')
 
 drawDefaultLine :: Int -> Vty.Image
 drawDefaultLine (fromIntegral -> w) = Vty.text mempty $ prependSpace w "\9474"
 
-drawLabelledBlock :: Int -> Int -> Text -> Vty.Image
+drawLabelledBlock :: Int -> Int -> LText -> Vty.Image
 drawLabelledBlock offset current label =
   let width = fromIntegral $ max (current - offset) 0
       topBar = Vty.text mempty $ LT.replicate (width - 1) "\9472" `LT.snoc` '\9516'
-      labelBar = Vty.text mempty $ prependSpace width $ LT.take (width - 1) (fromStrict label)
+      labelBar = Vty.text mempty $ prependSpace width $ LT.take (width - 1) label
    in topBar `vertJoin` labelBar
 
 prependSpace :: Int64 -> LText -> LText

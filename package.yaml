@@ -1,25 +1,27 @@
 library:
   source-dirs: ./src
   dependencies:
+    - base-noprelude
     - aeson
     - array
-    - base-noprelude >= 4.12.0.0
     - brick
     - containers
     - Decimal
-    - fmt >= 0.6.1.1
+    - generic-data
     - http-api-data
     - http-client
     - lens
     - logging-effect
     - mtl
     - optparse-simple
+    - formatting
     - relude
     - req
     - text
     - time
     - transformers
     - vector
+    - modern-uri
     - vty
 
 tests:
@@ -27,7 +29,7 @@ tests:
     source-dirs: ./test
     main: Spec.hs
     dependencies:
-      - base-noprelude >= 4.12.0.0
+      - base-noprelude
       - relude
       - req
       - hourglass
@@ -38,9 +40,9 @@ tests:
       - containers
       - time
       - mtl
+      - formatting
       - lens
       - brick
-      - fmt
       - aphrograph
       - hspec
       - QuickCheck
@@ -66,8 +68,8 @@ executables:
     source-dirs: ./app
     main: Main.hs
     dependencies:
+      - base-noprelude
       - aphrograph
-      - base-noprelude >= 4.12.0.0
       - vty
       - brick
       - prettyprinter

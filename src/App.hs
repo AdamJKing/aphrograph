@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
@@ -19,31 +20,25 @@ import qualified Brick.Widgets.List as Brick
 import Control.Lens.Combinators
 import Control.Lens.Getter
 import Control.Lens.Operators hiding ((??))
-import Control.Lens.Prism (_Just)
-import Control.Monad.Except
-  ( MonadError,
-    catchError,
-    throwError,
-  )
 import Control.Monad.Log as Log
 import qualified Display.Graph as Graph
 import Display.GraphWidget
 import Events
-import Fmt
+import Events.Types
 import qualified Graphics.Vty.Input.Events as Vty
 import Graphite
 import Graphite.Types
 import Text.Show.Functions ()
 
-type Logger m = Log.Handler m Text
+type Logger m = Log.Handler m LText
 
-newtype AppT m a = MkAppT {_unApp :: ReaderT App.Config (ExceptT App.Error (LoggingT Fmt.Builder m)) a}
+newtype AppT m a = MkAppT {_unApp :: ReaderT App.Config (ExceptT App.Error (LoggingT LText m)) a}
   deriving
     ( Functor,
       Applicative,
       Monad,
       MonadIO,
-      MonadLog Fmt.Builder,
+      MonadLog LText,
       MonadReader App.Config,
       MonadError App.Error
     )
@@ -57,7 +52,7 @@ instance Monad m => App.Configured App.Config (AppT m) where
 
 runApp :: Monad m => Logger m -> App.Config -> AppT m a -> m a
 runApp logger conf action =
-  fmap convertToRuntimeError $ runLoggingT ?? (logger . fmt) $ runExceptT $ usingReaderT conf $ _unApp action
+  fmap convertToRuntimeError $ runLoggingT ?? logger $ runExceptT $ usingReaderT conf $ _unApp action
   where
     convertToRuntimeError = either (error . ("Unhandled app error: " <>) . toText . displayException) id
 

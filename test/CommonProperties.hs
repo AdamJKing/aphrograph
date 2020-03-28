@@ -35,9 +35,7 @@ import ArbitraryInstances ()
 import Control.Lens.Extras
 import Control.Lens.Getter
 import Control.Lens.TH (makeLenses)
-import Control.Monad.Except (MonadError (catchError))
 import Control.Monad.Log
-import Data.Time.LocalTime (utc)
 import Events
 import Graphite.Types
 import Test.Hspec
@@ -71,11 +69,6 @@ shouldThrowMatching :: MonadError e m => m a -> (e -> Bool) -> PropertyM m Prope
 shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError` (return . property . errorMatcher)
   where
     failOnNoError = (>> return noExceptionThrown)
-
-newtype EmptyState s = Empty s
-
-instance Arbitrary (EmptyState App.ActiveState) where
-  arbitrary = return . Empty $ App.ActiveState {_metricsView = Nothing, _graphData = mempty, _timezone = utc}
 
 throwingErrors :: (Exception e, Monad m) => PropertyM (ExceptT e m) a -> PropertyM m a
 throwingErrors (MkPropertyM op) = MkPropertyM $

@@ -38,16 +38,16 @@ spec = describe "Graphite" $ do
               fromList
                 [ JSON.object
                     [ "datapoints"
-                        .= ( JSON.Array $
-                               fromList
-                                 ( JSON.Array
-                                     . fromList
-                                     <$> [ [JSON.Number 0, JSON.Number 1000],
-                                           [JSON.Number 1, JSON.Number 2000],
-                                           [JSON.Number 2, JSON.Number 3000]
-                                         ]
-                                 )
-                           ),
+                        .= JSON.Array
+                          ( fromList
+                              ( JSON.Array
+                                  . fromList
+                                  <$> [ [JSON.Number 0, JSON.Number 1000],
+                                        [JSON.Number 1, JSON.Number 2000],
+                                        [JSON.Number 2, JSON.Number 3000]
+                                      ]
+                              )
+                          ),
                       "target" .= JSON.String "test",
                       "tags" .= JSON.object ["name" .= JSON.String "test"]
                     ]

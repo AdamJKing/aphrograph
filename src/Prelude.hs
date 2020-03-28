@@ -17,6 +17,7 @@ import Control.Monad.Except hiding
   ( fail,
     runExceptT,
   )
+import GHC.TypeLits
 import Relude
 import Relude.Extra.Group (groupBy)
 import Relude.Extra.Newtype
