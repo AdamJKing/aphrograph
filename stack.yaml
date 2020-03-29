@@ -1,7 +1,7 @@
-resolver: lts-15.3
+resolver: lts-15.5
 packages: [.]
 ghc-options:
-  "$locals": -Wall -fexcess-precision -funfolding-use-threshold=16
+  "$locals": -Wall -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports
   "$targets": -Werror -threaded
   "$everything": -O2
 extra-deps:

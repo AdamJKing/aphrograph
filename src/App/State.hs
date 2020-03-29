@@ -24,8 +24,6 @@ newtype Error = AppGraphiteError GraphiteError
   deriving (Show, Generic)
   deriving anyclass (Exception)
 
-makePrisms ''Error
-
 type MetricsView = BWL.List AppComponent Metric
 
 data GraphData = Missing | Pending | Present (Graph Time Value)

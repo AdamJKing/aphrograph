@@ -7,12 +7,10 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
 
 module Graphite.Types where
 
-import Control.Lens.TH (makePrisms)
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 import Data.Decimal
@@ -66,19 +64,11 @@ data GraphiteError = HttpError HTTP.HttpException | ParsingError Text
   deriving (Show, Generic)
   deriving anyclass (Exception)
 
-makePrisms ''GraphiteError
-
-millisecond :: Time
-millisecond = 0.001
-
 toLocalTime :: TimeZone -> Time -> LocalTime
 toLocalTime timezone = utcToLocalTime timezone . toUTC
 
 toUTC :: Time -> UTCTime
 toUTC = posixSecondsToUTCTime . timestamp
-
-toTimeOfDay :: Time -> TimeOfDay
-toTimeOfDay = timeToTimeOfDay . utctDayTime . toUTC
 
 deltaDays :: Time -> Time -> Int
 deltaDays = deltaTime' 86400

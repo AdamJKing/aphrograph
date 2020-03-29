@@ -3,23 +3,18 @@ module Prelude
     module Relude.Extra.Newtype,
     module Relude.Extra.Type,
     module Control.Monad.Except,
-    groupBy,
     minMax,
     with,
   )
 where
 
 import Control.Lens.Getter
-  ( Getting,
-    view,
-  )
 import Control.Monad.Except hiding
   ( fail,
     runExceptT,
   )
 import GHC.TypeLits
 import Relude
-import Relude.Extra.Group (groupBy)
 import Relude.Extra.Newtype
 import Relude.Extra.Type
 

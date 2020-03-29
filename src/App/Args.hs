@@ -49,9 +49,6 @@ httpParser = do
     Just (Right (httpsUrl, _)) -> return $ GraphiteUrl httpsUrl
     Just (Left (httpUrl, _)) -> return $ GraphiteUrl httpUrl
 
-debugArgument :: Parser Bool
-debugArgument = switch $ long "debug" <> hidden
-
 arguments :: Parser App.Config
 arguments = do
   _fromTime <- fromTimeArgument

@@ -17,10 +17,6 @@ import Formatting
 import Formatting.Time
 import Graphite.Types
 
-generateSteps :: (Time, Time) -> [Time]
-generateSteps (earliest, latest) =
-  let step = asTime $ determineStepSize (earliest, latest) in [earliest, earliest + step .. latest]
-
 data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond
   deriving (Show, Eq, Generic, Enum)
 
@@ -60,12 +56,12 @@ generateLabelsTime timezone times span =
       steps = takeWhile (< latest) $ iterate (+ stepTime) start
    in [(scale i (earliest, latest) span, renderTimeLabel step timezone i) | i <- steps]
 
-generateLabelsDiscrete :: (Show a, Integral a) => [a] -> (Int, Int) -> [(Int, LText)]
-generateLabelsDiscrete input span =
-  let noTicks = calcTickNum span
-      offset = minimum input
-      spacer = (maximum input - offset) `quot` fromIntegral noTicks
-   in [(i * noTicks, show (offset + (fromIntegral i * spacer))) | i <- [0 .. noTicks]]
+-- generateLabelsDiscrete :: (Show a, Integral a) => [a] -> (Int, Int) -> [(Int, LText)]
+-- generateLabelsDiscrete input span =
+--   let noTicks = calcTickNum span
+--       offset = minimum input
+--       spacer = (maximum input - offset) `quot` fromIntegral noTicks
+--    in [(i * noTicks, show (offset + (fromIntegral i * spacer))) | i <- [0 .. noTicks]]
 
 generateLabelsContinuous :: (Show a, RealFrac a) => [a] -> (Int, Int) -> [(Int, LText)]
 generateLabelsContinuous input span =
