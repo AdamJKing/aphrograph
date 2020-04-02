@@ -14,7 +14,6 @@ import Control.Lens hiding
   ( cons,
     snoc,
   )
-import Data.Foldable (maximum)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import qualified Data.Text.Lazy as LT
@@ -63,12 +62,12 @@ drawGraphImage graph (width, height) =
 drawVerticalAxisImage :: Int -> [Value] -> Vty.Image
 drawVerticalAxisImage height values =
   let labels = M.fromAscList $ generateLabelsContinuous values (0, height)
-      width = largest labels
-      rows = (`M.lookup` labels) <$> [height .. 0]
-      buildRow = maybe (drawDefaultLine (fromIntegral width)) (drawLabelledLine (fromIntegral width))
+      width = fromIntegral $ largest labels
+      rows = (`M.lookup` labels) <$> [height, (height -1) .. 0]
+      buildRow = maybe (drawDefaultLine width) (drawLabelledLine width)
    in vertCat $ buildRow <$> rows
   where
-    largest = (+ 1) . maximum . (fmap LT.length)
+    largest = maybe 5 (+ 1) . maximumOf (traverse . to LT.length)
 
 drawHorizontalAxisImage :: TimeZone -> Int -> [Time] -> Vty.Image
 drawHorizontalAxisImage tz width values =

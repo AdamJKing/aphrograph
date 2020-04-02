@@ -4,8 +4,6 @@
 module GraphiteSpec where
 
 import ArbitraryInstances ()
-import Control.Lens.Extras (is)
-import Control.Lens.Prism
 import qualified Data.Aeson as JSON
 import Data.Aeson ((.=))
 import Graphite
@@ -77,9 +75,13 @@ spec = describe "Graphite" $ do
       err <- pick vanillaHttpException
       conf <- pick arbitrary
       result <- run (runGraphite conf $ handleHttpException err)
-      assert (is (_Left . _HttpError) result)
+      return $ case result of
+        Left (HttpError _) -> True
+        _ -> False
     prop "captures all json parse exceptions as http errors" . monadicIO $ do
       err <- pick jsonParseException
       conf <- pick arbitrary
       result <- run (runGraphite conf $ handleHttpException err)
-      assert (is (_Left . _ParsingError) result)
+      return $ case result of
+        Left (ParsingError _) -> True
+        _ -> False

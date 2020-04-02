@@ -64,6 +64,7 @@ generateLabelsTime timezone times span =
 --    in [(i * noTicks, show (offset + (fromIntegral i * spacer))) | i <- [0 .. noTicks]]
 
 generateLabelsContinuous :: (Show a, RealFrac a) => [a] -> (Int, Int) -> [(Int, LText)]
+generateLabelsContinuous [] _ = []
 generateLabelsContinuous input span =
   let noTicks = calcTickNum span
       offset = minimum input
@@ -72,4 +73,4 @@ generateLabelsContinuous input span =
    in [(i * noTicks, labelValue i) | i <- [0 .. noTicks]]
 
 calcTickNum :: (Int, Int) -> Int
-calcTickNum (mn, mx) = let (totalSpan :: Double) = fromIntegral $ mx - mn in floor (sqrt totalSpan)
+calcTickNum (mn, mx) = let (totalSpan :: Double) = fromIntegral $ mx - fromIntegral mn in floor (sqrt totalSpan)

@@ -8,4 +8,5 @@ out/
 .idea
 *.tix
 *.dump-hi
+*.hie
 stack.yaml.lock

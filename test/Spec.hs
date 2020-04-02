@@ -10,6 +10,7 @@ import qualified GraphiteSpec (spec)
 import qualified LabelsSpec (spec)
 import qualified NormalisationSpec (spec)
 import Test.Hspec
+import qualified WidgetsSpec (spec)
 
 main :: IO ()
 main = hspec $ do
@@ -20,3 +21,4 @@ main = hspec $ do
   describe "Graphite" GraphiteSpec.spec
   describe "Labels" LabelsSpec.spec
   describe "Normalisation" NormalisationSpec.spec
+  describe "Widgets" WidgetsSpec.spec
