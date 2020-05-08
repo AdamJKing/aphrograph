@@ -14,10 +14,12 @@ module App.State where
 
 import App.Components
 import qualified App.Config as App
+import qualified Brick.BChan as Brick
 import qualified Brick.Widgets.List as BWL
 import Control.Lens.Combinators
 import Data.Time.LocalTime
 import Display.Graph as Graph
+import Events.Types
 import Graphite.Types
 
 newtype Error = AppGraphiteError GraphiteError
@@ -33,9 +35,10 @@ data ActiveState
   = ActiveState
       { _metricsView :: Maybe MetricsView,
         _graphData :: !GraphData,
-        _timezone :: !TimeZone
+        _timezone :: !TimeZone,
+        _eventCh :: !(Brick.BChan AppEvent)
       }
-  deriving (Show, Generic)
+  deriving (Generic)
 
 makeLenses ''ActiveState
 
@@ -58,7 +61,7 @@ newtype FailedState = FailedState {failure :: Error}
   deriving (Show, Generic)
 
 newtype CurrentState = CurrentState (Either FailedState ActiveState)
-  deriving (Generic, Show)
+  deriving (Generic)
 
 instance Wrapped CurrentState
 
@@ -76,8 +79,8 @@ pattern Failed s = CurrentState (Left s)
 
 {-# COMPLETE Active, Failed #-}
 
-constructDefaultContext :: MonadIO m => App.Config -> m ActiveState
-constructDefaultContext _ = do
+constructDefaultContext :: MonadIO m => Brick.BChan AppEvent -> App.Config -> m ActiveState
+constructDefaultContext _eventCh _ = do
   _timezone <- liftIO (getTimezone `catchError` defaultToUtc)
   let _metricsView = Nothing
   let _graphData = Missing

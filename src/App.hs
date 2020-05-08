@@ -14,6 +14,7 @@ module App where
 import App.Components
 import qualified App.Config as App
 import qualified App.State as App
+import qualified Brick.BChan as Brick
 import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import qualified Brick.Widgets.List as Brick
@@ -96,13 +97,25 @@ instance MonadIO m => GraphViewer (AppT m) where
     datapoints <- getMetrics $ RenderRequest fromTime toTime target
     return (Graph.mkGraph $ Graph.extract <$> datapoints)
 
+writeEvent :: MonadIO m => Brick.BChan e -> e -> AppT m ()
+writeEvent ch e = liftIO (Brick.writeBChan ch e)
+
+triggerUpdate :: App.ActiveState -> AppT m ()
+triggerUpdate st = do
+  let ch = st ^. App.eventCh
+  newGraph <- updateGraph
+  ch `writeEvent` GraphUpdate newGraph
+
 instance MonadEventHandler AppEvent (AppT (Brick.EventM AppComponent)) where
   type EventS (AppT (Brick.EventM AppComponent)) = App.CurrentState
 
-  handleEvent UpdateEvent s = do
-    newState <- App.updateGraph updateGraph s `catchError` (return . (App.failed #) . App.FailedState)
+  handleEvent (GraphUpdate newGraph) st = do
     lift (Brick.invalidateCacheEntry GraphView)
+    let newState = st & (App.active . App.graphData) .~ (App.Present newGraph)
     continue newState
+  handleEvent TriggerUpdate previousState =
+    triggerUpdate previousState
+      >> continue (previousState & (App.active . App.graphData) .~ App.Pending)
 
 instance MonadEventHandler Vty.Event (AppT (Brick.EventM AppComponent)) where
   type EventS (AppT (Brick.EventM AppComponent)) = App.CurrentState

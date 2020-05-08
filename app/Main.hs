@@ -37,7 +37,7 @@ main = do
       _ <- forkIO . forever $ do
         threadDelay 30000000
         Brick.writeBChan eventQueue UpdateEvent
-      startState <- App.constructDefaultContext args
+      startState <- App.constructDefaultContext eventQueue args
       initialVty <- getVty
       let app = mkApp (liftIO . prettier handler) args
       Brick.writeBChan eventQueue UpdateEvent

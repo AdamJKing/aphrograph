@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
@@ -15,7 +16,6 @@ module Events where
 import qualified App.Config as App
 import qualified App.State as App
 import qualified Brick.Types as Brick
-import qualified Display.Graph as Graph
 import Events.Types
 import qualified Graphics.Vty.Input.Events as Vty
 import Graphite.Types
@@ -41,6 +41,14 @@ class MonadOutcome (EventF m) m => MonadEventHandler e m where
   type EventS m
   handleEvent :: e -> EventS m -> m (EventF m (EventS m))
 
+newtype EventM m a = MkEventM (ReaderT App.CurrentState m a)
+  deriving
+    ( Applicative,
+      Functor,
+      Monad,
+      MonadReader App.CurrentState
+    )
+
 handleBrickEvent ::
   ( GraphViewer m,
     EventS m ~ App.CurrentState,
@@ -55,6 +63,3 @@ handleBrickEvent ::
 handleBrickEvent (Brick.VtyEvent keyPress) = handleEvent keyPress
 handleBrickEvent (Brick.AppEvent appEvent) = handleEvent appEvent
 handleBrickEvent _ = continue
-
-class GraphViewer m where
-  updateGraph :: m (Graph.Graph Time Value)
