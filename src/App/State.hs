@@ -35,10 +35,9 @@ data ActiveState
   = ActiveState
       { _metricsView :: Maybe MetricsView,
         _graphData :: !GraphData,
-        _timezone :: !TimeZone,
-        _eventCh :: !(Brick.BChan AppEvent)
+        _timezone :: !TimeZone
       }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 makeLenses ''ActiveState
 

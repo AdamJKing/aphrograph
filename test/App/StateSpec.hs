@@ -23,6 +23,6 @@ import Test.QuickCheck.Monadic
 spec :: Spec
 spec = describe "App.State" $ describe "Graph updates" $ prop "overwriting existing graph state" $ runMonadicTest $ do
   newGraph <- pick arbitrary
-  oldState <- pick activeState
+  (Blind oldState) <- pick (Blind <$> activeState)
   result <- run (updateGraph (return newGraph) oldState)
   return ((result ^? (App.active . App.graphData)) === Just (Present newGraph))

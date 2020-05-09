@@ -13,7 +13,6 @@
 
 module Events where
 
-import qualified App.Config as App
 import qualified App.State as App
 import qualified Brick.Types as Brick
 import Events.Types
@@ -53,7 +52,6 @@ handleBrickEvent ::
   ( GraphViewer m,
     EventS m ~ App.CurrentState,
     MonadEventHandler AppEvent m,
-    App.Configured App.Config m,
     MonadGraphite m,
     MonadEventHandler Vty.Event m
   ) =>

@@ -12,7 +12,10 @@ library:
     - http-client
     - lens
     - logging-effect
+    - lifted-base
     - mtl
+    - monad-control
+    - transformers-base
     - optparse-simple
     - formatting
     - relude

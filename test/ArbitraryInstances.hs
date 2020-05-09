@@ -8,7 +8,7 @@ module ArbitraryInstances where
 
 import App.Components
 import qualified App.State as App
-import qualified Brick.Widgets.List as BWL
+import Brick.Widgets.List as BWL
 import DerivedArbitraryInstances
 import Display.Graph as Graph
 import Display.Labels

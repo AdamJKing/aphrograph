@@ -33,10 +33,10 @@ import qualified App.Config as App
 import qualified App.State as App
 import ArbitraryInstances ()
 import Control.Lens.Extras
-import Control.Lens.Getter
 import Control.Lens.TH (makeLenses)
 import Control.Monad.Log
 import Events
+import Events.Types
 import Graphite.Types
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
@@ -134,10 +134,6 @@ instance MonadEventHandler e TestM where
 instance MonadGraphite TestM where
   listMetrics = TestM $ lift $ lift $ lift arbitrary
   getMetrics _ = TestM $ lift $ lift $ lift arbitrary
-
-instance App.Configured App.Config TestM where
-  getConfig = view
-  {-# INLINE getConfig #-}
 
 instance GraphViewer TestM where
   updateGraph = TestM $ lift $ lift $ lift arbitrary

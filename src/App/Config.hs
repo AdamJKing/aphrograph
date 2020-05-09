@@ -7,7 +7,6 @@
 
 module App.Config where
 
-import Control.Lens.Getter (Getter)
 import Control.Lens.TH
 import Graphite.Types
 
@@ -26,6 +25,3 @@ newtype Config = Config {_graphiteConfig :: GraphiteConfig}
   deriving (Show, Generic)
 
 makeLenses ''Config
-
-class Configured c m where
-  getConfig :: Monad m => Getter c a -> m a

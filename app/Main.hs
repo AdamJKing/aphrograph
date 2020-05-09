@@ -36,11 +36,11 @@ main = do
     withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
       _ <- forkIO . forever $ do
         threadDelay 30000000
-        Brick.writeBChan eventQueue UpdateEvent
+        Brick.writeBChan eventQueue TriggerUpdate
       startState <- App.constructDefaultContext eventQueue args
       initialVty <- getVty
-      let app = mkApp (liftIO . prettier handler) args
-      Brick.writeBChan eventQueue UpdateEvent
+      let app = mkApp eventQueue (liftIO . prettier handler) args
+      Brick.writeBChan eventQueue TriggerUpdate
       Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
   where
     prettier f = f . Doc.pretty
@@ -54,8 +54,8 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
    in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
-mkApp logger conf =
+mkApp :: Brick.BChan AppEvent -> Logger (Brick.EventM AppComponent) -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
+mkApp chan logger conf =
   let appDraw :: App.CurrentState -> [Brick.Widget AppComponent]
       appDraw = compileLayered . constructDom
       appChooseCursor ::
@@ -65,7 +65,7 @@ mkApp logger conf =
         App.CurrentState ->
         Brick.BrickEvent AppComponent AppEvent ->
         Brick.EventM AppComponent (Brick.Next App.CurrentState)
-      appHandleEvent s e = runApp logger conf $ handleBrickEvent e s
+      appHandleEvent s e = runApp chan logger conf $ handleBrickEvent e s
       appStartEvent :: App.CurrentState -> Brick.EventM AppComponent App.CurrentState
       appStartEvent = return
       appAttrMap :: App.CurrentState -> Brick.AttrMap
