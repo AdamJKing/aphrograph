@@ -4,6 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -20,48 +21,51 @@ import qualified App.State as App
 import qualified Brick.BChan as Brick
 import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
-import qualified Brick.Widgets.List as Brick
 import Control.Concurrent.Lifted
 import Control.Lens.Combinators
 import Control.Lens.Getter
 import Control.Lens.Operators hiding ((??))
 import Control.Monad.Base
-import Control.Monad.Log as Log
+import Control.Monad.Logger
+import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import qualified Display.Graph as Graph
 import Display.GraphWidget
-import Events
 import Events.Types
-import qualified Graphics.Vty.Input.Events as Vty
 import Graphite
 import Graphite.Types
 import Text.Show.Functions ()
-
-type Logger m = Log.Handler m LText
 
 data AppSystem = AppSystem {_config :: App.Config, _eventCh :: Brick.BChan AppEvent}
 
 makeLenses ''AppSystem
 
-newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (ExceptT App.Error (LoggingT LText m)) a}
+newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (LoggingT (ExceptT App.Error m)) a}
   deriving
     ( Functor,
       Applicative,
       Monad,
       MonadIO,
-      MonadLog LText,
       MonadReader AppSystem,
       MonadError App.Error
     )
 
+instance MFunctor AppT where
+  hoist nat m = MkAppT $ hoist (mapLoggingT $ hoist nat) (_unApp m)
+
+deriving instance MonadBase b m => MonadBase b (AppT m)
+
+deriving instance MonadBaseControl b m => MonadBaseControl b (AppT m)
+
 instance MonadTrans AppT where
   lift = MkAppT . lift . lift . lift
 
-runApp :: Monad m => Brick.BChan AppEvent -> Logger m -> App.Config -> AppT m a -> m a
-runApp chan logger conf action =
-  fmap convertToRuntimeError $ runLoggingT ?? logger $ runExceptT $ usingReaderT (AppSystem conf chan) $ _unApp action
+runApp :: (MonadFail m, MonadBaseControl IO m) => AppSystem -> FilePath -> AppT m a -> m a
+runApp deps log = failOnError . runFileLoggingT log . usingReaderT deps . _unApp
   where
-    convertToRuntimeError = either (error . ("Unhandled app error: " <>) . toText . displayException) id
+    failOnError res = (runExceptT res) >>= \case
+      (Right a) -> return a
+      (Left e) -> fail (displayException e)
 
 constructDom :: App.CurrentState -> DisplayWidget App.Error
 constructDom (App.Failed (App.FailedState err)) = DisplayWidget $ Left (ErrorWidget err)
@@ -71,8 +75,6 @@ constructDom (App.Active activeState) =
       { dataDisplay = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone),
         metricBrowser = activeState ^? toMetricBrowser
       }
-  where
-    toMetricBrowser = App.metricsView . _Just . to MetricsBrowser
 
 instance MonadIO m => MonadGraphite (AppT m) where
   getMetrics req = do
@@ -89,43 +91,16 @@ instance MonadIO m => MonadGraphite (AppT m) where
       Right metrics -> return metrics
       Left err -> throwError (App.AppGraphiteError err)
 
-instance MonadOutcome Brick.Next (AppT (Brick.EventM n)) where
+instance MonadTransControl AppT where
+  type StT AppT a = StT (ReaderT AppSystem) (StT LoggingT (StT (ExceptT App.Error) a))
+
+  liftWith t = MkAppT $ liftWith (\runr -> liftWith (\runl -> liftWith (\rune -> t $ rune . runl . runr . _unApp)))
+  restoreT = MkAppT . restoreT . restoreT . restoreT
+
+instance MonadOutcome (AppT (Brick.EventM n)) where
+  type EventF (AppT (Brick.EventM n)) = Brick.Next
+
   continue = lift . Brick.continue
+  {-# INLINEABLE continue #-}
   stop = lift . Brick.halt
-
-type instance EventF (AppT (Brick.EventM n)) = Brick.Next
-
-instance MonadIO m => GraphViewer (AppT m) where
-  updateGraph = do
-    App.GraphiteConfig {..} <- view (App.config . App.graphiteConfig)
-    datapoints <- getMetrics $ RenderRequest _fromTime _toTime _targetArg
-    return (Graph.mkGraph $ Graph.extract <$> datapoints)
-
-triggerUpdate :: MonadIO m => Brick.BChan AppEvent -> AppT m ()
-triggerUpdate ch = void $ fork $ do
-  newGraph <- updateGraph
-  liftIO (Brick.writeBChan ch (GraphUpdate newGraph))
-
-instance MonadEventHandler AppEvent (AppT (Brick.EventM AppComponent)) where
-  type EventS (AppT (Brick.EventM AppComponent)) = App.CurrentState
-
-  handleEvent (GraphUpdate newGraph) st = do
-    lift (Brick.invalidateCacheEntry GraphView)
-    let newState = st & (App.active . App.graphData) .~ App.Present newGraph
-    continue newState
-  handleEvent TriggerUpdate (App.Active previousState) = do
-    ch <- view App.eventCh
-    triggerUpdate ch
-    continue (App.Active (previousState & App.graphData .~ App.Pending))
-  handleEvent _ previousState = continue previousState
-
-instance MonadEventHandler Vty.Event (AppT (Brick.EventM AppComponent)) where
-  type EventS (AppT (Brick.EventM AppComponent)) = App.CurrentState
-
-  handleEvent ExitKey = stop
-  handleEvent (KeyDown 'm') = continue <=< App.toggleMetricsView
-  handleEvent otherKeyPress = continue <=< App.setMetricsView (lift . Brick.handleListEventVi Brick.handleListEvent otherKeyPress)
-
-deriving instance MonadBase IO (AppT IO)
-
-deriving instance MonadBaseControl IO (AppT IO)
+  {-# INLINEABLE stop #-}

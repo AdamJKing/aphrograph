@@ -7,14 +7,16 @@ library:
     - brick
     - containers
     - Decimal
+    - data-has
     - generic-data
     - http-api-data
     - http-client
     - lens
-    - logging-effect
     - lifted-base
     - mtl
     - monad-control
+    - mmorph
+    - monad-logger
     - transformers-base
     - optparse-simple
     - formatting

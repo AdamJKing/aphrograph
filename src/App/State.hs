@@ -26,8 +26,6 @@ newtype Error = AppGraphiteError GraphiteError
   deriving (Show, Generic)
   deriving anyclass (Exception)
 
-type MetricsView = BWL.List AppComponent Metric
-
 data GraphData = Missing | Pending | Present (Graph Time Value)
   deriving (Eq, Show, Generic)
 
@@ -43,11 +41,6 @@ makeLenses ''ActiveState
 
 updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState -> f CurrentState
 updateGraph update = traverseOf (active . graphData) (\_ -> Present <$> update)
-
-setMetricsView :: MonadGraphite m => (MetricsView -> m MetricsView) -> CurrentState -> m CurrentState
-setMetricsView update = traverseOf (active . metricsView) $ \case
-  (Just mv) -> Just <$> update mv
-  _ -> return Nothing
 
 toggleMetricsView :: MonadGraphite m => CurrentState -> m CurrentState
 toggleMetricsView = traverseOf (active . metricsView) $ \case
