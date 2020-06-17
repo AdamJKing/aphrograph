@@ -18,7 +18,6 @@ type MetricsView = BWL.List AppComponent Metric
 
 class Monad m => GraphViewer m where
   updateGraph :: m (Graph Time Value)
-  updateMetricsView :: Maybe MetricsView -> m ()
 
 class Monad m => MonadOutcome (m :: Type -> Type) where
   type EventF (m :: Type -> Type) :: Type -> Type

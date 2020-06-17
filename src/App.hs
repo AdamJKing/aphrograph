@@ -21,10 +21,9 @@ import qualified App.State as App
 import qualified Brick.BChan as Brick
 import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
-import Control.Concurrent.Lifted
+import qualified Brick.Widgets.List as BWL
 import Control.Lens.Combinators
 import Control.Lens.Getter
-import Control.Lens.Operators hiding ((??))
 import Control.Monad.Base
 import Control.Monad.Logger
 import Control.Monad.Morph
@@ -47,15 +46,13 @@ newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (LoggingT (ExceptT App.Er
       Monad,
       MonadIO,
       MonadReader AppSystem,
-      MonadError App.Error
+      MonadError App.Error,
+      MonadBase b,
+      MonadBaseControl b
     )
 
 instance MFunctor AppT where
   hoist nat m = MkAppT $ hoist (mapLoggingT $ hoist nat) (_unApp m)
-
-deriving instance MonadBase b m => MonadBase b (AppT m)
-
-deriving instance MonadBaseControl b m => MonadBaseControl b (AppT m)
 
 instance MonadTrans AppT where
   lift = MkAppT . lift . lift . lift
@@ -63,7 +60,7 @@ instance MonadTrans AppT where
 runApp :: (MonadFail m, MonadBaseControl IO m) => AppSystem -> FilePath -> AppT m a -> m a
 runApp deps log = failOnError . runFileLoggingT log . usingReaderT deps . _unApp
   where
-    failOnError res = (runExceptT res) >>= \case
+    failOnError res = runExceptT res >>= \case
       (Right a) -> return a
       (Left e) -> fail (displayException e)
 
@@ -73,7 +70,7 @@ constructDom (App.Active activeState) =
   DisplayWidget $ Right $
     DefaultDisplay
       { dataDisplay = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone),
-        metricBrowser = activeState ^? toMetricBrowser
+        metricBrowser = activeState ^. App.metricsView
       }
 
 instance MonadIO m => MonadGraphite (AppT m) where
@@ -104,3 +101,12 @@ instance MonadOutcome (AppT (Brick.EventM n)) where
   {-# INLINEABLE continue #-}
   stop = lift . Brick.halt
   {-# INLINEABLE stop #-}
+
+instance MonadIO m => GraphViewer (AppT m) where
+  updateGraph = do
+    App.GraphiteConfig {..} <- view (App.config . App.graphiteConfig)
+    datapoints <- getMetrics $ RenderRequest _fromTime _toTime _targetArg
+    return (Graph.mkGraph $ Graph.extract <$> datapoints)
+
+instance MetricsBrowser (AppT (Brick.EventM AppComponent)) where
+  updateMetricBrowserWidget keyPress (MetricsBrowser browser) = lift (MetricsBrowser <$> BWL.handleListEventVi BWL.handleListEvent keyPress browser)

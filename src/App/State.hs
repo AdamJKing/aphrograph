@@ -15,7 +15,6 @@ module App.State where
 import App.Components
 import qualified App.Config as App
 import qualified Brick.BChan as Brick
-import qualified Brick.Widgets.List as BWL
 import Control.Lens.Combinators
 import Data.Time.LocalTime
 import Display.Graph as Graph
@@ -31,23 +30,16 @@ data GraphData = Missing | Pending | Present (Graph Time Value)
 
 data ActiveState
   = ActiveState
-      { _metricsView :: Maybe MetricsView,
+      { _metricsView :: Maybe MetricsBrowserWidget,
         _graphData :: !GraphData,
         _timezone :: !TimeZone
       }
-  deriving (Generic, Show)
+  deriving (Generic)
 
 makeLenses ''ActiveState
 
 updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState -> f CurrentState
 updateGraph update = traverseOf (active . graphData) (\_ -> Present <$> update)
-
-toggleMetricsView :: MonadGraphite m => CurrentState -> m CurrentState
-toggleMetricsView = traverseOf (active . metricsView) $ \case
-  Nothing -> do
-    availableMetrics <- take 10 <$> listMetrics
-    return (Just (BWL.list MetricsBrowserComponent (fromList availableMetrics) 1))
-  _ -> return Nothing
 
 newtype FailedState = FailedState {failure :: Error}
   deriving (Show, Generic)

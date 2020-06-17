@@ -7,7 +7,6 @@ library:
     - brick
     - containers
     - Decimal
-    - data-has
     - generic-data
     - http-api-data
     - http-client

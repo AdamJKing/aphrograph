@@ -23,6 +23,22 @@ class CompileWidget n w where
 class CompileLayeredWidget n w where
   compileLayered :: w -> [Brick.Widget n]
 
+instance CompileWidget AppComponent MetricsBrowserWidget where
+  compile (MetricsBrowser metricsList) =
+    let hasFocus = True
+        popupSize = (25, 10)
+     in Widget.centerLayer $ WidgetB.border $ Widget.setAvailableSize popupSize $
+          Widget.renderList
+            ( \active (Metric descriptor) ->
+                Widget.withAttr ("metric" <> if active then "selected" else "unselcted") (Widget.txt descriptor)
+            )
+            hasFocus
+            metricsList
+
+instance CompileLayeredWidget AppComponent (AppWidget e) where
+  compileLayered (DefaultDisplay dataDisplay Nothing) = [compile dataDisplay]
+  compileLayered (DefaultDisplay dataDisplay (Just mBrowser)) = [compile mBrowser, compile dataDisplay]
+
 instance Exception e => CompileLayeredWidget AppComponent (DisplayWidget e) where
   compileLayered (DisplayWidget (Right appWidget)) = compileLayered appWidget
   compileLayered (DisplayWidget (Left errorWidget)) = return (compile errorWidget)

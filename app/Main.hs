@@ -65,7 +65,7 @@ mkApp chan log conf =
         App.CurrentState ->
         Brick.BrickEvent AppComponent AppEvent ->
         Brick.EventM AppComponent (Brick.Next App.CurrentState)
-      appHandleEvent s e = handleBrickEvent e s
+      appHandleEvent s e = runApp _ _ (runEventHandler (handleEvent e s) s)
       appStartEvent :: App.CurrentState -> Brick.EventM AppComponent App.CurrentState
       appStartEvent = return
       appAttrMap :: App.CurrentState -> Brick.AttrMap
