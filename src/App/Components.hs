@@ -1,9 +1,11 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module App.Components where
 
 import qualified Brick.Widgets.List as Brick
 import Data.Time.LocalTime
+import Data.Vector (Vector)
 import Display.Graph
 import qualified Graphics.Vty.Input.Events as Vty
 import qualified Graphite.Types as Graphite
@@ -21,7 +23,9 @@ newtype ErrorWidget e = ErrorWidget e deriving (Show)
 data AppComponent = GraphView | MetricsBrowserComponent
   deriving (Eq, Ord, Show)
 
-newtype MetricsBrowserWidget = MetricsBrowser (Brick.List AppComponent Graphite.Metric)
+newtype MetricsBrowserWidget' t = MetricsBrowser (t Graphite.Metric) deriving (Generic)
+
+type MetricsBrowserWidget = MetricsBrowserWidget' (Brick.GenericList AppComponent Vector)
 
 metricBrowserWidget :: [Graphite.Metric] -> MetricsBrowserWidget
 metricBrowserWidget = MetricsBrowser . (Brick.list MetricsBrowserComponent ?? 1) . fromList

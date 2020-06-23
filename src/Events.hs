@@ -1,3 +1,5 @@
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -8,10 +10,9 @@
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Events where
 
@@ -25,12 +26,12 @@ import Control.Concurrent.Lifted
 import Control.Lens.Getter
 import Control.Lens.Operators
 import Control.Lens.Traversal
-import Control.Monad.Base
 import Control.Monad.Morph
-import Control.Monad.Trans.Control
 import Events.Types
 import qualified Graphics.Vty.Input.Events as Vty
 import Graphite.Types
+import Control.Monad.Base
+import Control.Monad.Trans.Control
 
 pattern KeyDown :: Char -> Vty.Event
 pattern KeyDown k = Vty.EvKey (Vty.KChar k) []
@@ -44,7 +45,9 @@ newtype EventT m a = MkEventT (ReaderT App.CurrentState m a)
       Functor,
       Monad,
       MonadIO,
-      MonadReader App.CurrentState
+      MonadReader App.CurrentState,
+      MonadTrans,
+      MonadTransControl
     )
 
 runEventHandler :: EventT m a -> App.CurrentState -> m a
@@ -55,17 +58,10 @@ instance MonadOutcome m => MonadOutcome (EventT m) where
   continue = lift . continue
   stop = lift . stop
 
-deriving instance MonadBase b m => MonadBase b (EventT m)
-
-deriving instance MonadBaseControl b m => MonadBaseControl b (EventT m)
-
 instance MFunctor EventT where
   hoist f (MkEventT action) = MkEventT $ hoist f action
 
 type EventM = EventT (Brick.EventM AppComponent)
-
-instance MonadTrans EventT where
-  lift = MkEventT . lift
 
 handleMetricBrowserEvents :: (MonadGraphite m, MetricsBrowser m) => Vty.Event -> Maybe MetricsBrowserWidget -> EventT m (Maybe MetricsBrowserWidget)
 handleMetricBrowserEvents (KeyDown 'm') (Just _) = return Nothing
@@ -95,6 +91,9 @@ instance MonadEventHandler (Brick.BrickEvent n AppEvent) App.CurrentState (Event
 writeEvent :: MonadIO m => Brick.BChan AppEvent -> AppEvent -> AppT m ()
 writeEvent ch e = liftIO (Brick.writeBChan ch e)
 
+deriving instance MonadBase IO (EventT (AppT IO))
+deriving instance MonadBaseControl IO (EventT (AppT IO))
+
 triggerUpdate :: EventT (AppT IO) ()
 triggerUpdate =
   void $ fork $ do
@@ -102,11 +101,3 @@ triggerUpdate =
     lift $ do
       ch <- view App.eventCh
       writeEvent ch (GraphUpdate newGraph)
-
-instance MonadBase IO (Brick.EventM n) where
-  liftBase = liftIO
-
-instance MonadBaseControl IO (Brick.EventM n) where
-  type StM (Brick.EventM n) a = StM (Unwrap (Brick.EventM n)) a
-  liftBaseWith f = liftIO $ f (\eventM -> liftBaseWith (\runR -> runR (Brick.runEventM eventM)))
-  restoreM = Brick.EventM . _

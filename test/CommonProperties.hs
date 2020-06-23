@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -11,13 +12,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties
   ( shouldThrowMatching,
     forAllEnvs,
     throwingErrors,
-    ignoreLogging,
     appProp,
     daysFrom,
     range,
@@ -34,8 +35,10 @@ import qualified App.State as App
 import ArbitraryInstances ()
 import Control.Lens.Extras
 import Control.Lens.TH (makeLenses)
-import Control.Monad.Log
-import Events
+import Control.Monad.Base
+import Control.Monad.Trans.Control
+import DerivedArbitraryInstances
+import Test.Orphans ()
 import Events.Types
 import Graphite.Types
 import Test.Hspec
@@ -100,20 +103,37 @@ hoistLiftedPropertyM lower = hoistPropertyM lower lift . coerce
 appProp :: (HasCallStack, Testable a) => String -> PropertyM Gen a -> Spec
 appProp desc = prop desc . monadic property
 
-ignoreLogging :: Monad m => PropertyM (DiscardLoggingT msg m) a -> PropertyM m a
-ignoreLogging = hoistLiftedPropertyM discardLogging
-
-newtype TestM a = TestM {_runTest :: DiscardLoggingT LText (ExceptT App.Error (ReaderT App.Config Gen)) a}
+newtype TestM a = TestM {_runTest :: ExceptT App.Error (ReaderT App.Config Gen) a}
   deriving
     ( Applicative,
       Functor,
       Monad,
       MonadReader App.Config,
       MonadError App.Error,
-      MonadLog LText
+      MonadGen
     )
 
-instance MonadOutcome ((,) EventOutcome) TestM where
+runTestM :: App.Config -> TestM a -> Gen (Either App.Error a)
+runTestM conf = usingReaderT conf . runExceptT . _runTest
+
+instance MonadBase Gen TestM where
+  liftBase = liftGen
+
+instance MonadBaseControl Gen TestM where
+  type StM TestM a = Either App.Error a
+
+  liftBaseWith action = do
+    conf <- ask
+    liftGen (action (runTestM conf))
+
+  restoreM = liftEither
+
+data EventOutcome = Continue | Stop
+  deriving (Generic)
+  deriving (Arbitrary) via (GenArbitrary EventOutcome)
+
+instance MonadOutcome TestM where
+  type EventF TestM = (,) EventOutcome
   continue = return . (Continue,)
   stop = return . (Stop,)
 
@@ -125,18 +145,15 @@ data MockGraphiteResponses
 
 makeLenses ''MockGraphiteResponses
 
-type instance EventF TestM = (,) EventOutcome
-
-instance MonadEventHandler e TestM where
-  type EventS TestM = App.CurrentState
-  handleEvent _ _ = TestM $ lift $ lift $ lift arbitrary2
+instance Arbitrary s => MonadEventHandler e s TestM where
+  handleEvent _ _ = liftGen arbitrary2
 
 instance MonadGraphite TestM where
-  listMetrics = TestM $ lift $ lift $ lift arbitrary
-  getMetrics _ = TestM $ lift $ lift $ lift arbitrary
+  listMetrics = liftGen arbitrary
+  getMetrics _ = liftGen arbitrary
 
 instance GraphViewer TestM where
-  updateGraph = TestM $ lift $ lift $ lift arbitrary
+  updateGraph = liftGen arbitrary
 
 runMonadicTest :: Testable a => PropertyM TestM a -> Property
 runMonadicTest =
@@ -147,11 +164,11 @@ runMonadicTest =
         return (either unexpectedError property result)
     )
   where
-    unwrapTest env = usingReaderT env . runExceptT . discardLogging . _runTest
+    unwrapTest env = usingReaderT env . runExceptT . _runTest
     unexpectedError err = property $ failed {reason = "Unexpected exception.", theException = Just (SomeException err)}
 
 assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
 assertAll predicate = assert . all predicate
 
-activeState :: Gen App.CurrentState
+activeState :: Gen (App.CurrentState' [])
 activeState = arbitrary `suchThat` is App.active

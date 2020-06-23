@@ -1,3 +1,8 @@
+# global dependencies
+dependencies:
+  - transformers-base
+  - monad-control
+
 library:
   source-dirs: ./src
   dependencies:
@@ -13,10 +18,8 @@ library:
     - lens
     - lifted-base
     - mtl
-    - monad-control
     - mmorph
     - monad-logger
-    - transformers-base
     - optparse-simple
     - formatting
     - relude
@@ -54,7 +57,6 @@ tests:
       - random
       - quickcheck-instances
       - quickcheck-transformer
-      - logging-effect
 
 default-extensions:
   - RecordWildCards
@@ -76,5 +78,3 @@ executables:
       - aphrograph
       - vty
       - brick
-      - prettyprinter
-      - logging-effect

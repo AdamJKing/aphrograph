@@ -25,7 +25,6 @@ import qualified Brick.Widgets.List as BWL
 import Control.Lens.Combinators
 import Control.Lens.Getter
 import Control.Monad.Base
-import Control.Monad.Logger
 import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import qualified Display.Graph as Graph
@@ -39,7 +38,7 @@ data AppSystem = AppSystem {_config :: App.Config, _eventCh :: Brick.BChan AppEv
 
 makeLenses ''AppSystem
 
-newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (LoggingT (ExceptT App.Error m)) a}
+newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (ExceptT App.Error m) a}
   deriving
     ( Functor,
       Applicative,
@@ -52,13 +51,13 @@ newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (LoggingT (ExceptT App.Er
     )
 
 instance MFunctor AppT where
-  hoist nat m = MkAppT $ hoist (mapLoggingT $ hoist nat) (_unApp m)
+  hoist nat = MkAppT . hoist (hoist nat) . _unApp
 
 instance MonadTrans AppT where
-  lift = MkAppT . lift . lift . lift
+  lift = MkAppT . lift . lift
 
-runApp :: (MonadFail m, MonadBaseControl IO m) => AppSystem -> FilePath -> AppT m a -> m a
-runApp deps log = failOnError . runFileLoggingT log . usingReaderT deps . _unApp
+runApp :: MonadFail m => AppSystem -> AppT m a -> m a
+runApp deps = failOnError . usingReaderT deps . _unApp
   where
     failOnError res = runExceptT res >>= \case
       (Right a) -> return a
@@ -89,10 +88,10 @@ instance MonadIO m => MonadGraphite (AppT m) where
       Left err -> throwError (App.AppGraphiteError err)
 
 instance MonadTransControl AppT where
-  type StT AppT a = StT (ReaderT AppSystem) (StT LoggingT (StT (ExceptT App.Error) a))
+  type StT AppT a = StT (ReaderT AppSystem) (StT (ExceptT App.Error) a)
 
-  liftWith t = MkAppT $ liftWith (\runr -> liftWith (\runl -> liftWith (\rune -> t $ rune . runl . runr . _unApp)))
-  restoreT = MkAppT . restoreT . restoreT . restoreT
+  liftWith t = MkAppT $ liftWith (\runr -> liftWith (\rune -> t $ rune . runr . _unApp))
+  restoreT = MkAppT . restoreT . restoreT
 
 instance MonadOutcome (AppT (Brick.EventM n)) where
   type EventF (AppT (Brick.EventM n)) = Brick.Next

@@ -8,7 +8,6 @@ module ArbitraryInstances where
 
 import App.Components
 import qualified App.State as App
-import Brick.Widgets.List as BWL
 import DerivedArbitraryInstances
 import Display.Graph as Graph
 import Display.Labels
@@ -23,13 +22,12 @@ import Test.QuickCheck.Instances.Time ()
 import Test.QuickCheck.Instances.Vector
   (
   )
+  
+deriving via (GenArbitrary (MetricsBrowserWidget' [])) instance Arbitrary (MetricsBrowserWidget' [])
 
-instance Arbitrary App.ActiveState where
-  arbitrary = do
-    _metricsView <- Just . (BWL.list MetricsBrowserComponent ?? 1) <$> arbitrary
-    _graphData <- arbitrary
-    _timezone <- arbitrary
-    return (App.ActiveState {..})
+deriving via (GenArbitrary (App.ActiveState [])) instance Arbitrary (App.ActiveState [])
+
+deriving via (GenArbitrary (App.CurrentState' [])) instance Arbitrary (App.CurrentState' [])
 
 deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
 
@@ -38,8 +36,6 @@ deriving via (GenArbitrary App.GraphData) instance Arbitrary App.GraphData
 deriving via (GenArbitrary App.Error) instance Arbitrary App.Error
 
 deriving via (GenArbitrary App.FailedState) instance Arbitrary App.FailedState
-
-deriving via (GenArbitrary App.CurrentState) instance Arbitrary App.CurrentState
 
 instance Arbitrary DataPoint where
   arbitrary = genericArbitrary

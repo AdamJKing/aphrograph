@@ -7,7 +7,6 @@ module Prelude
     module Control.Monad.Except,
     minMax,
     with,
-    Unwrap,
   )
 where
 
@@ -28,7 +27,3 @@ minMax (x :| xs) = (min mn x, max mx x) where (mn, mx) = minMax $ fromList xs
 
 with :: MonadReader s m => Getting t s t -> (t -> m b) -> m b
 with lens f = view lens >>= f
-
-type family Unwrap (m :: Type -> Type) :: Type -> Type
-
-type instance Unwrap (t m) = m

@@ -1,17 +1,12 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE StandaloneDeriving #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Test.Orphans where
 
 import           Test.QuickCheck.GenT
-import           Control.Monad.Log
-
-deriving instance MonadGen m => MonadGen ( DiscardLoggingT msg m )
 
 instance MonadGen m => MonadGen ( ExceptT e m ) where
     liftGen = lift . liftGen

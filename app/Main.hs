@@ -21,8 +21,6 @@ import Control.Concurrent
   ( forkIO,
     threadDelay,
   )
-import Control.Monad.Log
-import qualified Data.Text.Prettyprint.Doc as Doc
 import Display.Widgets
 import Events
 import Events.Types
@@ -32,18 +30,17 @@ import Prelude hiding (on)
 main :: IO ()
 main = do
   eventQueue <- Brick.newBChan 10
-  void $ App.withCommandLineArguments $ \args -> withFile "aphrograph.log" WriteMode $ \logfile ->
-    withFDHandler defaultBatchingOptions logfile 0.4 80 $ \handler -> do
-      _ <- forkIO . forever $ do
-        threadDelay 30000000
+  void $ App.withCommandLineArguments $
+    \args ->
+      do
+        _ <- forkIO . forever $ do
+          threadDelay 30000000
+          Brick.writeBChan eventQueue TriggerUpdate
+        startState <- App.constructDefaultContext eventQueue args
+        initialVty <- getVty
+        let app = mkApp eventQueue args
         Brick.writeBChan eventQueue TriggerUpdate
-      startState <- App.constructDefaultContext eventQueue args
-      initialVty <- getVty
-      let app = mkApp eventQueue _ args
-      Brick.writeBChan eventQueue TriggerUpdate
-      Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
-  where
-    prettier f = f . Doc.pretty
+        Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
 
 getVty :: MonadIO m => m Vty.Vty
 getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
@@ -54,8 +51,8 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
    in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Brick.BChan AppEvent -> FilePath -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
-mkApp chan log conf =
+mkApp :: Brick.BChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
+mkApp chan conf =
   let appDraw :: App.CurrentState -> [Brick.Widget AppComponent]
       appDraw = compileLayered . constructDom
       appChooseCursor ::
@@ -65,7 +62,7 @@ mkApp chan log conf =
         App.CurrentState ->
         Brick.BrickEvent AppComponent AppEvent ->
         Brick.EventM AppComponent (Brick.Next App.CurrentState)
-      appHandleEvent s e = runApp _ _ (runEventHandler (handleEvent e s) s)
+      appHandleEvent s e = runApp (AppSystem conf chan) (runEventHandler (handleEvent e s) s)
       appStartEvent :: App.CurrentState -> Brick.EventM AppComponent App.CurrentState
       appStartEvent = return
       appAttrMap :: App.CurrentState -> Brick.AttrMap
