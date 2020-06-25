@@ -43,18 +43,19 @@ renderTimeLabel step timezone time =
     & format
       ( case step of
           Day -> dayOfMonth <> "/" % month
-          _ -> hmsL
+          _otherTimes -> hmsL
       )
 
 generateLabelsTime :: TimeZone -> [Time] -> (Int, Int) -> [(Int, LText)]
-generateLabelsTime _ [] _ = []
-generateLabelsTime timezone times span =
-  let (earliest, latest) = minMax (fromList times)
-      step = determineStepSize (earliest, latest)
-      stepTime = asTime step
-      start = earliest + (stepTime - mod' earliest stepTime)
-      steps = takeWhile (< latest) $ iterate (+ stepTime) start
-   in [(scale i (earliest, latest) span, renderTimeLabel step timezone i) | i <- steps]
+generateLabelsTime timezone times span = case nonEmpty times of
+  Nothing -> []
+  Just ns ->
+    let (earliest, latest) = minMax ns
+        step = determineStepSize (earliest, latest)
+        stepTime = asTime step
+        start = earliest + (stepTime - mod' earliest stepTime)
+        steps = takeWhile (< latest) $ iterate (+ stepTime) start
+     in [(scale i (earliest, latest) span, renderTimeLabel step timezone i) | i <- steps]
 
 -- generateLabelsDiscrete :: (Show a, Integral a) => [a] -> (Int, Int) -> [(Int, LText)]
 -- generateLabelsDiscrete input span =
@@ -64,13 +65,14 @@ generateLabelsTime timezone times span =
 --    in [(i * noTicks, show (offset + (fromIntegral i * spacer))) | i <- [0 .. noTicks]]
 
 generateLabelsContinuous :: (Show a, RealFrac a) => [a] -> (Int, Int) -> [(Int, LText)]
-generateLabelsContinuous [] _ = []
-generateLabelsContinuous input span =
-  let noTicks = calcTickNum span
-      offset = minimum input
-      space = (maximum input - offset) / fromIntegral noTicks
-      labelValue i = format (fixed 4) (offset + (fromIntegral i * space))
-   in [(i * noTicks, labelValue i) | i <- [0 .. noTicks]]
+generateLabelsContinuous input span = case nonEmpty input of
+  Nothing -> []
+  Just xs ->
+    let noTicks = calcTickNum span
+        offset = minimum xs
+        space = (maximum xs - offset) / fromIntegral noTicks
+        labelValue i = format (fixed 4) (offset + (fromIntegral i * space))
+     in [(i * noTicks, labelValue i) | i <- [0 .. noTicks]]
 
 calcTickNum :: (Int, Int) -> Int
 calcTickNum (mn, mx) = let (totalSpan :: Double) = fromIntegral $ mx - fromIntegral mn in floor (sqrt totalSpan)

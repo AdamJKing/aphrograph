@@ -77,11 +77,11 @@ spec = describe "Graphite" $ do
       result <- run (runGraphite conf $ handleHttpException err)
       return $ case result of
         Left (HttpError _) -> True
-        _ -> False
+        _unexpected -> False
     prop "captures all json parse exceptions as http errors" . monadicIO $ do
       err <- pick jsonParseException
       conf <- pick arbitrary
       result <- run (runGraphite conf $ handleHttpException err)
       return $ case result of
         Left (ParsingError _) -> True
-        _ -> False
+        _unexpected -> False

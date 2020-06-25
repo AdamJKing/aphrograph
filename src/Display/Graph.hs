@@ -19,7 +19,6 @@ where
 import qualified Data.Map as M
 import qualified Data.Set as Set
 import Graphite.Types
-import qualified Relude.Unsafe as Unsafe
 
 newtype Graph x y = Graph {_data :: M.Map x (Set y)}
   deriving (Show, Eq, Semigroup, Monoid)
@@ -30,21 +29,22 @@ class (Ord x, Ord y) => Graphable n x y where
 instance Graphable DataPoint Time Value where
   extract DataPoint {value = v, time = t} = (t, v)
 
-boundsX :: (Ord x) => Graph x y -> (x, x)
-boundsX (Graph g) = if M.null g then error "boundsX on empty graph" else getBounds (sort (M.keys g))
-  where
-    getBounds ns = (Unsafe.head ns, Unsafe.last ns)
+boundsX :: Ord x => Graph x y -> (x, x)
+boundsX (Graph g) =
+  case nonEmpty (sort (M.keys g)) of
+    Just ns -> (head ns, last ns)
+    Nothing -> error "boundsX on empty graph"
 
 boundsY :: (Num y, Ord y) => Graph x y -> (y, y)
 boundsY (Graph g) =
-  if M.null g
-    then error "boundsY on empty graph"
-    else getBounds (Set.toAscList $ Set.unions $ M.elems g)
-  where
-    getBounds ns = (Unsafe.head ns, Unsafe.last ns)
+  case nonEmpty (Set.toAscList $ Set.unions $ M.elems g) of
+    Just ns -> (head ns, last ns)
+    Nothing -> error "boundsY on empty graph"
 
-mkGraph :: (Ord x, Ord y) => [(x, y)] -> Graph x y
-mkGraph = Graph . M.fromAscListWith Set.union . sortWith fst . (one <<$>>)
+mkGraph :: (Ord x, Ord y, Foldable t) => t (x, y) -> Graph x y
+mkGraph points = Graph $ foldr collectToSet mempty points
+  where
+    collectToSet (x, y) = M.insertWith Set.union x (one y)
 
 assocs :: Graph x y -> [(x, y)]
 assocs (Graph g) = do

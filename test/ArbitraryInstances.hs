@@ -1,4 +1,6 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE StandaloneDeriving #-}
@@ -44,7 +46,7 @@ instance Arbitrary GraphiteRequest where
   arbitrary = genericArbitrary
 
 instance (Ord x, Arbitrary x, Ord y, Arbitrary y) => Arbitrary (Graph x y) where
-  arbitrary = Graph.mkGraph <$> arbitrary
+  arbitrary = Graph.mkGraph <$> arbitrary @[(x, y)]
 
 data Range i = Range {lower :: i, higher :: i}
   deriving (Show, Eq)

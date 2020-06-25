@@ -83,7 +83,7 @@ cornerPiece :: Widget n
 cornerPiece = padBottom Max $ padLeft Max $ txt "\9492"
 
 buildColumn :: Int -> Int -> Vty.Image
-buildColumn height value = vertCat $! reverse [drawPixelAt i | i <- [0 .. height]]
+buildColumn height value = vertCat $ [drawPixelAt i | i <- [height, height -1 .. 0]]
   where
     drawPixelAt i = Vty.char mempty (if i == value then 'X' else ' ')
 

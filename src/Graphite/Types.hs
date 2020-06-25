@@ -96,7 +96,7 @@ instance JSON.FromJSON DataPoint where
   parseJSON (JSON.Array arr) = case toList arr of
     [JSON.Null, t] -> DataPoint (Value 0.0) <$> JSON.parseJSON t
     [v, t] -> DataPoint <$> JSON.parseJSON v <*> JSON.parseJSON t
-    _ -> Prelude.fail "Couldn't parse datapoint"
+    _unexpected -> Prelude.fail "Couldn't parse datapoint"
   parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
 newtype Metric = Metric Text

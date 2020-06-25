@@ -63,6 +63,7 @@ default-extensions:
   - LambdaCase
   - OverloadedStrings
   - MultiParamTypeClasses
+  - StrictData
 
 name: aphrograph
 version: 0.1.0.0
@@ -73,8 +74,11 @@ executables:
   aphrograph:
     source-dirs: ./app
     main: Main.hs
+    ghc-options: -threaded
     dependencies:
       - base-noprelude
       - aphrograph
       - vty
       - brick
+
+ghc-options: -Werror -Wall -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie -O2

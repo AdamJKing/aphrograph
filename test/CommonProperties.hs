@@ -56,9 +56,9 @@ import Test.QuickCheck.Property
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
-  x <- liftGen arbitrary
-  y <- liftGen arbitrary `suchThat` (/= x)
-  return (min x y, max x y)
+  lower <- liftGen arbitrary
+  upper <- liftGen arbitrary `suchThat` (> lower)
+  return (lower, upper)
 
 daysFrom :: Word16 -> Time -> [Time]
 daysFrom n = take (fromIntegral n + 1) . iterate (+ 86400)

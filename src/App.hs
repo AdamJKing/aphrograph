@@ -105,7 +105,9 @@ instance MonadIO m => GraphViewer (AppT m) where
   updateGraph = do
     App.GraphiteConfig {..} <- view (App.config . App.graphiteConfig)
     datapoints <- getMetrics $ RenderRequest _fromTime _toTime _targetArg
-    return (Graph.mkGraph $ Graph.extract <$> datapoints)
+    return (toGraph datapoints)
+    where
+      toGraph = Graph.mkGraph . fmap Graph.extract
 
 instance MetricsBrowser (AppT (Brick.EventM AppComponent)) where
   updateMetricBrowserWidget keyPress (MetricsBrowser browser) = lift (MetricsBrowser <$> BWL.handleListEventVi BWL.handleListEvent keyPress browser)
