@@ -80,5 +80,3 @@ executables:
       - aphrograph
       - vty
       - brick
-
-ghc-options: -Werror -Wall -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie -O2

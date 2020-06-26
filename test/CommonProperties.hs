@@ -16,9 +16,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties
-  ( shouldThrowMatching,
-    forAllEnvs,
-    throwingErrors,
+  ( forAllEnvs,
     appProp,
     daysFrom,
     range,
@@ -38,11 +36,11 @@ import Control.Lens.TH (makeLenses)
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import DerivedArbitraryInstances
-import Test.Orphans ()
 import Events.Types
 import Graphite.Types
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
+import Test.Orphans ()
 import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen (Gen (..))
 import Test.QuickCheck.GenT
@@ -65,22 +63,6 @@ daysFrom n = take (fromIntegral n + 1) . iterate (+ 86400)
 
 deriving instance (Show r, Arbitrary r, Testable (m a)) => Testable (ReaderT r m a)
 
-noExceptionThrown :: Property
-noExceptionThrown = property $ failed {reason = "Expected an exception but no exception was thrown"}
-
-shouldThrowMatching :: MonadError e m => m a -> (e -> Bool) -> PropertyM m Property
-shouldThrowMatching testOp errorMatcher = run $ failOnNoError testOp `catchError` (return . property . errorMatcher)
-  where
-    failOnNoError = (>> return noExceptionThrown)
-
-throwingErrors :: (Exception e, Monad m) => PropertyM (ExceptT e m) a -> PropertyM m a
-throwingErrors (MkPropertyM op) = MkPropertyM $
-  \runTest -> hoistGen' ((handleUnexpected <$>) . runExceptT) $ op $ hoistGen' lift . runTest
-  where
-    handleUnexpected (Right p) = property p
-    handleUnexpected (Left e) =
-      property $ failed {reason = "Unexpected exception.", theException = Just (SomeException e)}
-
 readerProp :: Monad m => r -> PropertyM (ReaderT r m) a -> PropertyM m a
 readerProp r = hoistLiftedPropertyM (`runReaderT` r)
 
@@ -89,9 +71,6 @@ forAllEnvs op = pick arbitrary >>= (readerProp ?? op)
 
 hoistGen :: (forall x. n x -> m x) -> Gen (n a) -> Gen (m a)
 hoistGen nat (MkGen f) = MkGen $ \gen -> nat . f gen
-
-hoistGen' :: (n x -> m y) -> Gen (n x) -> Gen (m y)
-hoistGen' nat (MkGen f) = MkGen $ \gen -> nat . f gen
 
 hoistPropertyM :: (forall x. n x -> m x) -> (forall x. m x -> n x) -> PropertyM n a -> PropertyM m a
 hoistPropertyM nat natInv (MkPropertyM f) = MkPropertyM $ \g -> hoistGen nat $ f $ hoistGen natInv . g

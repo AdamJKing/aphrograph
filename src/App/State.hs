@@ -40,9 +40,6 @@ data ActiveState t
 
 makeLenses ''ActiveState
 
-updateGraph :: Applicative f => f (Graph.Graph Time Value) -> CurrentState' t -> f (CurrentState' t)
-updateGraph update = traverseOf (active . graphData) (\_ -> Present <$> update)
-
 newtype FailedState = FailedState {failure :: Error}
   deriving (Show, Generic)
 
@@ -55,9 +52,6 @@ instance Wrapped (CurrentState' t)
 
 active :: Prism' (CurrentState' t) (ActiveState t)
 active = _Wrapped' . _Right
-
-failed :: Prism' (CurrentState' t) FailedState
-failed = _Wrapped' . _Left
 
 pattern Active :: ActiveState t -> CurrentState' t
 pattern Active s = CurrentState (Right s)
