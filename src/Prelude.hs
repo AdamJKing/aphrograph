@@ -3,7 +3,6 @@
 module Prelude
   ( module Relude,
     module Relude.Extra.Newtype,
-    module Relude.Extra.Type,
     module Control.Monad.Except,
     minMax,
     with,
@@ -16,12 +15,11 @@ import Control.Monad.Except hiding
     runExceptT,
   )
 import Control.Monad.Trans.Identity
+import Data.List.NonEmpty
 import Data.Semigroup
-import GHC.TypeLits
 import Relude
 import Relude.Extra.Foldable1
 import Relude.Extra.Newtype
-import Relude.Extra.Type
 
 minMax :: Ord a => NonEmpty a -> (a, a)
 minMax xs = let (Min mn, Max mx) = foldMap1 (\n -> (Min n, Max n)) xs in (mn, mx)

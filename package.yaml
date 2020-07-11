@@ -2,11 +2,18 @@
 dependencies:
   - transformers-base
   - monad-control
+  - relude 
+
+  - name: base
+    mixin: 
+      - hiding (Prelude)
+
+ghc-options:
+  -Werror -Wall -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie -O2
 
 library:
   source-dirs: ./src
   dependencies:
-    - base-noprelude
     - aeson
     - array
     - brick
@@ -36,8 +43,6 @@ tests:
     source-dirs: ./test
     main: Spec.hs
     dependencies:
-      - base-noprelude
-      - relude
       - req
       - hourglass
       - Decimal
@@ -76,7 +81,6 @@ executables:
     main: Main.hs
     ghc-options: -threaded
     dependencies:
-      - base-noprelude
       - aphrograph
       - vty
       - brick
