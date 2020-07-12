@@ -1,4 +1,3 @@
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -6,12 +5,13 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Events where
 
@@ -25,12 +25,12 @@ import Control.Concurrent.Lifted
 import Control.Lens.Getter
 import Control.Lens.Operators
 import Control.Lens.Traversal
+import Control.Monad.Base
 import Control.Monad.Morph
+import Control.Monad.Trans.Control
 import Events.Types
 import qualified Graphics.Vty.Input.Events as Vty
 import Graphite.Types
-import Control.Monad.Base
-import Control.Monad.Trans.Control
 
 pattern KeyDown :: Char -> Vty.Event
 pattern KeyDown k = Vty.EvKey (Vty.KChar k) []
@@ -78,7 +78,7 @@ instance MonadEventHandler AppEvent App.CurrentState (EventT (AppT (Brick.EventM
     let newState = st & (App.active . App.graphData) .~ App.Present newGraph
     continue newState
   handleEvent TriggerUpdate (App.Active previousState) = do
-    hoist (hoist liftIO) triggerUpdate
+    triggerUpdate
     continue (App.Active (previousState & App.graphData .~ App.Pending))
   handleEvent _ previousState = continue previousState
 
@@ -91,12 +91,15 @@ writeEvent :: MonadIO m => Brick.BChan AppEvent -> AppEvent -> AppT m ()
 writeEvent ch e = liftIO (Brick.writeBChan ch e)
 
 deriving instance MonadBase IO (EventT (AppT IO))
+
 deriving instance MonadBaseControl IO (EventT (AppT IO))
 
-triggerUpdate :: EventT (AppT IO) ()
+triggerUpdate :: MonadIO m => EventT (AppT m) ()
 triggerUpdate =
-  void $ fork $ do
+  viaLiftIO $ void $ fork $ do
     newGraph <- lift updateGraph
     lift $ do
       ch <- view App.eventCh
       writeEvent ch (GraphUpdate newGraph)
+  where
+    viaLiftIO = hoist (hoist liftIO)
