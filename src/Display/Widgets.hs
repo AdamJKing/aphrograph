@@ -48,7 +48,7 @@ instance Exception e => CompileWidget n (ErrorWidget e) where
 
 instance CompileWidget AppComponent GraphDisplayWidget where
   compile NoDataDisplayWidget = Widget.str "NoData"
-  compile LoadingDataDisplayWidget = Widget.str "Loading..."
+  compile LoadingDataDisplayWidget = Widget.center $ WidgetB.border $ Widget.padAll 1 $ Widget.str "Loading..."
   compile (GraphDisplay graphCanvas verticalAxis' horizontalAxis') =
     let graphWidget = compile graphCanvas
         horizontalAxisWidget = compile horizontalAxis'
