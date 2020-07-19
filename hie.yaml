@@ -1,8 +1,13 @@
 cradle:
   stack:
-    - path: "./src"
+    - path: "././src"
       component: "aphrograph:lib"
-    - path: "./app/Main.hs"
+
+    - path: "././app/Main.hs"
       component: "aphrograph:exe:aphrograph"
-    - path: "./test"
+
+    - path: "././app/Paths_aphrograph.hs"
+      component: "aphrograph:exe:aphrograph"
+
+    - path: "././test"
       component: "aphrograph:test:aphrograph-test"

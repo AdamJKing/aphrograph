@@ -1,11 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module Display.Labels where
 
+import Control.Lens.Getter
 import Data.Fixed
 import Data.Foldable
   ( maximum,
@@ -19,6 +21,9 @@ import Graphite.Types
 
 data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond
   deriving (Show, Eq, Generic, Enum)
+
+with :: MonadReader s m => Getter s a -> (a -> m b) -> m b
+with lens f = view lens >>= f
 
 asTime :: TimeStep -> Time
 asTime Day = 86400
@@ -56,6 +61,10 @@ generateLabelsTime timezone times span = case nonEmpty times of
         start = earliest + (stepTime - mod' earliest stepTime)
         steps = takeWhile (< latest) $ iterate (+ stepTime) start
      in [(scale i (earliest, latest) span, renderTimeLabel step timezone i) | i <- steps]
+    where
+      minMax :: Ord a => NonEmpty a -> (a, a)
+      minMax (x :| []) = (x, x)
+      minMax (x :| xs) = foldl' (\(mn, mx) n -> (min mn n, max mx n)) (x, x) xs
 
 -- generateLabelsDiscrete :: (Show a, Integral a) => [a] -> (Int, Int) -> [(Int, LText)]
 -- generateLabelsDiscrete input span =

@@ -18,7 +18,6 @@ module Events where
 import App
 import App.Components
 import qualified App.State as App
-import qualified Brick.BChan as Brick
 import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import Control.Concurrent.Lifted
@@ -87,19 +86,18 @@ instance MonadEventHandler (Brick.BrickEvent n AppEvent) App.CurrentState (Event
   handleEvent (Brick.AppEvent appEvent) = handleEvent appEvent
   handleEvent _ = continue
 
-writeEvent :: MonadIO m => Brick.BChan AppEvent -> AppEvent -> AppT m ()
-writeEvent ch e = liftIO (Brick.writeBChan ch e)
-
 deriving instance MonadBase IO (EventT (AppT IO))
 
 deriving instance MonadBaseControl IO (EventT (AppT IO))
 
 triggerUpdate :: MonadIO m => EventT (AppT m) ()
 triggerUpdate =
-  viaLiftIO $ void $ fork $ do
-    newGraph <- lift updateGraph
-    lift $ do
-      ch <- view App.eventCh
-      writeEvent ch (GraphUpdate newGraph)
+  viaLiftIO $
+    void $
+      fork $ do
+        newGraph <- lift updateGraph
+        lift $ do
+          ch <- view App.eventCh
+          writeEvent ch (GraphUpdate newGraph)
   where
     viaLiftIO = hoist (hoist liftIO)

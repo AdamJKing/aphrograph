@@ -1,15 +1,22 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Graphite where
 
 import qualified App.Config as App
+import Control.Lens.Getter
+import Control.Monad.Except
 import Data.Aeson as JSON
 import Graphite.Types
 import Network.HTTP.Req as Req
+
+with :: MonadReader s m => Getter s a -> (a -> m b) -> m b
+with lens f = view lens >>= f
 
 asQueryParams :: GraphiteRequest -> Req.Option s
 asQueryParams RenderRequest {..} =

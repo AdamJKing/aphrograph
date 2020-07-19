@@ -25,6 +25,7 @@ import qualified Brick.Widgets.List as BWL
 import Control.Lens.Combinators
 import Control.Lens.Getter
 import Control.Monad.Base
+import Control.Monad.Except
 import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import qualified Display.Graph as Graph
@@ -34,9 +35,16 @@ import Graphite
 import Graphite.Types
 import Text.Show.Functions ()
 
-data AppSystem = AppSystem {_config :: App.Config, _eventCh :: Brick.BChan AppEvent}
+newtype AppChan e = AppChan (Brick.BChan e)
 
-makeLenses ''AppSystem
+instance MonadIO m => MonadEvent AppChan m where
+  writeEvent (AppChan ch) = liftIO . Brick.writeBChan ch
+
+data AppSystem' ch = AppSystem {_config :: App.Config, _eventCh :: ch AppEvent}
+
+type AppSystem = AppSystem' AppChan
+
+makeLenses ''AppSystem'
 
 newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (ExceptT App.Error m) a}
   deriving
@@ -59,18 +67,20 @@ instance MonadTrans AppT where
 runApp :: MonadFail m => AppSystem -> AppT m a -> m a
 runApp deps = failOnError . usingReaderT deps . _unApp
   where
-    failOnError res = runExceptT res >>= \case
-      (Right a) -> return a
-      (Left e) -> fail (displayException e)
+    failOnError res =
+      runExceptT res >>= \case
+        (Right a) -> return a
+        (Left e) -> fail (displayException e)
 
 constructDom :: App.CurrentState -> DisplayWidget App.Error
 constructDom (App.Failed (App.FailedState err)) = DisplayWidget $ Left (ErrorWidget err)
 constructDom (App.Active activeState) =
-  DisplayWidget $ Right $
-    DefaultDisplay
-      { dataDisplay = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone),
-        metricBrowser = activeState ^. App.metricsView
-      }
+  DisplayWidget $
+    Right $
+      DefaultDisplay
+        { dataDisplay = graphDisplayWidget (activeState ^. App.graphData) (activeState ^. App.timezone),
+          metricBrowser = activeState ^. App.metricsView
+        }
 
 instance MonadIO m => MonadGraphite (AppT m) where
   getMetrics req = do

@@ -2,7 +2,9 @@
 dependencies:
   - transformers-base
   - monad-control
-  - relude 
+
+  - name: relude 
+    mixin: (Relude as Prelude)
 
   - name: base
     mixin: 
@@ -26,10 +28,10 @@ library:
     - lifted-base
     - mtl
     - mmorph
+    - retry
     - monad-logger
     - optparse-simple
     - formatting
-    - relude
     - req
     - text
     - time

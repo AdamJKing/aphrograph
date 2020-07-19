@@ -27,3 +27,6 @@ class Monad m => MonadOutcome (m :: Type -> Type) where
 
 class MonadOutcome m => MonadEventHandler e a m where
   handleEvent :: e -> a -> m (EventF m a)
+
+class MonadEvent ch m where
+  writeEvent :: ch e -> e -> m ()

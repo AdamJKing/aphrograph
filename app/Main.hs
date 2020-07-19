@@ -30,17 +30,18 @@ import Prelude hiding (on)
 main :: IO ()
 main = do
   eventQueue <- Brick.newBChan 10
-  void $ App.withCommandLineArguments $
-    \args ->
-      do
-        _ <- forkIO . forever $ do
-          threadDelay 30000000
+  void $
+    App.withCommandLineArguments $
+      \args ->
+        do
+          _ <- forkIO . forever $ do
+            threadDelay 30000000
+            Brick.writeBChan eventQueue TriggerUpdate
+          startState <- App.constructDefaultContext eventQueue args
+          initialVty <- getVty
+          let app = mkApp (AppChan eventQueue) args
           Brick.writeBChan eventQueue TriggerUpdate
-        startState <- App.constructDefaultContext eventQueue args
-        initialVty <- getVty
-        let app = mkApp eventQueue args
-        Brick.writeBChan eventQueue TriggerUpdate
-        Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
+          Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
 
 getVty :: MonadIO m => m Vty.Vty
 getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
@@ -51,7 +52,7 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
    in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Brick.BChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
+mkApp :: AppChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
 mkApp chan conf =
   let appDraw :: App.CurrentState -> [Brick.Widget AppComponent]
       appDraw = compileLayered . constructDom

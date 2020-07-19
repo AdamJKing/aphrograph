@@ -33,6 +33,7 @@ import qualified App.State as App
 import ArbitraryInstances ()
 import Control.Lens.Extras
 import Control.Lens.TH (makeLenses)
+import Control.Monad.Except
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import DerivedArbitraryInstances
@@ -116,11 +117,10 @@ instance MonadOutcome TestM where
   continue = return . (Continue,)
   stop = return . (Stop,)
 
-data MockGraphiteResponses
-  = MockResponses
-      { _listMetricsResponse :: Either App.Error [Metric],
-        _getMetricsResponse :: Either App.Error [DataPoint]
-      }
+data MockGraphiteResponses = MockResponses
+  { _listMetricsResponse :: Either App.Error [Metric],
+    _getMetricsResponse :: Either App.Error [DataPoint]
+  }
 
 makeLenses ''MockGraphiteResponses
 

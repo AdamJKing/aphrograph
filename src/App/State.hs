@@ -17,6 +17,7 @@ import qualified App.Config as App
 import qualified Brick.BChan as Brick
 import qualified Brick.Widgets.List as Brick
 import Control.Lens.Combinators
+import Control.Monad.Except
 import Data.Time.LocalTime
 import Data.Vector (Vector)
 import Display.Graph as Graph
