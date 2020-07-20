@@ -9,14 +9,14 @@ module App.Config where
 
 import Control.Lens.TH
 import Graphite.Types
+import Relude
 
-data GraphiteConfig
-  = GraphiteConfig
-      { _fromTime :: From,
-        _toTime :: Maybe To,
-        _targetArg :: Text,
-        _graphiteUrl :: GraphiteUrl
-      }
+data GraphiteConfig = GraphiteConfig
+  { _fromTime :: From,
+    _toTime :: Maybe To,
+    _targetArg :: Text,
+    _graphiteUrl :: GraphiteUrl
+  }
   deriving (Show, Generic)
 
 makeLenses ''GraphiteConfig

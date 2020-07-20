@@ -14,6 +14,7 @@ import Control.Monad.Except
 import Data.Aeson as JSON
 import Graphite.Types
 import Network.HTTP.Req as Req
+import Relude
 
 with :: MonadReader s m => Getter s a -> (a -> m b) -> m b
 with lens f = view lens >>= f

@@ -14,10 +14,10 @@ import Data.List.NonEmpty ((<|))
 import qualified Data.List.NonEmpty as NE
 import Display.Graph as Graph
 import Graphite.Types
+import Relude hiding (null)
 import Test.Hspec as HS
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
-import Prelude hiding (null)
 
 nonEmptyListOf :: Gen a -> Gen (NonEmpty a)
 nonEmptyListOf gen = sized $ \i ->

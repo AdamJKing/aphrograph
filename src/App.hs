@@ -33,6 +33,7 @@ import Display.GraphWidget
 import Events.Types
 import Graphite
 import Graphite.Types
+import Relude
 import Text.Show.Functions ()
 
 newtype AppChan e = AppChan (Brick.BChan e)

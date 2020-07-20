@@ -23,6 +23,7 @@ import Data.Vector (Vector)
 import Display.Graph as Graph
 import Events.Types
 import Graphite.Types
+import Relude
 
 newtype Error = AppGraphiteError GraphiteError
   deriving (Show, Generic)

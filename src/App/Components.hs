@@ -9,6 +9,7 @@ import Data.Vector (Vector)
 import Display.Graph
 import qualified Graphics.Vty.Input.Events as Vty
 import qualified Graphite.Types as Graphite
+import Relude
 
 data HorizontalAxisWidget = HorizontalAxis [Graphite.Time] TimeZone deriving (Show)
 

@@ -40,6 +40,7 @@ import DerivedArbitraryInstances
 import Events.Types
 import Graphite.Types
 import Test.Hspec
+import Relude
 import Test.Hspec.QuickCheck (prop)
 import Test.Orphans ()
 import Test.QuickCheck.Arbitrary

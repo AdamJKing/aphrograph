@@ -3,15 +3,22 @@ dependencies:
   - transformers-base
   - monad-control
 
-  - name: relude 
-    mixin: (Relude as Prelude)
+  # Until https://github.com/commercialhaskell/stack/issues/5077 fixed
 
-  - name: base
-    mixin: 
-      - hiding (Prelude)
+  - relude
+  - base
+
+  # - name: relude 
+  #   mixin: (Relude as Prelude)
+
+  # - name: base
+  #   mixin: 
+  #     - hiding (Prelude)
 
 ghc-options:
-  -Werror -Wall -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie -O2
+  - -Werror -Wall
+  - -O2 -fexcess-precision -funfolding-use-threshold=16 
+  - -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie 
 
 library:
   source-dirs: ./src
@@ -71,6 +78,9 @@ default-extensions:
   - OverloadedStrings
   - MultiParamTypeClasses
   - StrictData
+
+  # https://github.com/commercialhaskell/stack/issues/5077
+  - NoImplicitPrelude
 
 name: aphrograph
 version: 0.1.0.0

@@ -15,6 +15,7 @@ import Control.Lens.Getter
 import Control.Lens.Setter
 import Display.GraphWidget
 import qualified Graphics.Vty as Vty
+import Relude
 import Graphite.Types
 
 class CompileWidget n w where
@@ -27,13 +28,15 @@ instance CompileWidget AppComponent MetricsBrowserWidget where
   compile (MetricsBrowser metricsList) =
     let hasFocus = True
         popupSize = (25, 10)
-     in Widget.centerLayer $ WidgetB.border $ Widget.setAvailableSize popupSize $
-          Widget.renderList
-            ( \active (Metric descriptor) ->
-                Widget.withAttr ("metric" <> if active then "selected" else "unselcted") (Widget.txt descriptor)
-            )
-            hasFocus
-            metricsList
+     in Widget.centerLayer $
+          WidgetB.border $
+            Widget.setAvailableSize popupSize $
+              Widget.renderList
+                ( \active (Metric descriptor) ->
+                    Widget.withAttr ("metric" <> if active then "selected" else "unselcted") (Widget.txt descriptor)
+                )
+                hasFocus
+                metricsList
 
 instance CompileLayeredWidget AppComponent (AppWidget e) where
   compileLayered (DefaultDisplay dataDisplay Nothing) = [compile dataDisplay]

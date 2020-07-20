@@ -22,6 +22,7 @@ import Data.Typeable
 import Display.Projection.Scalable
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Req
+import Relude
 import qualified Text.Show as TS
 import Web.HttpApiData
 
@@ -43,12 +44,11 @@ newtype To = To Text
 
 type Target = Text
 
-data GraphiteRequest
-  = RenderRequest
-      { _from :: From,
-        _to :: Maybe To,
-        _target :: Target
-      }
+data GraphiteRequest = RenderRequest
+  { _from :: From,
+    _to :: Maybe To,
+    _target :: Target
+  }
   deriving (Eq, Show, Generic)
 
 data GraphiteUrl where
@@ -90,13 +90,13 @@ instance JSON.FromJSON Time where
 
 instance JSON.FromJSON Value where
   parseJSON (JSON.Number n) = return $ Value (realFracToDecimal 8 n)
-  parseJSON _ = Prelude.fail "value"
+  parseJSON _ = fail "value"
 
 instance JSON.FromJSON DataPoint where
   parseJSON (JSON.Array arr) = case toList arr of
     [JSON.Null, t] -> DataPoint (Value 0.0) <$> JSON.parseJSON t
     [v, t] -> DataPoint <$> JSON.parseJSON v <*> JSON.parseJSON t
-    _unexpected -> Prelude.fail "Couldn't parse datapoint"
+    _unexpected -> Relude.fail "Couldn't parse datapoint"
   parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
 newtype Metric = Metric Text
@@ -107,12 +107,11 @@ class Monad m => MonadGraphite m where
   listMetrics :: m [Metric]
   getMetrics :: GraphiteRequest -> m [DataPoint]
 
-data MetricsResponse
-  = MetricsResponse
-      { target :: Text,
-        tags :: Map Text Text,
-        datapoints :: [DataPoint]
-      }
+data MetricsResponse = MetricsResponse
+  { target :: Text,
+    tags :: Map Text Text,
+    datapoints :: [DataPoint]
+  }
   deriving (Show, Eq, Generic)
 
 instance JSON.FromJSON MetricsResponse

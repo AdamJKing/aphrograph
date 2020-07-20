@@ -9,11 +9,12 @@ module App.StateSpec
 where
 
 import ArbitraryInstances ()
+import Relude
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 
 spec :: Spec
 spec =
-  describe "App.State"
-    $ describe "Graph updates"
-    $ prop "overwriting existing graph state" pending
+  describe "App.State" $
+    describe "Graph updates" $
+      prop "overwriting existing graph state" pending

@@ -8,6 +8,7 @@ import qualified Brick.Types as Brick
 import qualified Brick.Widgets.List as BWL
 import Display.Graph
 import Graphite.Types
+import Relude
 
 data AppEvent = TriggerUpdate | GraphUpdate (Graph Time Value)
   deriving (Show, Eq)

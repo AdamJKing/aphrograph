@@ -20,6 +20,7 @@ import Network.HTTP.Req
     https,
   )
 import System.Random
+import Relude
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 import Test.QuickCheck.Instances.Text ()

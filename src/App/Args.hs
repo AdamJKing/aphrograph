@@ -7,6 +7,7 @@
 module App.Args where
 
 import App.Config as App
+import Relude
 import Control.Lens.Prism
 import Control.Lens.Setter
 import Data.Version (showVersion)

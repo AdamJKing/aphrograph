@@ -8,6 +8,7 @@ import qualified Data.Aeson as JSON
 import Data.Aeson ((.=))
 import Graphite
 import Graphite.Types
+import Relude
 import Network.HTTP.Req
 import Test.Hspec as HS
 import Test.Hspec.QuickCheck
@@ -70,18 +71,19 @@ spec = describe "Graphite" $ do
       JSON.decode "[ 0.555 ]" `shouldBe` (Nothing :: Maybe DataPoint)
       JSON.decode "[ ]" `shouldBe` (Nothing :: Maybe DataPoint)
     it "treats null values as zero" $ JSON.decode "[ null, 155005500 ]" `shouldBe` Just (DataPoint 0.0 155005500)
-  describe "GraphiteM" $ describe "MonadHttp" $ do
-    prop "captures all vanilla http exceptions as http errors" . monadicIO $ do
-      err <- pick vanillaHttpException
-      conf <- pick arbitrary
-      result <- run (runGraphite conf $ handleHttpException err)
-      return $ case result of
-        Left (HttpError _) -> True
-        _unexpected -> False
-    prop "captures all json parse exceptions as http errors" . monadicIO $ do
-      err <- pick jsonParseException
-      conf <- pick arbitrary
-      result <- run (runGraphite conf $ handleHttpException err)
-      return $ case result of
-        Left (ParsingError _) -> True
-        _unexpected -> False
+  describe "GraphiteM" $
+    describe "MonadHttp" $ do
+      prop "captures all vanilla http exceptions as http errors" . monadicIO $ do
+        err <- pick vanillaHttpException
+        conf <- pick arbitrary
+        result <- run (runGraphite conf $ handleHttpException err)
+        return $ case result of
+          Left (HttpError _) -> True
+          _unexpected -> False
+      prop "captures all json parse exceptions as http errors" . monadicIO $ do
+        err <- pick jsonParseException
+        conf <- pick arbitrary
+        result <- run (runGraphite conf $ handleHttpException err)
+        return $ case result of
+          Left (ParsingError _) -> True
+          _unexpected -> False

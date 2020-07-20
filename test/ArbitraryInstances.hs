@@ -1,8 +1,8 @@
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveAnyClass #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -18,13 +18,14 @@ import Graphite.Types as Graphite
 import qualified Network.HTTP.Client as Http
 import qualified Network.HTTP.Req as Req
 import System.Random
+import Relude
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 import Test.QuickCheck.Instances.Time ()
 import Test.QuickCheck.Instances.Vector
   (
   )
-  
+
 deriving via (GenArbitrary (MetricsBrowserWidget' [])) instance Arbitrary (MetricsBrowserWidget' [])
 
 deriving via (GenArbitrary (App.ActiveState [])) instance Arbitrary (App.ActiveState [])

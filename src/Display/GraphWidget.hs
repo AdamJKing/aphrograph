@@ -21,14 +21,14 @@ import Data.Time.LocalTime
 import Display.Graph as G
 import Display.Labels
 import Display.Projection.Scalable
-import qualified Graphics.Vty as Vty
 import Graphics.Vty
   ( horizJoin,
     vertCat,
     vertJoin,
   )
+import qualified Graphics.Vty as Vty
+import Relude
 import Graphite.Types
-import Prelude hiding ((<|>))
 
 graphDisplayWidget :: GraphData -> TimeZone -> GraphDisplayWidget
 graphDisplayWidget Missing _ = NoDataDisplayWidget

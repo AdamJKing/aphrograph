@@ -7,6 +7,7 @@ import CommonProperties
 import Data.Decimal
 import Data.Fixed
 import Data.Time.LocalTime
+import Relude
 import Display.Labels
 import Test.Hspec as HS
 import Test.Hspec.QuickCheck

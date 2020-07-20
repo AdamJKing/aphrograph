@@ -3,6 +3,7 @@
 
 module Display.Projection where
 
+import Relude
 import Control.Lens
 import Display.Projection.Scalable
 

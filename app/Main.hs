@@ -25,7 +25,7 @@ import Display.Widgets
 import Events
 import Events.Types
 import qualified Graphics.Vty as Vty
-import Prelude hiding (on)
+import Relude hiding (on)
 
 main :: IO ()
 main = do

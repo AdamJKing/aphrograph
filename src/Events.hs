@@ -29,6 +29,7 @@ import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import Events.Types
 import qualified Graphics.Vty.Input.Events as Vty
+import Relude
 import Graphite.Types
 
 pattern KeyDown :: Char -> Vty.Event
