@@ -12,6 +12,7 @@ import qualified App.Config as App
 import Control.Lens.Getter
 import Control.Monad.Except
 import Data.Aeson as JSON
+import Data.Vector (Vector)
 import Graphite.Types
 import Network.HTTP.Req as Req
 import Relude
@@ -23,7 +24,7 @@ asQueryParams :: GraphiteRequest -> Req.Option s
 asQueryParams RenderRequest {..} =
   mconcat ["target" =: _target, "from" =: _from, "to" =: _to, "format" =: ("json" :: Text)]
 
-listMetricsHttp :: MonadHttp m => GraphiteUrl -> m [Metric]
+listMetricsHttp :: MonadHttp m => GraphiteUrl -> m (Vector Metric)
 listMetricsHttp (GraphiteUrl url) = makeRequest $ url /: "metrics/index.json"
 
 getMetricsHttp :: MonadHttp m => GraphiteUrl -> GraphiteRequest -> m [DataPoint]

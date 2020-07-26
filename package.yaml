@@ -2,6 +2,7 @@
 dependencies:
   - transformers-base
   - monad-control
+  - monad-logger
 
   # Until https://github.com/commercialhaskell/stack/issues/5077 fixed
 
@@ -35,8 +36,6 @@ library:
     - lifted-base
     - mtl
     - mmorph
-    - retry
-    - monad-logger
     - optparse-simple
     - formatting
     - req

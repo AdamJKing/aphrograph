@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
@@ -11,6 +12,7 @@ import App
 import qualified App.Args as App
 import App.Components
 import qualified App.Config as App
+import App.Logging (fileWritingLogChan)
 import qualified App.State as App
 import qualified Brick.AttrMap as Brick
 import qualified Brick.BChan as Brick
@@ -18,9 +20,12 @@ import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import Brick.Util (on)
 import Control.Concurrent
-  ( forkIO,
+  ( Chan,
+    forkIO,
+    newChan,
     threadDelay,
   )
+import Control.Monad.Logger (LogLine)
 import Display.Widgets
 import Events
 import Events.Types
@@ -30,6 +35,9 @@ import Relude hiding (on)
 main :: IO ()
 main = do
   eventQueue <- Brick.newBChan 10
+  logQueue <- newChan
+  writeFile "aphrograph.log" ""
+  fileWritingLogChan logQueue "aphrograph.log"
   void $
     App.withCommandLineArguments $
       \args ->
@@ -39,7 +47,7 @@ main = do
             Brick.writeBChan eventQueue TriggerUpdate
           startState <- App.constructDefaultContext eventQueue args
           initialVty <- getVty
-          let app = mkApp (AppChan eventQueue) args
+          let app = mkApp logQueue (AppChan eventQueue) args
           Brick.writeBChan eventQueue TriggerUpdate
           Brick.customMain initialVty getVty (Just eventQueue) app (App.Active startState)
 
@@ -52,8 +60,8 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
    in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: AppChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
-mkApp chan conf =
+mkApp :: Chan LogLine -> AppChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent AppComponent
+mkApp logging chan conf =
   let appDraw :: App.CurrentState -> [Brick.Widget AppComponent]
       appDraw = compileLayered . constructDom
       appChooseCursor ::
@@ -63,7 +71,7 @@ mkApp chan conf =
         App.CurrentState ->
         Brick.BrickEvent AppComponent AppEvent ->
         Brick.EventM AppComponent (Brick.Next App.CurrentState)
-      appHandleEvent s e = runApp (AppSystem conf chan) (runEventHandler (handleEvent e s) s)
+      appHandleEvent s e = runApp logging (AppSystem conf chan) (runEventHandler (handleEvent e s) s)
       appStartEvent :: App.CurrentState -> Brick.EventM AppComponent App.CurrentState
       appStartEvent = return
       appAttrMap :: App.CurrentState -> Brick.AttrMap

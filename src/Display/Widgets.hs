@@ -11,12 +11,11 @@ import Brick.Widgets.Border as WidgetB
 import Brick.Widgets.Center as Widget
 import Brick.Widgets.Core as Widget
 import Brick.Widgets.List as Widget
-import Control.Lens.Getter
-import Control.Lens.Setter
+import Control.Lens
 import Display.GraphWidget
 import qualified Graphics.Vty as Vty
-import Relude
 import Graphite.Types
+import Relude
 
 class CompileWidget n w where
   compile :: w -> Brick.Widget n
@@ -25,9 +24,9 @@ class CompileLayeredWidget n w where
   compileLayered :: w -> [Brick.Widget n]
 
 instance CompileWidget AppComponent MetricsBrowserWidget where
-  compile (MetricsBrowser metricsList) =
+  compile (MetricsBrowser metricsList width) =
     let hasFocus = True
-        popupSize = (25, 10)
+        popupSize = (width, 10)
      in Widget.centerLayer $
           WidgetB.border $
             Widget.setAvailableSize popupSize $

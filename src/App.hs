@@ -22,19 +22,21 @@ import qualified Brick.BChan as Brick
 import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import qualified Brick.Widgets.List as BWL
+import Control.Concurrent (Chan)
 import Control.Lens.Combinators
 import Control.Lens.Getter
 import Control.Monad.Base
 import Control.Monad.Except
+import Control.Monad.Logger (LogLine, LoggingT, MonadLogger, logInfo, mapLoggingT, runChanLoggingT)
 import Control.Monad.Morph
 import Control.Monad.Trans.Control
 import qualified Display.Graph as Graph
 import Display.GraphWidget
 import Events.Types
+import Formatting (int, sformat, (%))
 import Graphite
 import Graphite.Types
 import Relude
-import Text.Show.Functions ()
 
 newtype AppChan e = AppChan (Brick.BChan e)
 
@@ -47,7 +49,7 @@ type AppSystem = AppSystem' AppChan
 
 makeLenses ''AppSystem'
 
-newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (ExceptT App.Error m) a}
+newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (LoggingT (ExceptT App.Error m)) a}
   deriving
     ( Functor,
       Applicative,
@@ -56,17 +58,18 @@ newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (ExceptT App.Error m) a}
       MonadReader AppSystem,
       MonadError App.Error,
       MonadBase b,
-      MonadBaseControl b
+      MonadBaseControl b,
+      MonadLogger
     )
 
 instance MFunctor AppT where
-  hoist nat = MkAppT . hoist (hoist nat) . _unApp
+  hoist nat = MkAppT . hoist (mapLoggingT (hoist nat)) . _unApp
 
 instance MonadTrans AppT where
-  lift = MkAppT . lift . lift
+  lift = MkAppT . lift . lift . lift
 
-runApp :: MonadFail m => AppSystem -> AppT m a -> m a
-runApp deps = failOnError . usingReaderT deps . _unApp
+runApp :: (MonadIO m, MonadFail m) => Chan LogLine -> AppSystem -> AppT m a -> m a
+runApp logChan deps = failOnError . runChanLoggingT logChan . usingReaderT deps . _unApp
   where
     failOnError res =
       runExceptT res >>= \case
@@ -95,14 +98,10 @@ instance MonadIO m => MonadGraphite (AppT m) where
     conf <- view (App.config . App.graphiteConfig)
     response <- runGraphite conf listMetrics
     case response of
-      Right metrics -> return metrics
+      Right metrics ->
+        $(logInfo) (sformat ("Returned " % int % " metrics from graphite") (length metrics))
+          >> return metrics
       Left err -> throwError (App.AppGraphiteError err)
-
-instance MonadTransControl AppT where
-  type StT AppT a = StT (ReaderT AppSystem) (StT (ExceptT App.Error) a)
-
-  liftWith t = MkAppT $ liftWith (\runr -> liftWith (\rune -> t $ rune . runr . _unApp))
-  restoreT = MkAppT . restoreT . restoreT
 
 instance MonadOutcome (AppT (Brick.EventM n)) where
   type EventF (AppT (Brick.EventM n)) = Brick.Next
@@ -121,4 +120,6 @@ instance MonadIO m => GraphViewer (AppT m) where
       toGraph = Graph.mkGraph . fmap Graph.extract
 
 instance MetricsBrowser (AppT (Brick.EventM AppComponent)) where
-  updateMetricBrowserWidget keyPress (MetricsBrowser browser) = lift (MetricsBrowser <$> BWL.handleListEventVi BWL.handleListEvent keyPress browser)
+  updateMetricBrowserWidget keyPress (MetricsBrowser browser width) = lift $ do
+    adjustedList <- BWL.handleListEventVi BWL.handleListEvent keyPress browser
+    return (MetricsBrowser adjustedList width)

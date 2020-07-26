@@ -14,6 +14,7 @@ module Graphite.Types where
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 import Data.Decimal
+import qualified Data.Text as T
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
 import Data.Time.Format
@@ -25,6 +26,7 @@ import Network.HTTP.Req
 import Relude
 import qualified Text.Show as TS
 import Web.HttpApiData
+import Data.Vector (Vector)
 
 newtype Time = Time {timestamp :: POSIXTime}
   deriving newtype (Show, Eq, Ord, Num, Real, Enum, Fractional, RealFrac, Scalable, FormatTime)
@@ -103,8 +105,11 @@ newtype Metric = Metric Text
   deriving newtype (Show, Eq, JSON.FromJSON, IsString)
   deriving (Generic)
 
+metricLength :: Metric -> Int
+metricLength (Metric txt) = T.length txt
+
 class Monad m => MonadGraphite m where
-  listMetrics :: m [Metric]
+  listMetrics :: m ( Vector Metric )
   getMetrics :: GraphiteRequest -> m [DataPoint]
 
 data MetricsResponse = MetricsResponse
