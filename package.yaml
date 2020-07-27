@@ -27,6 +27,7 @@ library:
     - aeson
     - array
     - brick
+    - bytestring
     - containers
     - Decimal
     - generic-data

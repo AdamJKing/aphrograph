@@ -14,7 +14,6 @@ import Brick.Widgets.List as Widget
 import Control.Lens
 import Display.GraphWidget
 import qualified Graphics.Vty as Vty
-import Graphite.Types
 import Relude
 
 class CompileWidget n w where
@@ -31,8 +30,8 @@ instance CompileWidget AppComponent MetricsBrowserWidget where
           WidgetB.border $
             Widget.setAvailableSize popupSize $
               Widget.renderList
-                ( \active (Metric descriptor) ->
-                    Widget.withAttr ("metric" <> if active then "selected" else "unselcted") (Widget.txt descriptor)
+                ( \active metric ->
+                    Widget.withAttr ("metric" <> if active then "selected" else "unselcted") (Widget.txt (toText metric))
                 )
                 hasFocus
                 metricsList

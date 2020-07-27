@@ -12,21 +12,22 @@
 module Graphite.Types where
 
 import qualified Data.Aeson as JSON
+import Data.ByteString as BS
 import qualified Data.Aeson.Types as JSON
 import Data.Decimal
-import qualified Data.Text as T
+import Data.Text.Encoding.Error (ignore)
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
 import Data.Time.Format
 import Data.Time.LocalTime
 import Data.Typeable
+import Data.Vector (Vector)
 import Display.Projection.Scalable
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Req
 import Relude
 import qualified Text.Show as TS
 import Web.HttpApiData
-import Data.Vector (Vector)
 
 newtype Time = Time {timestamp :: POSIXTime}
   deriving newtype (Show, Eq, Ord, Num, Real, Enum, Fractional, RealFrac, Scalable, FormatTime)
@@ -101,15 +102,22 @@ instance JSON.FromJSON DataPoint where
     _unexpected -> Relude.fail "Couldn't parse datapoint"
   parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
-newtype Metric = Metric Text
-  deriving newtype (Show, Eq, JSON.FromJSON, IsString)
+newtype Metric = Metric ByteString
+  deriving newtype (Show, Eq, IsString)
   deriving (Generic)
 
+instance ToText Metric where
+  toText (Metric descriptor) = decodeUtf8With ignore descriptor
+
+instance JSON.FromJSON Metric where
+  parseJSON value =
+    Metric <$> JSON.withText "Metric" (pure . encodeUtf8) value
+
 metricLength :: Metric -> Int
-metricLength (Metric txt) = T.length txt
+metricLength (Metric txt) = BS.length txt
 
 class Monad m => MonadGraphite m where
-  listMetrics :: m ( Vector Metric )
+  listMetrics :: m (Vector Metric)
   getMetrics :: GraphiteRequest -> m [DataPoint]
 
 data MetricsResponse = MetricsResponse

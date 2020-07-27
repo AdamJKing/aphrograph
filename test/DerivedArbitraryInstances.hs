@@ -24,6 +24,7 @@ import Relude
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
 import Test.QuickCheck.Instances.Text ()
+import Test.QuickCheck.Instances.ByteString ()
 import Time.Types
 
 newtype GenArbitrary a = GenArbitrary a deriving (Generic)
@@ -49,7 +50,7 @@ deriving via (GenArbitrary GraphiteConfig) instance Arbitrary App.GraphiteConfig
 
 deriving instance Arbitrary App.Config
 
-deriving via Text instance Arbitrary Metric
+deriving via ByteString instance Arbitrary Metric
 
 deriving via Text instance Arbitrary Graphite.From
 

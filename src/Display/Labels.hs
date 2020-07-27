@@ -7,7 +7,6 @@
 
 module Display.Labels where
 
-import Control.Lens.Getter
 import Data.Fixed
 import Data.Foldable
   ( maximum,
@@ -22,9 +21,6 @@ import Relude
 
 data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond
   deriving (Show, Eq, Generic, Enum)
-
-with :: MonadReader s m => Getter s a -> (a -> m b) -> m b
-with lens f = view lens >>= f
 
 asTime :: TimeStep -> Time
 asTime Day = 86400

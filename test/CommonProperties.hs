@@ -16,11 +16,9 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module CommonProperties
-  ( forAllEnvs,
-    appProp,
+  ( appProp,
     daysFrom,
     range,
-    runMonadicTest,
     getMetricsResponse,
     listMetricsResponse,
     assertAll,
@@ -47,12 +45,7 @@ import Test.QuickCheck.Arbitrary
 import Test.QuickCheck.Gen (Gen (..))
 import Test.QuickCheck.GenT
 import Test.QuickCheck.Monadic hiding (stop)
-import Test.QuickCheck.Property
-  ( Property,
-    Result (..),
-    Testable (..),
-    failed,
-  )
+import Test.QuickCheck.Property (Testable (..))
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
@@ -64,22 +57,6 @@ daysFrom :: Word16 -> Time -> [Time]
 daysFrom n = take (fromIntegral n + 1) . iterate (+ 86400)
 
 deriving instance (Show r, Arbitrary r, Testable (m a)) => Testable (ReaderT r m a)
-
-readerProp :: Monad m => r -> PropertyM (ReaderT r m) a -> PropertyM m a
-readerProp r = hoistLiftedPropertyM (`runReaderT` r)
-
-forAllEnvs :: (Arbitrary r, Show r, Monad m) => PropertyM (ReaderT r m) a -> PropertyM m a
-forAllEnvs op = pick arbitrary >>= (readerProp ?? op)
-
-hoistGen :: (forall x. n x -> m x) -> Gen (n a) -> Gen (m a)
-hoistGen nat (MkGen f) = MkGen $ \gen -> nat . f gen
-
-hoistPropertyM :: (forall x. n x -> m x) -> (forall x. m x -> n x) -> PropertyM n a -> PropertyM m a
-hoistPropertyM nat natInv (MkPropertyM f) = MkPropertyM $ \g -> hoistGen nat $ f $ hoistGen natInv . g
-
-hoistLiftedPropertyM ::
-  (MonadTrans t, Monad m, Coercible n (t m)) => (forall x. t m x -> m x) -> PropertyM n a -> PropertyM m a
-hoistLiftedPropertyM lower = hoistPropertyM lower lift . coerce
 
 appProp :: (HasCallStack, Testable a) => String -> PropertyM Gen a -> Spec
 appProp desc = prop desc . monadic property
@@ -134,18 +111,6 @@ instance MonadGraphite TestM where
 
 instance GraphViewer TestM where
   updateGraph = liftGen arbitrary
-
-runMonadicTest :: Testable a => PropertyM TestM a -> Property
-runMonadicTest =
-  monadic
-    ( \test -> property $ do
-        env <- arbitrary
-        result <- unwrapTest env test
-        return (either unexpectedError property result)
-    )
-  where
-    unwrapTest env = usingReaderT env . runExceptT . _runTest
-    unexpectedError err = property $ failed {reason = "Unexpected exception.", theException = Just (SomeException err)}
 
 assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
 assertAll predicate = assert . all predicate
