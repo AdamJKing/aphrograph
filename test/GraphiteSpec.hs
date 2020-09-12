@@ -4,11 +4,10 @@
 module GraphiteSpec where
 
 import ArbitraryInstances ()
-import qualified Data.Aeson as JSON
 import Data.Aeson ((.=))
+import qualified Data.Aeson as JSON
 import Graphite
 import Graphite.Types
-import Relude
 import Network.HTTP.Req
 import Test.Hspec as HS
 import Test.Hspec.QuickCheck

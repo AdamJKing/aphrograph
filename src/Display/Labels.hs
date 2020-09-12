@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -17,7 +17,6 @@ import Display.Projection.Scalable
 import Formatting
 import Formatting.Time
 import Graphite.Types
-import Relude
 
 data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond
   deriving (Show, Eq, Generic, Enum)

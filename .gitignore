@@ -10,3 +10,5 @@ out/
 *.dump-hi
 *.hie
 stack.yaml.lock
+cabal.project.local
+dist-*

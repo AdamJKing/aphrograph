@@ -6,15 +6,44 @@
 module Display.Widgets where
 
 import App.Components
+  ( AppWidget (DefaultDisplay),
+    ComponentName (GraphView),
+    DisplayWidget (..),
+    ErrorWidget (..),
+    GraphCanvasWidget (..),
+    GraphDisplayWidget (..),
+    HorizontalAxisWidget (..),
+    MetricsBrowserWidget (display),
+    VerticalAxisWidget (..),
+  )
 import Brick.Types as Brick
-import Brick.Widgets.Border as WidgetB
-import Brick.Widgets.Center as Widget
+  ( RenderM,
+    Result,
+    Size (Greedy),
+    Widget (..),
+    emptyResult,
+    imageL,
+  )
+import Brick.Widgets.Border as WidgetB (border)
+import Brick.Widgets.Center as Widget (center)
 import Brick.Widgets.Core as Widget
-import Brick.Widgets.List as Widget
-import Control.Lens
+  ( cached,
+    hBox,
+    hLimitPercent,
+    padAll,
+    str,
+    vBox,
+    vLimitPercent,
+  )
+import Control.Lens (set, view, views)
 import Display.GraphWidget
+  ( cornerPiece,
+    drawGraphImage,
+    drawHorizontalAxisImage,
+    drawVerticalAxisImage,
+    heightAndWidthL,
+  )
 import qualified Graphics.Vty as Vty
-import Relude
 
 class CompileWidget n w where
   compile :: w -> Brick.Widget n
@@ -22,32 +51,20 @@ class CompileWidget n w where
 class CompileLayeredWidget n w where
   compileLayered :: w -> [Brick.Widget n]
 
-instance CompileWidget AppComponent MetricsBrowserWidget where
-  compile (MetricsBrowser metricsList width) =
-    let hasFocus = True
-        popupSize = (width, 10)
-     in Widget.centerLayer $
-          WidgetB.border $
-            Widget.setAvailableSize popupSize $
-              Widget.renderList
-                ( \active metric ->
-                    Widget.withAttr ("metric" <> if active then "selected" else "unselcted") (Widget.txt (toText metric))
-                )
-                hasFocus
-                metricsList
+instance CompileWidget ComponentName (MetricsBrowserWidget m) where
+  compile = display
 
-instance CompileLayeredWidget AppComponent (AppWidget e) where
-  compileLayered (DefaultDisplay dataDisplay Nothing) = [compile dataDisplay]
-  compileLayered (DefaultDisplay dataDisplay (Just mBrowser)) = [compile mBrowser, compile dataDisplay]
+instance CompileLayeredWidget ComponentName (AppWidget e) where
+  compileLayered (DefaultDisplay dataDisplay mBrowser) = [compile mBrowser, compile dataDisplay]
 
-instance Exception e => CompileLayeredWidget AppComponent (DisplayWidget e) where
+instance Exception e => CompileLayeredWidget ComponentName (DisplayWidget m e) where
   compileLayered (DisplayWidget (Right appWidget)) = compileLayered appWidget
   compileLayered (DisplayWidget (Left errorWidget)) = return (compile errorWidget)
 
 instance Exception e => CompileWidget n (ErrorWidget e) where
   compile (ErrorWidget err) = Widget.str (displayException err)
 
-instance CompileWidget AppComponent GraphDisplayWidget where
+instance CompileWidget ComponentName GraphDisplayWidget where
   compile NoDataDisplayWidget = Widget.str "NoData"
   compile LoadingDataDisplayWidget = Widget.center $ WidgetB.border $ Widget.padAll 1 $ Widget.str "Loading..."
   compile (GraphDisplay graphCanvas verticalAxis' horizontalAxis') =

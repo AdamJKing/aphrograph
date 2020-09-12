@@ -3,28 +3,24 @@
 
 module Display.Projection where
 
-import Relude
 import Control.Lens
 import Display.Projection.Scalable
 
-data ProjectionContext a b
-  = ProjectionContext
-      { origin :: (a, a),
-        projection :: (b, b)
-      }
+data ProjectionContext a b = ProjectionContext
+  { origin :: (a, a),
+    projection :: (b, b)
+  }
 
-data ProjectionContext2D a b c d
-  = ProjectionContext2D
-      { originX :: (a, a),
-        originY :: (b, b),
-        projectionX :: (c, c),
-        projectionY :: (d, d)
-      }
+data ProjectionContext2D a b c d = ProjectionContext2D
+  { originX :: (a, a),
+    originY :: (b, b),
+    projectionX :: (c, c),
+    projectionY :: (d, d)
+  }
 
-newtype Projected2D a b c d m t
-  = Projected2D
-      { runProjection :: ProjectionContext2D a b c d -> m (t c d)
-      }
+newtype Projected2D a b c d m t = Projected2D
+  { runProjection :: ProjectionContext2D a b c d -> m (t c d)
+  }
 
 instance Bifunctor ProjectionContext where
   bimap f g ProjectionContext {..} = ProjectionContext (over each f origin) (over each g projection)

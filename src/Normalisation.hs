@@ -3,8 +3,6 @@ module Normalisation
   )
 where
 
-import Relude
-
 diff :: Num a => (a, a) -> a
 diff (a, b) = b - a
 

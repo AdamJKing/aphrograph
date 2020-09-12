@@ -3,18 +3,14 @@ dependencies:
   - transformers-base
   - monad-control
   - monad-logger
+  - vector
 
-  # Until https://github.com/commercialhaskell/stack/issues/5077 fixed
+  - name: relude 
+    mixin: (Relude as Prelude)
 
-  - relude
-  - base
-
-  # - name: relude 
-  #   mixin: (Relude as Prelude)
-
-  # - name: base
-  #   mixin: 
-  #     - hiding (Prelude)
+  - name: base
+    mixin: 
+      - hiding (Prelude)
 
 ghc-options:
   - -Werror -Wall
@@ -26,7 +22,7 @@ library:
   dependencies:
     - aeson
     - array
-    - brick
+    - brick >= 0.55
     - bytestring
     - containers
     - Decimal
@@ -43,7 +39,6 @@ library:
     - text
     - time
     - transformers
-    - vector
     - modern-uri
     - vty
 
@@ -63,7 +58,7 @@ tests:
       - mtl
       - formatting
       - lens
-      - brick
+      - brick >= 0.55
       - aphrograph
       - hspec
       - QuickCheck
@@ -79,9 +74,6 @@ default-extensions:
   - MultiParamTypeClasses
   - StrictData
 
-  # https://github.com/commercialhaskell/stack/issues/5077
-  - NoImplicitPrelude
-
 name: aphrograph
 version: 0.1.0.0
 extra-source-files:
@@ -95,4 +87,4 @@ executables:
     dependencies:
       - aphrograph
       - vty
-      - brick
+      - brick >= 0.55

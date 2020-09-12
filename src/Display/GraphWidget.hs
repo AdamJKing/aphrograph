@@ -27,7 +27,6 @@ import Graphics.Vty
     vertJoin,
   )
 import qualified Graphics.Vty as Vty
-import Relude
 import Graphite.Types
 
 graphDisplayWidget :: GraphData -> TimeZone -> GraphDisplayWidget

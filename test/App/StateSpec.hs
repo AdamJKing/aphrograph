@@ -9,7 +9,6 @@ module App.StateSpec
 where
 
 import ArbitraryInstances ()
-import Relude
 import Test.Hspec
 import Test.Hspec.QuickCheck (prop)
 

@@ -6,10 +6,10 @@
 
 module App.Args where
 
-import App.Config as App
-import Relude
+import qualified App.Config as App
 import Control.Lens.Prism
 import Control.Lens.Setter
+import Data.Time (TimeZone, getCurrentTimeZone)
 import Data.Version (showVersion)
 import Formatting
 import Graphite.Types hiding (value)
@@ -50,13 +50,18 @@ httpParser = do
     Just (Right (httpsUrl, _)) -> return $ GraphiteUrl httpsUrl
     Just (Left (httpUrl, _)) -> return $ GraphiteUrl httpUrl
 
-arguments :: Parser App.Config
-arguments = do
+timezoneArgument :: Parser TimeZone
+timezoneArgument = option auto $ long "timezone" <> help "Timezone used to present the graph (Defaults to system timezone)"
+
+arguments :: TimeZone -> Parser App.Config
+arguments defaultTimezone = do
   _fromTime <- fromTimeArgument
   _toTime <- optional toTimeArgument
   _targetArg <- targetArgument
   _graphiteUrl <- graphiteUrlArgument
-  return (App.Config $ GraphiteConfig {..})
+  _timezone <- timezoneArgument <|> pure defaultTimezone
+
+  return (App.Config (App.GraphiteConfig {..}) _timezone)
 
 withCommandLineArguments :: (App.Config -> IO b) -> IO b
 withCommandLineArguments f =
@@ -64,5 +69,6 @@ withCommandLineArguments f =
       title = "△phrograph"
       description = "A command-line viewer for graphite metrics."
    in do
-        (args, ()) <- simpleOptions version' title description arguments empty
+        timezone <- getCurrentTimeZone
+        (args, ()) <- simpleOptions version' title description (arguments timezone) empty
         f args

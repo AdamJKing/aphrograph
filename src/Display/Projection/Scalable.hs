@@ -9,7 +9,6 @@ import Control.Lens
 import Data.Decimal
 import Data.Time.Clock
 import Normalisation
-import Relude
 
 class Real b => Scalable b where
   scale :: Real a => a -> (a, a) -> (b, b) -> b

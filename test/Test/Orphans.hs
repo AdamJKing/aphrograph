@@ -5,7 +5,6 @@
 
 module Test.Orphans where
 
-import Relude
 import Test.QuickCheck.GenT
 
 instance MonadGen m => MonadGen (ExceptT e m) where

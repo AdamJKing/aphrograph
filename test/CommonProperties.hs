@@ -22,30 +22,36 @@ module CommonProperties
     getMetricsResponse,
     listMetricsResponse,
     assertAll,
-    activeState,
+    TestM,
+    EventOutcome (..),
   )
 where
 
+import App.Components (GraphViewer (..))
 import qualified App.Config as App
 import qualified App.State as App
 import ArbitraryInstances ()
-import Control.Lens.Extras
 import Control.Lens.TH (makeLenses)
-import Control.Monad.Except
-import Control.Monad.Base
-import Control.Monad.Trans.Control
-import DerivedArbitraryInstances
-import Events.Types
+import Control.Monad.Base (MonadBase (..))
+import Control.Monad.Except (MonadError, liftEither)
+import Control.Monad.Trans.Control (MonadBaseControl (..))
+import DerivedArbitraryInstances (GenArbitrary (..))
+import Events.Types (MonadOutcome (..))
 import Graphite.Types
-import Test.Hspec
-import Relude
+  ( DataPoint,
+    Metric,
+    MonadGraphite (..),
+    Time,
+  )
+import Test.Hspec (Spec)
 import Test.Hspec.QuickCheck (prop)
 import Test.Orphans ()
-import Test.QuickCheck.Arbitrary
+import Test.QuickCheck (Discard (Discard), Property)
+import Test.QuickCheck.Arbitrary (Arbitrary (arbitrary))
 import Test.QuickCheck.Gen (Gen (..))
-import Test.QuickCheck.GenT
-import Test.QuickCheck.Monadic hiding (stop)
-import Test.QuickCheck.Property (Testable (..))
+import Test.QuickCheck.GenT (MonadGen (liftGen), suchThat)
+import Test.QuickCheck.Monadic (PropertyM, assert, monadic)
+import Test.QuickCheck.Property (Testable (..), counterexample)
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
@@ -74,6 +80,16 @@ newtype TestM a = TestM {_runTest :: ExceptT App.Error (ReaderT App.Config Gen) 
 runTestM :: App.Config -> TestM a -> Gen (Either App.Error a)
 runTestM conf = usingReaderT conf . runExceptT . _runTest
 
+eitherProp :: (Testable prop, Show a) => Either a prop -> Property
+eitherProp (Right p) = property p
+eitherProp (Left err) = counterexample (show err) $ property Discard
+
+instance Testable prop => Testable (TestM prop) where
+  property test = property $ do
+    conf <- arbitrary
+    result <- runTestM conf test
+    return (eitherProp result)
+
 instance MonadBase Gen TestM where
   liftBase = liftGen
 
@@ -87,7 +103,7 @@ instance MonadBaseControl Gen TestM where
   restoreM = liftEither
 
 data EventOutcome = Continue | Stop
-  deriving (Generic)
+  deriving (Generic, Eq, Show)
   deriving (Arbitrary) via (GenArbitrary EventOutcome)
 
 instance MonadOutcome TestM where
@@ -102,18 +118,13 @@ data MockGraphiteResponses = MockResponses
 
 makeLenses ''MockGraphiteResponses
 
-instance Arbitrary s => MonadEventHandler e s TestM where
-  handleEvent _ _ = liftGen arbitrary2
-
 instance MonadGraphite TestM where
   listMetrics = liftGen arbitrary
   getMetrics _ = liftGen arbitrary
 
 instance GraphViewer TestM where
-  updateGraph = liftGen arbitrary
+  triggerUpdate _ = pure ()
+  updateGraph _ = liftGen arbitrary
 
 assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
 assertAll predicate = assert . all predicate
-
-activeState :: Gen (App.CurrentState' [])
-activeState = arbitrary `suchThat` is App.active

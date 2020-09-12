@@ -1,13 +1,13 @@
 cradle:
-  stack:
+  cabal:
+    - path: "./src"
+      component: "lib:aphrograph"
+
     - path: "./app/Main.hs"
       component: "aphrograph:exe:aphrograph"
 
-    - path: "./src"
-      component: "aphrograph:lib"
-    
+    - path: "./app/Paths_aphrograph.hs"
+      component: "aphrograph:exe:aphrograph"
+
     - path: "./test"
       component: "aphrograph:test:aphrograph-test"
-
-    - path: "./.stack-work/dist/x86_64-linux-tinfo6/Cabal-3.0.1.0/build/autogen/Paths_aphrograph.hs"
-      component: "aphrograph:lib"

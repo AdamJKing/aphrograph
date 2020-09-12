@@ -12,8 +12,8 @@
 module Graphite.Types where
 
 import qualified Data.Aeson as JSON
-import Data.ByteString as BS
 import qualified Data.Aeson.Types as JSON
+import Data.ByteString as BS
 import Data.Decimal
 import Data.Text.Encoding.Error (ignore)
 import Data.Time.Clock
@@ -25,7 +25,6 @@ import Data.Vector (Vector)
 import Display.Projection.Scalable
 import Network.HTTP.Client as HTTP
 import Network.HTTP.Req
-import Relude
 import qualified Text.Show as TS
 import Web.HttpApiData
 
@@ -99,7 +98,7 @@ instance JSON.FromJSON DataPoint where
   parseJSON (JSON.Array arr) = case toList arr of
     [JSON.Null, t] -> DataPoint (Value 0.0) <$> JSON.parseJSON t
     [v, t] -> DataPoint <$> JSON.parseJSON v <*> JSON.parseJSON t
-    _unexpected -> Relude.fail "Couldn't parse datapoint"
+    _unexpected -> fail "Couldn't parse datapoint"
   parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
 newtype Metric = Metric ByteString

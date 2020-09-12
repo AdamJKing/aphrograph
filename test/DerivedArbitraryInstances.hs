@@ -20,11 +20,10 @@ import Network.HTTP.Req
     https,
   )
 import System.Random
-import Relude
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary.ADT
-import Test.QuickCheck.Instances.Text ()
 import Test.QuickCheck.Instances.ByteString ()
+import Test.QuickCheck.Instances.Text ()
 import Time.Types
 
 newtype GenArbitrary a = GenArbitrary a deriving (Generic)
@@ -47,8 +46,6 @@ deriving instance Arbitrary Value
 deriving instance Arbitrary Seconds
 
 deriving via (GenArbitrary GraphiteConfig) instance Arbitrary App.GraphiteConfig
-
-deriving instance Arbitrary App.Config
 
 deriving via ByteString instance Arbitrary Metric
 

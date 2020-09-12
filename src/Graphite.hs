@@ -15,7 +15,6 @@ import Data.Aeson as JSON
 import Data.Vector (Vector)
 import Graphite.Types
 import Network.HTTP.Req as Req
-import Relude
 
 with :: MonadReader s m => Getter s a -> (a -> m b) -> m b
 with lens f = view lens >>= f
@@ -30,8 +29,7 @@ listMetricsHttp (GraphiteUrl url) = makeRequest $ url /: "metrics/index.json"
 getMetricsHttp :: MonadHttp m => GraphiteUrl -> GraphiteRequest -> m [DataPoint]
 getMetricsHttp (GraphiteUrl url) renderRequest =
   let parameters = asQueryParams renderRequest
-      renderUrl = url /: "render"
-   in makeRequest' renderUrl parameters <&> \case
+   in makeRequest' (url /: "render") parameters <&> \case
         [MetricsResponse {datapoints}] -> datapoints
         _emptyResponse -> []
 

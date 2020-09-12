@@ -1,5 +1,5 @@
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module NormalisationSpec
   ( spec,
@@ -8,7 +8,6 @@ where
 
 import CommonProperties
 import Normalisation
-import Relude
 import Test.Hspec as HS
 import Test.Hspec.QuickCheck
 import Test.QuickCheck

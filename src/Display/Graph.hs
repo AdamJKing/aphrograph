@@ -18,7 +18,6 @@ where
 
 import qualified Data.Map as M
 import qualified Data.Set as Set
-import Relude
 import Graphite.Types
 
 newtype Graph x y = Graph {_data :: M.Map x (Set y)}

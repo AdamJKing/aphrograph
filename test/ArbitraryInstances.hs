@@ -1,36 +1,54 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module ArbitraryInstances where
 
 import App.Components
+  ( GraphCanvasWidget (..),
+    GraphDisplayWidget (..),
+    HorizontalAxisWidget (..),
+    VerticalAxisWidget (..),
+  )
+import qualified App.Config as App
 import qualified App.State as App
-import DerivedArbitraryInstances
-import Display.Graph as Graph
-import Display.Labels
+import Data.Time (utc)
+import DerivedArbitraryInstances (GenArbitrary (..))
+import Display.Graph as Graph (Graph, mkGraph)
+import Display.Labels (TimeStep (..))
 import Graphics.Vty.Input.Events as Vty
+  ( Button,
+    Key (..),
+    Modifier (..),
+  )
 import Graphite.Types as Graphite
+  ( DataPoint,
+    GraphiteError (..),
+    GraphiteRequest,
+    Time (timestamp),
+  )
 import qualified Network.HTTP.Client as Http
 import qualified Network.HTTP.Req as Req
-import System.Random
-import Relude
-import Test.QuickCheck
+import System.Random (Random (random, randomR))
+import Test.QuickCheck (Arbitrary (arbitrary), suchThat)
 import Test.QuickCheck.Arbitrary.ADT
-import Test.QuickCheck.Instances.Time ()
-import Test.QuickCheck.Instances.Vector
-  (
+  ( ToADTArbitrary,
+    genericArbitrary,
   )
+import Test.QuickCheck.Instances.Time ()
+import Test.QuickCheck.Instances.Vector ()
 
-deriving via (GenArbitrary (MetricsBrowserWidget' [])) instance Arbitrary (MetricsBrowserWidget' [])
+deriving via (GenArbitrary GraphCanvasWidget) instance Arbitrary GraphCanvasWidget
 
-deriving via (GenArbitrary (App.ActiveState [])) instance Arbitrary (App.ActiveState [])
+deriving via (GenArbitrary VerticalAxisWidget) instance Arbitrary VerticalAxisWidget
 
-deriving via (GenArbitrary (App.CurrentState' [])) instance Arbitrary (App.CurrentState' [])
+deriving via (GenArbitrary HorizontalAxisWidget) instance Arbitrary HorizontalAxisWidget
+
+deriving via (GenArbitrary GraphDisplayWidget) instance Arbitrary GraphDisplayWidget
 
 deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
 
@@ -88,3 +106,12 @@ instance Arbitrary Http.HttpException where
   arbitrary = return $ Http.HttpExceptionRequest "http://www.example.com" Http.ResponseTimeout
 
 deriving via (GenArbitrary Req.HttpException) instance Arbitrary Req.HttpException
+
+instance Arbitrary App.Config where
+  arbitrary = do
+    graphiteConf <- arbitrary
+    return $
+      App.Config
+        { _graphiteConfig = graphiteConf,
+          _timezone = utc
+        }

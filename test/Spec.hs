@@ -8,7 +8,6 @@ import qualified GraphiteSpec (spec)
 import qualified LabelsSpec (spec)
 import qualified NormalisationSpec (spec)
 import Test.Hspec
-import Relude
 import qualified WidgetsSpec (spec)
 
 main :: IO ()

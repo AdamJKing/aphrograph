@@ -7,9 +7,9 @@
 
 module App.Config where
 
-import Control.Lens.TH
-import Graphite.Types
-import Relude
+import Control.Lens.TH (makeLenses)
+import Data.Time (TimeZone)
+import Graphite.Types (From, GraphiteUrl, To)
 
 data GraphiteConfig = GraphiteConfig
   { _fromTime :: From,
@@ -21,7 +21,10 @@ data GraphiteConfig = GraphiteConfig
 
 makeLenses ''GraphiteConfig
 
-newtype Config = Config {_graphiteConfig :: GraphiteConfig}
+data Config = Config
+  { _graphiteConfig :: GraphiteConfig,
+    _timezone :: TimeZone
+  }
   deriving (Show, Generic)
 
 makeLenses ''Config

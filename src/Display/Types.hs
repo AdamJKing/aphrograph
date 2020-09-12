@@ -4,7 +4,6 @@ module Display.Types where
 
 import Formatting
 import Text.Show
-import Relude
 
 data Dimensions = Dims {width :: !Natural, height :: !Natural}
   deriving (Eq, Show)

@@ -4,7 +4,6 @@ import Control.Concurrent (Chan, getChanContents)
 import Control.Concurrent.Lifted (fork)
 import Control.Monad.Base (MonadBase (liftBase))
 import Control.Monad.Logger (LogLine, monadLoggerLog, runFileLoggingT)
-import Relude
 
 fileWritingLogChan :: Chan LogLine -> FilePath -> IO ()
 fileWritingLogChan logChan logFile =

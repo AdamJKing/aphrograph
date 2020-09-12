@@ -7,7 +7,6 @@ import CommonProperties
 import Display.Projection.Scalable
 import Formatting
 import Graphite.Types
-import Relude
 import Test.Hspec as HS
 import Test.Hspec.QuickCheck
 import Test.QuickCheck hiding (scale)

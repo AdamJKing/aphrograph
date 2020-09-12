@@ -15,22 +15,25 @@
 
 module Events where
 
-import App
+import App (AppT)
 import App.Components
+  ( GraphDisplayWidget (LoadingDataDisplayWidget),
+    GraphViewer (..),
+    MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser),
+    close,
+    open,
+    update,
+  )
 import qualified App.State as App
-import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
-import Control.Concurrent.Lifted
-import Control.Lens.Getter
-import Control.Lens.Operators
-import Control.Lens.Traversal
-import Control.Monad.Base
-import Control.Monad.Morph
+import Control.Lens (traverseOf)
+import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans.Control
-import Events.Types
+  ( MonadBaseControl,
+  )
+import Events.Types (AppEvent (..), MetricsBrowserEvent (Modify), MonadOutcome (..))
 import qualified Graphics.Vty.Input.Events as Vty
-import Relude
-import Graphite.Types
+import Graphite.Types (MonadGraphite (listMetrics))
 
 pattern KeyDown :: Char -> Vty.Event
 pattern KeyDown k = Vty.EvKey (Vty.KChar k) []
@@ -38,51 +41,45 @@ pattern KeyDown k = Vty.EvKey (Vty.KChar k) []
 pattern ExitKey :: Vty.Event
 pattern ExitKey = KeyDown 'q'
 
-newtype EventT m a = MkEventT (ReaderT App.CurrentState m a)
+newtype EventT m a = MkEventT (ReaderT (App.CurrentState m) m a)
   deriving
     ( Applicative,
       Functor,
       Monad,
       MonadIO,
-      MonadReader App.CurrentState,
-      MonadTrans,
-      MonadTransControl
+      MonadReader (App.CurrentState m)
     )
 
-runEventHandler :: EventT m a -> App.CurrentState -> m a
-runEventHandler (MkEventT op) startState = usingReaderT startState op
+instance MonadTrans EventT where
+  lift = MkEventT . lift
+
+runEventHandler :: App.CurrentState m -> EventT m a -> m a
+runEventHandler startState (MkEventT op) = usingReaderT startState op
 
 instance MonadOutcome m => MonadOutcome (EventT m) where
   type EventF (EventT m) = EventF m
   continue = lift . continue
   stop = lift . stop
 
-instance MFunctor EventT where
-  hoist f (MkEventT action) = MkEventT $ hoist f action
+handleMetricBrowserEvents :: MonadGraphite m => Vty.Event -> MetricsBrowserWidget m -> EventT m (MetricsBrowserWidget m)
+handleMetricBrowserEvents (KeyDown 'm') browser@ClosedMetricsBrowser {} = open browser <$> lift listMetrics
+handleMetricBrowserEvents (KeyDown 'm') browser@OpenMetricsBrowser {} = return (close browser)
+handleMetricBrowserEvents keyPress browser = lift (update browser (Modify keyPress))
 
-type EventM = EventT (Brick.EventM AppComponent)
+class MonadOutcome m => MonadEventHandler e a m where
+  handleEvent :: e -> a -> m (EventF m a)
 
-handleMetricBrowserEvents :: (MonadGraphite m, MetricsBrowser m) => Vty.Event -> Maybe MetricsBrowserWidget -> EventT m (Maybe MetricsBrowserWidget)
-handleMetricBrowserEvents (KeyDown 'm') (Just _) = return Nothing
-handleMetricBrowserEvents (KeyDown 'm') Nothing = Just . metricBrowserWidget <$> lift listMetrics
-handleMetricBrowserEvents keyPress (Just browser) = lift (Just <$> updateMetricBrowserWidget keyPress browser)
-handleMetricBrowserEvents _ Nothing = return Nothing
-
-instance (MonadGraphite m, MonadOutcome m, MetricsBrowser m) => MonadEventHandler Vty.Event App.CurrentState (EventT m) where
+instance (MonadGraphite m, MonadOutcome m) => MonadEventHandler Vty.Event (App.CurrentState m) (EventT m) where
   handleEvent ExitKey previousState = stop previousState
   handleEvent keyPress previousState = continue =<< traverseOf (App.active . App.metricsView) (handleMetricBrowserEvents keyPress) previousState
 
-instance MonadEventHandler AppEvent App.CurrentState (EventT (AppT (Brick.EventM AppComponent))) where
-  handleEvent (GraphUpdate newGraph) st = do
-    lift . lift $ Brick.invalidateCacheEntry GraphView
-    let newState = st & (App.active . App.graphData) .~ App.Present newGraph
-    continue newState
-  handleEvent TriggerUpdate (App.Active previousState) = do
-    triggerUpdate
-    continue (App.Active (previousState & App.graphData .~ App.Pending))
-  handleEvent _ previousState = continue previousState
+instance (GraphViewer m, MonadOutcome m) => MonadEventHandler AppEvent (App.CurrentState m) (EventT m) where
+  handleEvent graphUpdate currentState = continue =<< traverseOf (App.active . App.graphData) (\_ -> update graphUpdate) currentState
+    where
+      update (GraphUpdate newGraph) = lift (updateGraph newGraph)
+      update TriggerUpdate = (lift triggerUpdate) >> return LoadingDataDisplayWidget
 
-instance MonadEventHandler (Brick.BrickEvent n AppEvent) App.CurrentState (EventT (AppT (Brick.EventM AppComponent))) where
+instance (GraphViewer m, MonadOutcome m, MonadGraphite m) => MonadEventHandler (Brick.BrickEvent n AppEvent) (App.CurrentState m) (EventT m) where
   handleEvent (Brick.VtyEvent keyPress) = handleEvent keyPress
   handleEvent (Brick.AppEvent appEvent) = handleEvent appEvent
   handleEvent _ = continue
@@ -90,15 +87,3 @@ instance MonadEventHandler (Brick.BrickEvent n AppEvent) App.CurrentState (Event
 deriving instance MonadBase IO (EventT (AppT IO))
 
 deriving instance MonadBaseControl IO (EventT (AppT IO))
-
-triggerUpdate :: MonadIO m => EventT (AppT m) ()
-triggerUpdate =
-  viaLiftIO $
-    void $
-      fork $ do
-        newGraph <- lift updateGraph
-        lift $ do
-          ch <- view App.eventCh
-          writeEvent ch (GraphUpdate newGraph)
-  where
-    viaLiftIO = hoist (hoist liftIO)
