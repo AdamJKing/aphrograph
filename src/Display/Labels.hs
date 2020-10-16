@@ -7,16 +7,24 @@
 
 module Display.Labels where
 
-import Data.Fixed
+import Data.Fixed (mod')
 import Data.Foldable
   ( maximum,
     minimum,
   )
-import Data.Time.LocalTime
-import Display.Projection.Scalable
-import Formatting
-import Formatting.Time
+import Data.Time.LocalTime (TimeZone)
+import Display.Projection.Scalable (Scalable (scale))
+import Formatting (fixed, format, (%))
+import Formatting.Time (dayOfMonth, month)
+import qualified Formatting.Time as Format
 import Graphite.Types
+  ( Time,
+    deltaDays,
+    deltaHours,
+    deltaMinutes,
+    deltaSeconds,
+    toLocalTime,
+  )
 
 data TimeStep = Day | Hour | FiveMinute | Minute | Second | Millisecond
   deriving (Show, Eq, Generic, Enum)
@@ -44,7 +52,8 @@ renderTimeLabel step timezone time =
     & format
       ( case step of
           Day -> dayOfMonth <> "/" % month
-          _otherTimes -> hmsL
+          Second -> Format.hmsL
+          _otherTimes -> Format.hm
       )
 
 generateLabelsTime :: TimeZone -> [Time] -> (Int, Int) -> [(Int, LText)]
