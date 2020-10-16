@@ -72,7 +72,7 @@ brickEventHandler ::
 brickEventHandler handleKeyPresses handleAppEvents = \case
   (Brick.VtyEvent keyPress) -> handleKeyPresses keyPress
   (Brick.AppEvent appEvent) -> handleAppEvents appEvent
-  _ -> pure . (Continue,)
+  _unhandled -> pure . (Continue,)
 
 keyPressHandler :: (MonadEvent AppEvent n, MonadGraphite m) => (forall x. n x -> m x) -> EventHandler m Vty.Event (App.CurrentState m)
 keyPressHandler nat = \event cm ->
