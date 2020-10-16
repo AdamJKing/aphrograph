@@ -1,12 +1,13 @@
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE TypeApplications #-}
 
 module ComponentMock where
 
-import App.Components (MetricsBrowserWidget (..))
+import App.Components (ComponentName, MetricsBrowserWidget (..))
 import qualified Brick as Brick
-import Data.Vector (Vector)
+import Data.Vector (Vector, (!?))
 import Events.Types (MetricsBrowserEvent (Modify))
 import qualified Graphics.Vty as Vty
 import qualified Graphite.Types as Graphite
@@ -18,7 +19,7 @@ mockClosedMetricsBrowser = ClosedMetricsBrowser {open}
 
 mockOpenMetricsBrowser :: Applicative m => Vector Graphite.Metric -> Int -> MetricsBrowserWidget m
 mockOpenMetricsBrowser metrics index =
-  OpenMetricsBrowser {update, display, close}
+  OpenMetricsBrowser {update, display, close, target}
   where
     update (Modify (Vty.EvKey keyPress [])) = pure $
       mockOpenMetricsBrowser metrics $ case keyPress of
@@ -29,6 +30,8 @@ mockOpenMetricsBrowser metrics index =
         _ -> index
     update _ = pure (mockOpenMetricsBrowser metrics index)
 
-    display = Brick.emptyWidget
+    target _ = metrics !? index
+
+    display = Brick.emptyWidget @ComponentName
 
     close = mockClosedMetricsBrowser

@@ -2,10 +2,9 @@
 
 ## TODO List
 
-* Perform graphite call asynchronously, produce a new event when complete
-* Show a loading sign while gathering data
 * Investigate weird label cropping when using day labels (??? in from section)
-* Remove weird double 'updateGraph' in App (#108)
 * set a maximum label width (GraphWidget#68)
 * Prefer a more compact time when the "seconds" section isn't used
-
+* Better type safety around the metrics browser
+* Add ability to adjust the display time (with or without new graphite call?)
+* Fix command line input (defaulting to 24h in main?)

@@ -1,0 +1,153 @@
+cabal-version: 2.0
+
+-- This file has been generated from package.yaml by hpack version 0.34.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           aphrograph
+version:        0.1.2.0
+license:        GPL-3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+library
+  exposed-modules:
+      App
+      App.Args
+      App.Components
+      App.Config
+      App.Logging
+      App.State
+      Display.Graph
+      Display.GraphWidget
+      Display.Labels
+      Display.Projection
+      Display.Projection.Scalable
+      Display.Types
+      Display.Widgets
+      Events
+      Events.Types
+      Graphite
+      Graphite.Types
+      Normalisation
+  other-modules:
+      Paths_aphrograph
+  hs-source-dirs:
+      ./src
+  default-extensions: RecordWildCards LambdaCase OverloadedStrings MultiParamTypeClasses StrictData
+  ghc-options: -Wall -O2 -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie
+  build-depends:
+      Decimal
+    , aeson
+    , array
+    , base
+    , brick >=0.57
+    , bytestring
+    , containers
+    , formatting
+    , generic-data
+    , http-api-data
+    , http-client
+    , lens
+    , lifted-base
+    , mmorph
+    , modern-uri
+    , monad-control
+    , monad-logger
+    , mtl
+    , optparse-simple
+    , relude
+    , req
+    , text
+    , time
+    , transformers
+    , transformers-base
+    , vector
+    , vty
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
+  default-language: Haskell2010
+
+executable aphrograph
+  main-is: Main.hs
+  other-modules:
+      Paths_aphrograph
+  hs-source-dirs:
+      ./app
+  default-extensions: RecordWildCards LambdaCase OverloadedStrings MultiParamTypeClasses StrictData
+  ghc-options: -Wall -O2 -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie -threaded
+  build-depends:
+      aphrograph
+    , base
+    , brick >=0.57
+    , monad-control
+    , monad-logger
+    , mmorph
+    , relude
+    , transformers-base
+    , vector
+    , vty
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
+  default-language: Haskell2010
+
+test-suite aphrograph-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      App.StateSpec
+      ArbitraryInstances
+      CommonProperties
+      ComponentMock
+      DerivedArbitraryInstances
+      Display.GraphSpec
+      Display.ProjectionSpec
+      Display.WidgetsSpec
+      DisplaySpec
+      EventsSpec
+      GraphiteMock
+      GraphiteSpec
+      LabelsSpec
+      NormalisationSpec
+      Test.Orphans
+      Test.Tools
+      WidgetsSpec
+      Paths_aphrograph
+  hs-source-dirs:
+      ./test
+  default-extensions: RecordWildCards LambdaCase OverloadedStrings MultiParamTypeClasses StrictData
+  ghc-options: -Wall -O2 -fexcess-precision -funfolding-use-threshold=16 -fwrite-ide-info -fwarn-unused-binds -fwarn-unused-imports -hiedir=.hie
+  build-depends:
+      Decimal
+    , QuickCheck
+    , aeson
+    , aphrograph
+    , base
+    , brick >=0.55
+    , containers
+    , formatting
+    , hourglass
+    , hspec
+    , http-client
+    , lens
+    , monad-control
+    , monad-logger
+    , mtl
+    , quickcheck-arbitrary-adt
+    , quickcheck-instances
+    , quickcheck-transformer
+    , random
+    , relude
+    , req
+    , time
+    , transformers-base
+    , vector
+    , vty
+  mixins:
+      base hiding (Prelude)
+    , relude (Relude as Prelude)
+  default-language: Haskell2010

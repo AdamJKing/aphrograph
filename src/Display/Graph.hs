@@ -18,7 +18,7 @@ where
 
 import qualified Data.Map as M
 import qualified Data.Set as Set
-import Graphite.Types
+import Graphite.Types ( DataPoint(..), Time, Value )
 
 newtype Graph x y = Graph {_data :: M.Map x (Set y)}
   deriving (Show, Eq, Semigroup, Monoid)

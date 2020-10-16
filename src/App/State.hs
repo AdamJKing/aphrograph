@@ -15,47 +15,31 @@
 module App.State where
 
 import App.Components
-  ( GraphDisplayWidget,
-    MetricsBrowserWidget,
+  ( MetricsBrowserWidget,
   )
 import Control.Lens.Combinators
-  ( Prism',
-    Wrapped (_Wrapped'),
-    makeLenses,
-    _Right,
+  ( makeLenses,
+    makePrisms,
   )
-import Display.Graph as Graph (Graph)
-import Graphite.Types (GraphiteError, Time, Value)
+import Display.GraphWidget (GraphWidget)
+import Graphite.Types as Graphite (GraphiteError)
 
 newtype Error = AppGraphiteError GraphiteError
   deriving (Show, Generic)
   deriving anyclass (Exception)
 
-data GraphData = Missing | Pending | Present (Graph Time Value)
-  deriving (Eq, Show, Generic)
-
-data ActiveState m = ActiveState
+data ActiveState (m :: * -> *) = ActiveState
   { _metricsView :: MetricsBrowserWidget m,
-    _graphData :: GraphDisplayWidget
+    _graphData :: GraphWidget
   }
+  deriving (Show)
 
 makeLenses ''ActiveState
 
 newtype FailedState = FailedState {failure :: Error}
   deriving (Show, Generic)
 
-newtype CurrentState m = CurrentState (Either FailedState (ActiveState m))
-  deriving (Generic)
+data CurrentState (m :: * -> *) = Failed FailedState | Active (ActiveState m)
+  deriving (Generic, Show)
 
-instance Wrapped (CurrentState m)
-
-active :: Prism' (CurrentState m) (ActiveState m)
-active = _Wrapped' . _Right
-
-pattern Active :: (ActiveState m) -> (CurrentState m)
-pattern Active s = CurrentState (Right s)
-
-pattern Failed :: FailedState -> (CurrentState m)
-pattern Failed s = CurrentState (Left s)
-
-{-# COMPLETE Active, Failed #-}
+makePrisms ''CurrentState

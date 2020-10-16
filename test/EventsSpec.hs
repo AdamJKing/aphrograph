@@ -1,95 +1,151 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
+
 module EventsSpec
   ( spec,
   )
 where
 
-import App.Components
-  ( GraphDisplayWidget (NoDataDisplayWidget),
-    MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser),
-  )
+import App.Components (close, open)
 import qualified App.State as App
 import ArbitraryInstances ()
-import Brick (BrickEvent)
-import qualified Brick as Brick
-import CommonProperties (EventOutcome (Continue), TestM)
-import ComponentMock (mockClosedMetricsBrowser)
-import Control.Lens ((^?))
-import Events (handleEvent, runEventHandler)
-import Events.Types (AppEvent)
+import CommonProperties (FakeChanT, TestM, inMetricsView, inside, is, isClosedMetricsBrowser, isOpenMetricsBrowser, runFakeChan)
+import ComponentMock (mockClosedMetricsBrowser, mockOpenMetricsBrowser)
+import Control.Lens (makePrisms)
+import Data.Vector ((!))
+import qualified Data.Vector as Vec
+import Display.GraphWidget
+  ( GraphDisplay (LoadingDataDisplay, NoDataDisplay),
+    GraphWidget (GraphWidget),
+    graphDisplay,
+    graphiteRequest,
+    _graphDisplay,
+    _graphiteRequest,
+  )
+import Events (EventOutcome (Continue, Halt), keyPressHandler)
+import Events.Types (AppEvent (TriggerUpdate))
 import qualified Graphics.Vty as Vty
+import Graphite.Types (GraphiteRequest, requestMetric)
 import Test.Hspec (Spec, describe)
 import Test.Hspec.QuickCheck (prop)
-import Test.QuickCheck (property, (.&&.), (===))
+import Test.QuickCheck (Discard (Discard), Testable (property), arbitrary, counterexample, (.&&.), (===))
+import Test.QuickCheck.Arbitrary.ADT (genericArbitrary)
+import Test.QuickCheck.GenT (MonadGen (choose, liftGen), suchThat)
+import Test.QuickCheck.Property (failed)
+
+makePrisms ''GraphDisplay
 
 spec :: Spec
-spec = describe "Metrics Browser Events" $ do
-  prop "pressing (m) opens the browser when closed" $
-    let inputEvent :: Brick.BrickEvent n AppEvent
-        inputEvent = Brick.VtyEvent (Vty.EvKey (Vty.KChar 'm') [])
+spec = do
+  describe "Metrics Browser Events" $ do
+    prop "Mock browser works as expected" $
+      let openable = isOpenMetricsBrowser (open (mockClosedMetricsBrowser @Identity) mempty)
+          closeable = isClosedMetricsBrowser (close (mockOpenMetricsBrowser @Identity mempty 0))
+       in openable .&&. closeable
 
-        inputState :: App.CurrentState TestM
-        inputState =
-          App.Active
-            ( App.ActiveState
-                { _metricsView = mockClosedMetricsBrowser,
-                  _graphData = NoDataDisplayWidget
-                }
-            )
-     in runEventHandler inputState $ do
-          (outcome, result') <- handleEvent inputEvent inputState
+    prop "pressing (m) opens the browser when closed" $
+      let inputEvent :: Vty.Event
+          inputEvent = Vty.EvKey (Vty.KChar 'm') []
 
-          let didContinue = outcome === Continue
-          let isOpen =
-                property $
-                  result' ^? (App.active . App.metricsView)
-                    <&> \case
-                      OpenMetricsBrowser {} -> True
-                      _ -> False
+          inputState :: GraphiteRequest -> App.CurrentState (FakeChanT AppEvent TestM)
+          inputState req =
+            App.Active
+              ( App.ActiveState
+                  { _metricsView = mockClosedMetricsBrowser,
+                    _graphData = GraphWidget {_graphiteRequest = req, _graphDisplay = NoDataDisplay}
+                  }
+              )
+       in do
+            someRequest <- (liftGen genericArbitrary :: TestM GraphiteRequest)
+            ((outcome, result), _) <- runFakeChan $ keyPressHandler id inputEvent (inputState someRequest)
 
-          return (didContinue .&&. isOpen)
+            return $ case outcome of
+              Halt -> (counterexample "App halted unexpectedly" Discard)
+              Continue -> inMetricsView isOpenMetricsBrowser result
 
   prop "pressing (m) closes the browser when open" $
-    let inputEvent :: Brick.BrickEvent n AppEvent
-        inputEvent = Brick.VtyEvent (Vty.EvKey (Vty.KChar 'm') [])
+    let inputEvent :: Vty.Event
+        inputEvent = Vty.EvKey (Vty.KChar 'm') []
 
-        inputState :: App.CurrentState TestM
-        inputState =
+        inputState :: GraphiteRequest -> App.CurrentState (FakeChanT AppEvent TestM)
+        inputState req =
           App.Active
             ( App.ActiveState
-                { _metricsView = mockClosedMetricsBrowser,
-                  _graphData = NoDataDisplayWidget
+                { _metricsView = mockOpenMetricsBrowser mempty 0,
+                  _graphData = GraphWidget {_graphiteRequest = req, _graphDisplay = NoDataDisplay}
                 }
             )
-     in runEventHandler inputState $ do
-          (outcome, result') <- handleEvent inputEvent inputState
+     in do
+          someRequest <- (liftGen genericArbitrary :: TestM GraphiteRequest)
+          ((outcome, result), _) <- runFakeChan $ keyPressHandler id inputEvent (inputState someRequest)
 
-          let didContinue = outcome === Continue
-          let isClosed =
-                property $
-                  result' ^? (App.active . App.metricsView)
-                    <&> \case
-                      ClosedMetricsBrowser {} -> True
-                      _ -> False
+          return $ case outcome of
+            Halt -> (counterexample "App halted unexpectedly" (property failed))
+            Continue -> inMetricsView isClosedMetricsBrowser result
 
-          return (didContinue .&&. isClosed)
+  describe "pressing Enter in metrics view" $ do
+    prop "selects the metric under the cursor as the current metric when metrics are available" $
+      let inputEvent :: Vty.Event
+          inputEvent = Vty.EvKey Vty.KEnter []
+       in do
+            someRequest <- (liftGen genericArbitrary :: TestM GraphiteRequest)
 
--- describe "pressing Enter in metrics view" $
---   prop "selects the metric under the cursor as the current metric" $
---     do
---       let inputEvent = Brick.VtyEvent (Vty.EvKey Vty.KEnter [])
+            metrics <- (liftGen arbitrary) `suchThat` (not . Vec.null)
+            chosen <- choose (0, length metrics - 1)
 
---       inputState <- do
---         metrics <- arbitrary `suchThat` (not . null)
---         index <- choose (0, length metrics)
---         return $
---           App.Active
---             ( App.ActiveState
---                 { _metricsView = mockOpenMetricsBrowser metrics index,
---                   _graphData = NoDataDisplayWidget
---                 }
---             )
+            let inputState req =
+                  App.Active
+                    ( App.ActiveState
+                        { _metricsView = mockOpenMetricsBrowser metrics chosen,
+                          _graphData = GraphWidget {_graphiteRequest = req, _graphDisplay = NoDataDisplay}
+                        }
+                    )
 
---       runEventHandler inputState $ do
---         (outcome, result') <- handleEvent inputEvent inputState
+            ((outcome, result), writtenEvents) <- runFakeChan $ keyPressHandler id inputEvent (inputState someRequest)
 
---         let didContinue = outcome === Continue
+            return $ case outcome of
+              Halt -> (counterexample "App halted unexpectedly" (property failed))
+              Continue ->
+                let usingDesiredMetric =
+                      inside
+                        result
+                        "Active graph data graphite request"
+                        (App._Active . App.graphData . graphiteRequest)
+                        (\req -> (requestMetric req) === (metrics ! chosen))
+
+                    requestedUpdate = writtenEvents === [TriggerUpdate]
+                 in inMetricsView isClosedMetricsBrowser result .&&. usingDesiredMetric .&&. requestedUpdate
+
+    prop "when there are no metrics available, the result is the no-data-display" $
+      let inputEvent :: Vty.Event
+          inputEvent = Vty.EvKey Vty.KEnter []
+       in do
+            someRequest <- (liftGen genericArbitrary :: TestM GraphiteRequest)
+
+            let inputState req =
+                  App.Active
+                    ( App.ActiveState
+                        { _metricsView = mockOpenMetricsBrowser mempty 0,
+                          _graphData =
+                            GraphWidget
+                              { _graphiteRequest = req,
+                                _graphDisplay = LoadingDataDisplay
+                              }
+                        }
+                    )
+
+            ((outcome, result), writtenEvents) <- runFakeChan @AppEvent $ keyPressHandler id inputEvent (inputState someRequest)
+
+            return $ case outcome of
+              Halt -> (counterexample "App halted unexpectedly" (property failed))
+              Continue ->
+                let isNoDataDisplay =
+                      inside
+                        result
+                        "Active graph data"
+                        (App._Active . App.graphData . graphDisplay)
+                        (`is` ("no data display", _NoDataDisplay))
+
+                    noUpdate = writtenEvents === []
+                 in inMetricsView isClosedMetricsBrowser result .&&. isNoDataDisplay .&&. noUpdate

@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
@@ -13,20 +14,20 @@ module Graphite.Types where
 
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
-import Data.ByteString as BS
-import Data.Decimal
+import Data.ByteString as BS (length)
+import Data.Decimal (Decimal, realFracToDecimal)
 import Data.Text.Encoding.Error (ignore)
-import Data.Time.Clock
-import Data.Time.Clock.POSIX
-import Data.Time.Format
-import Data.Time.LocalTime
-import Data.Typeable
+import Data.Time.Clock (NominalDiffTime, UTCTime)
+import Data.Time.Clock.POSIX (POSIXTime, posixSecondsToUTCTime)
+import Data.Time.Format (FormatTime)
+import Data.Time.LocalTime (LocalTime, TimeZone, utcToLocalTime)
+import Data.Typeable (cast)
 import Data.Vector (Vector)
-import Display.Projection.Scalable
-import Network.HTTP.Client as HTTP
-import Network.HTTP.Req
+import Display.Projection.Scalable (Scalable)
+import Network.HTTP.Client as HTTP (HttpException)
+import Network.HTTP.Req (Scheme, Url)
 import qualified Text.Show as TS
-import Web.HttpApiData
+import Web.HttpApiData (ToHttpApiData)
 
 newtype Time = Time {timestamp :: POSIXTime}
   deriving newtype (Show, Eq, Ord, Num, Real, Enum, Fractional, RealFrac, Scalable, FormatTime)
@@ -44,12 +45,10 @@ newtype From = From Text
 newtype To = To Text
   deriving newtype (Show, Eq, IsString, ToHttpApiData)
 
-type Target = Text
-
 data GraphiteRequest = RenderRequest
-  { _from :: From,
-    _to :: Maybe To,
-    _target :: Target
+  { requestFrom :: From,
+    requestTo :: Maybe To,
+    requestMetric :: Metric
   }
   deriving (Eq, Show, Generic)
 
@@ -102,8 +101,8 @@ instance JSON.FromJSON DataPoint where
   parseJSON invalid = JSON.typeMismatch "DataPoint" invalid
 
 newtype Metric = Metric ByteString
-  deriving newtype (Show, Eq, IsString)
-  deriving (Generic)
+  deriving newtype (IsString)
+  deriving (Show, Eq, Generic)
 
 instance ToText Metric where
   toText (Metric descriptor) = decodeUtf8With ignore descriptor
@@ -117,6 +116,7 @@ metricLength (Metric txt) = BS.length txt
 
 class Monad m => MonadGraphite m where
   listMetrics :: m (Vector Metric)
+
   getMetrics :: GraphiteRequest -> m [DataPoint]
 
 data MetricsResponse = MetricsResponse

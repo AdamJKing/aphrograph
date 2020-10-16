@@ -10,21 +10,33 @@
 
 module DerivedArbitraryInstances where
 
-import App.Config as App
-import Data.Decimal
-import Display.Types
-import GHC.Generics as GHC
+import App.Config as App ( GraphiteConfig(GraphiteConfig) )
+import Data.Decimal ( DecimalRaw(..), roundTo )
+import Display.Types ( Dimensions(Dims) )
+import GHC.Generics as GHC ( Generic(Rep) )
 import Graphite.Types as Graphite
+    ( DataPoint(DataPoint),
+      From(..),
+      GraphiteUrl(..),
+      Metric(..),
+      To(..),
+      Value(..) )
 import Network.HTTP.Req
   ( http,
     https,
   )
-import System.Random
+import System.Random ( Random(random, randomR) )
 import Test.QuickCheck
+    ( Arbitrary(arbitrary),
+      oneof,
+      applyArbitrary2,
+      arbitrarySizedNatural,
+      Positive(Positive) )
 import Test.QuickCheck.Arbitrary.ADT
+    ( GArbitrary, genericArbitrary )
 import Test.QuickCheck.Instances.ByteString ()
 import Test.QuickCheck.Instances.Text ()
-import Time.Types
+import Time.Types ( Elapsed(..), Seconds(..) )
 
 newtype GenArbitrary a = GenArbitrary a deriving (Generic)
 

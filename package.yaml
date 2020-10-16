@@ -22,7 +22,7 @@ library:
   dependencies:
     - aeson
     - array
-    - brick >= 0.55
+    - brick >= 0.57
     - bytestring
     - containers
     - Decimal
@@ -87,4 +87,4 @@ executables:
     dependencies:
       - aphrograph
       - vty
-      - brick >= 0.55
+      - brick >= 0.57

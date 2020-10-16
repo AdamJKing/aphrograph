@@ -7,16 +7,29 @@
 module App.Args where
 
 import qualified App.Config as App
-import Control.Lens.Prism
-import Control.Lens.Setter
+import Control.Lens.Prism (_Left)
+import Control.Lens.Setter (over)
 import Data.Time (TimeZone, getCurrentTimeZone)
 import Data.Version (showVersion)
-import Formatting
-import Graphite.Types hiding (value)
-import Network.HTTP.Req
+import Formatting (formatToString, shown, (%))
+import Graphite.Types (From, GraphiteUrl (..), To)
+import Network.HTTP.Req (useURI)
 import Options.Applicative.Simple as Opt
+  ( ParseError (ErrorMsg),
+    Parser,
+    ReadM,
+    auto,
+    eitherReader,
+    help,
+    long,
+    metavar,
+    option,
+    readerAbort,
+    simpleOptions,
+    strOption,
+  )
 import Paths_aphrograph (version)
-import Text.URI
+import Text.URI (URI, mkURI)
 
 fromTimeArgument :: Parser From
 fromTimeArgument =

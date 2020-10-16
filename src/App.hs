@@ -30,29 +30,21 @@ import qualified Brick.Types as Brick
 import Control.Concurrent (Chan)
 import Control.Concurrent.Lifted (fork)
 import Control.Lens (makeLenses, view, views, (^.))
-import Control.Monad.Base (MonadBase)
+import Control.Monad.Base (MonadBase, liftBase)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.Logger (LogLine, LoggingT, MonadLogger, logInfo, mapLoggingT, runChanLoggingT)
 import Control.Monad.Morph (MFunctor (..))
-import Control.Monad.Trans.Control (MonadBaseControl)
-import qualified Display.Graph as Graph
+import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Display.GraphWidget (graphDisplayWidget)
 import Events.Types
-  ( AppEvent (GraphUpdate),
+  ( AppEvent,
     MonadEvent (..),
-    MonadOutcome (..),
   )
 import Formatting (int, sformat, (%))
 import Graphite (runGraphite)
-import Graphite.Types as Graphite
-  ( GraphiteRequest (RenderRequest),
-    MonadGraphite (..),
-  )
+import Graphite.Types as Graphite (MonadGraphite (..))
 
 newtype AppChan e = AppChan (Brick.BChan e)
-
-instance MonadIO m => MonadEvent AppChan m where
-  writeEvent (AppChan ch) = liftIO . Brick.writeBChan ch
 
 data AppSystem' ch = AppSystem {_config :: App.Config, _eventCh :: ch AppEvent}
 
@@ -68,10 +60,14 @@ newtype AppT m a = MkAppT {_unApp :: ReaderT AppSystem (LoggingT (ExceptT App.Er
       MonadIO,
       MonadReader AppSystem,
       MonadError App.Error,
-      MonadBase b,
-      MonadBaseControl b,
       MonadLogger
     )
+
+instance Monad m => MonadBase m (AppT m) where
+  liftBase = lift
+  {-# INLINEABLE liftBase #-}
+
+deriving instance (MonadBase b (AppT m), MonadBaseControl b m) => MonadBaseControl b (AppT m)
 
 instance MFunctor AppT where
   hoist nat = MkAppT . hoist (mapLoggingT (hoist nat)) . _unApp
@@ -114,30 +110,16 @@ instance MonadIO m => MonadGraphite (AppT m) where
           >> return metrics
       Left err -> throwError (App.AppGraphiteError err)
 
-instance MonadOutcome (AppT (Brick.EventM n)) where
-  type EventF (AppT (Brick.EventM n)) = Brick.Next
-
-  continue = lift . Brick.continue
-  {-# INLINEABLE continue #-}
-  stop = lift . Brick.halt
-  {-# INLINEABLE stop #-}
-
 instance GraphViewer (AppT (Brick.EventM ComponentName)) where
-  triggerUpdate metric =
-    inThread $ do
-      ch <- view App.eventCh
-      newGraph <- fetchGraph
-      writeEvent ch (GraphUpdate metric newGraph)
-    where
-      fetchGraph = do
-        App.GraphiteConfig {..} <- view (App.config . App.graphiteConfig)
-        datapoints <- getMetrics $ RenderRequest _fromTime _toTime _targetArg
-        return (toGraph datapoints)
-        where
-          toGraph = Graph.mkGraph . fmap Graph.extract
-
-      inThread = hoist liftIO . void . fork
-
-  updateGraph newGraph = do
+  updateGraph ctx newGraph = do
     lift $ Brick.invalidateCacheEntry GraphView
-    views (App.config . App.timezone) $ graphDisplayWidget (App.Present newGraph)
+    views (App.config . App.timezone) $ graphDisplayWidget ctx newGraph
+
+instance MonadEvent AppEvent (AppT IO) where
+  writeEvent ev = do
+    (AppChan ch) <- view App.eventCh
+    liftBase (Brick.writeBChan ch ev)
+
+  writeEventLater eventAction = void $ fork (eventAction >>= writeEvent)
+
+type AppM = AppT (Brick.EventM ComponentName)

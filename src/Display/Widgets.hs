@@ -10,11 +10,7 @@ import App.Components
     ComponentName (GraphView),
     DisplayWidget (..),
     ErrorWidget (..),
-    GraphCanvasWidget (..),
-    GraphDisplayWidget (..),
-    HorizontalAxisWidget (..),
-    MetricsBrowserWidget (display),
-    VerticalAxisWidget (..),
+    MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser, display),
   )
 import Brick.Types as Brick
   ( RenderM,
@@ -28,6 +24,7 @@ import Brick.Widgets.Border as WidgetB (border)
 import Brick.Widgets.Center as Widget (center)
 import Brick.Widgets.Core as Widget
   ( cached,
+    emptyWidget,
     hBox,
     hLimitPercent,
     padAll,
@@ -37,7 +34,12 @@ import Brick.Widgets.Core as Widget
   )
 import Control.Lens (set, view, views)
 import Display.GraphWidget
-  ( cornerPiece,
+  ( GraphCanvasWidget (..),
+    GraphDisplay (..),
+    GraphWidget (..),
+    HorizontalAxisWidget (..),
+    VerticalAxisWidget (..),
+    cornerPiece,
     drawGraphImage,
     drawHorizontalAxisImage,
     drawVerticalAxisImage,
@@ -52,7 +54,8 @@ class CompileLayeredWidget n w where
   compileLayered :: w -> [Brick.Widget n]
 
 instance CompileWidget ComponentName (MetricsBrowserWidget m) where
-  compile = display
+  compile (opened@OpenMetricsBrowser {}) = display opened
+  compile (ClosedMetricsBrowser {}) = Widget.emptyWidget
 
 instance CompileLayeredWidget ComponentName (AppWidget e) where
   compileLayered (DefaultDisplay dataDisplay mBrowser) = [compile mBrowser, compile dataDisplay]
@@ -64,14 +67,11 @@ instance Exception e => CompileLayeredWidget ComponentName (DisplayWidget m e) w
 instance Exception e => CompileWidget n (ErrorWidget e) where
   compile (ErrorWidget err) = Widget.str (displayException err)
 
-instance CompileWidget ComponentName GraphDisplayWidget where
-  compile NoDataDisplayWidget = Widget.str "NoData"
-  compile LoadingDataDisplayWidget = Widget.center $ WidgetB.border $ Widget.padAll 1 $ Widget.str "Loading..."
-  compile (GraphDisplay graphCanvas verticalAxis' horizontalAxis') =
-    let graphWidget = compile graphCanvas
-        horizontalAxisWidget = compile horizontalAxis'
-        verticalAxisWidget = compile verticalAxis'
-     in cached GraphView $ arrange graphWidget verticalAxisWidget horizontalAxisWidget
+instance CompileWidget ComponentName GraphWidget where
+  compile GraphWidget {_graphDisplay = NoDataDisplay} = Widget.str "NoData"
+  compile GraphWidget {_graphDisplay = LoadingDataDisplay} = Widget.center $ WidgetB.border $ Widget.padAll 1 $ Widget.str "Loading..."
+  compile GraphWidget {_graphDisplay = (GraphDisplay graphCanvas verticalAxis' horizontalAxis')} =
+    cached GraphView $ arrange (compile graphCanvas) (compile verticalAxis') (compile horizontalAxis')
     where
       arrange g v h =
         Widget.vBox

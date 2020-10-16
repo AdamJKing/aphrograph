@@ -8,17 +8,16 @@
 
 module ArbitraryInstances where
 
-import App.Components
-  ( GraphCanvasWidget (..),
-    GraphDisplayWidget (..),
-    HorizontalAxisWidget (..),
-    VerticalAxisWidget (..),
-  )
 import qualified App.Config as App
 import qualified App.State as App
 import Data.Time (utc)
 import DerivedArbitraryInstances (GenArbitrary (..))
 import Display.Graph as Graph (Graph, mkGraph)
+import Display.GraphWidget
+  ( GraphCanvasWidget (..),
+    HorizontalAxisWidget (..),
+    VerticalAxisWidget (..),
+  )
 import Display.Labels (TimeStep (..))
 import Graphics.Vty.Input.Events as Vty
   ( Button,
@@ -48,11 +47,7 @@ deriving via (GenArbitrary VerticalAxisWidget) instance Arbitrary VerticalAxisWi
 
 deriving via (GenArbitrary HorizontalAxisWidget) instance Arbitrary HorizontalAxisWidget
 
-deriving via (GenArbitrary GraphDisplayWidget) instance Arbitrary GraphDisplayWidget
-
 deriving via (GenArbitrary GraphiteError) instance Arbitrary GraphiteError
-
-deriving via (GenArbitrary App.GraphData) instance Arbitrary App.GraphData
 
 deriving via (GenArbitrary App.Error) instance Arbitrary App.Error
 

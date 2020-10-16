@@ -2,6 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 
 module App.StateSpec
   ( spec,
@@ -9,11 +10,7 @@ module App.StateSpec
 where
 
 import ArbitraryInstances ()
-import Test.Hspec
-import Test.Hspec.QuickCheck (prop)
+import Test.Hspec (Spec, it, pending)
 
 spec :: Spec
-spec =
-  describe "App.State" $
-    describe "Graph updates" $
-      prop "overwriting existing graph state" pending
+spec = it "no tests" pending

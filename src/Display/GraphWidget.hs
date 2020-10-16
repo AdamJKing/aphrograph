@@ -1,45 +1,105 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Display.GraphWidget where
-
-import App.Components
-import App.State
-import Brick.Types as Brick
-import Brick.Widgets.Core as W
-import Control.Lens hiding
-  ( cons,
-    snoc,
+module Display.GraphWidget
+  ( GraphWidget (..),
+    GraphCanvasWidget(..),
+    GraphDisplay (..),
+    HorizontalAxisWidget (..),
+    VerticalAxisWidget (..),
+    graphDisplayWidget,
+    drawGraphImage,
+    drawVerticalAxisImage,
+    drawHorizontalAxisImage,
+    cornerPiece,
+    heightAndWidthL,
+    graphiteRequest,
+    graphDisplay,
   )
+where
+
+import Brick.Types as Brick
+  ( Context,
+    Padding (Max),
+    Widget,
+    availHeightL,
+    availWidthL,
+  )
+import Brick.Widgets.Core as W (padBottom, padLeft, txt)
+import Control.Lens
+  ( Getter,
+    ReifiedGetter (Getter, runGetter),
+    maximumOf,
+    to,
+  )
+import Control.Lens.TH (makeLenses)
 import qualified Data.Map.Strict as M
 import qualified Data.Set as Set
 import qualified Data.Text.Lazy as LT
-import Data.Time.LocalTime
+import Data.Time.LocalTime (TimeZone)
 import Display.Graph as G
+  ( Graph,
+    boundsX,
+    boundsY,
+    horizontalAxis,
+    null,
+    toMap,
+    verticalAxis,
+  )
 import Display.Labels
-import Display.Projection.Scalable
+  ( generateLabelsContinuous,
+    generateLabelsTime,
+  )
+import Display.Projection.Scalable (Scalable (scale))
 import Graphics.Vty
   ( horizJoin,
     vertCat,
     vertJoin,
   )
 import qualified Graphics.Vty as Vty
-import Graphite.Types
+import Graphite.Types as Graphite (GraphiteRequest, Time, Value)
 
-graphDisplayWidget :: GraphData -> TimeZone -> GraphDisplayWidget
-graphDisplayWidget Missing _ = NoDataDisplayWidget
-graphDisplayWidget Pending _ = LoadingDataDisplayWidget
-graphDisplayWidget (Present graph) _timezone =
-  if G.null graph
-    then NoDataDisplayWidget
-    else
-      GraphDisplay
-        (GraphCanvas graph)
-        (VerticalAxis (verticalAxis graph))
-        (HorizontalAxis (horizontalAxis graph) _timezone)
+data HorizontalAxisWidget = HorizontalAxis [Graphite.Time] TimeZone deriving (Show, Generic)
+
+newtype VerticalAxisWidget = VerticalAxis [Graphite.Value] deriving (Show, Generic)
+
+newtype GraphCanvasWidget = GraphCanvas (Graph Graphite.Time Graphite.Value) deriving (Show, Generic)
+
+data GraphDisplay
+  = GraphDisplay
+      { displayCanvas :: GraphCanvasWidget,
+        vertAxis :: VerticalAxisWidget,
+        horizAxis :: HorizontalAxisWidget
+      }
+  | LoadingDataDisplay
+  | NoDataDisplay
+  deriving (Show, Generic)
+
+data GraphWidget = GraphWidget
+  { _graphiteRequest :: Graphite.GraphiteRequest,
+    _graphDisplay :: GraphDisplay
+  }
+  deriving (Generic, Show)
+
+makeLenses ''GraphWidget
+
+graphDisplayWidget :: GraphiteRequest -> Graph Time Value -> TimeZone -> GraphWidget
+graphDisplayWidget _graphiteRequest graph _timezone =
+  GraphWidget {_graphiteRequest, _graphDisplay}
+  where
+    _graphDisplay
+      | G.null graph = NoDataDisplay
+      | otherwise =
+        GraphDisplay
+          (GraphCanvas graph)
+          (VerticalAxis (verticalAxis graph))
+          (HorizontalAxis (horizontalAxis graph) _timezone)
 
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
 drawGraphImage graph (width, height) =
