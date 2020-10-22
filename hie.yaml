@@ -1,0 +1,13 @@
+cradle:
+  cabal:
+    - path: "./src"
+      component: "lib:aphrograph"
+
+    - path: "./app/Main.hs"
+      component: "aphrograph:exe:aphrograph"
+
+    - path: "./app/Paths_aphrograph.hs"
+      component: "aphrograph:exe:aphrograph"
+
+    - path: "./test"
+      component: "aphrograph:test:aphrograph-test"
