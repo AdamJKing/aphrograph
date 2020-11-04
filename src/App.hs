@@ -16,10 +16,7 @@
 module App where
 
 import App.Components
-  ( AppWidget (DefaultDisplay, dataDisplay, metricBrowser),
-    ComponentName (GraphView),
-    DisplayWidget (..),
-    ErrorWidget (ErrorWidget),
+  ( ComponentName (GraphView),
     GraphViewer (..),
   )
 import qualified App.Config as App
@@ -29,7 +26,7 @@ import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import Control.Concurrent (Chan)
 import Control.Concurrent.Lifted (fork)
-import Control.Lens (makeLenses, view, views, (^.))
+import Control.Lens (makeLenses, view, views)
 import Control.Monad.Base (MonadBase, liftBase)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.Logger (LogLine, LoggingT, MonadLogger, logInfo, mapLoggingT, runChanLoggingT)
@@ -82,16 +79,6 @@ runApp logChan deps = failOnError . runChanLoggingT logChan . usingReaderT deps 
       runExceptT res >>= \case
         (Right a) -> return a
         (Left e) -> fail (displayException e)
-
-constructDom :: App.CurrentState m -> DisplayWidget m App.Error
-constructDom (App.Failed (App.FailedState err)) = DisplayWidget $ Left (ErrorWidget err)
-constructDom (App.Active activeState) =
-  DisplayWidget $
-    Right $
-      DefaultDisplay
-        { dataDisplay = activeState ^. App.graphData,
-          metricBrowser = activeState ^. App.metricsView
-        }
 
 instance MonadIO m => MonadGraphite (AppT m) where
   getMetrics req = do

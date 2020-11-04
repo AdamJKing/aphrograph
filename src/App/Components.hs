@@ -20,6 +20,7 @@ module App.Components
     openMetricsBrowser,
     closedMetricsBrowser,
     targeted,
+    MetricsBrowser,
   )
 where
 
@@ -40,6 +41,8 @@ newtype ErrorWidget e = ErrorWidget e deriving (Show)
 
 data ComponentName = GraphView | MetricsView
   deriving (Eq, Ord, Show)
+
+type MetricsBrowser = BWL.List ComponentName Graphite.Metric
 
 data MetricsBrowserWidget (m :: * -> *)
   = ClosedMetricsBrowser {open :: Vector Graphite.Metric -> MetricsBrowserWidget m}

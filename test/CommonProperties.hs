@@ -35,7 +35,7 @@ module CommonProperties
   )
 where
 
-import App.Components (GraphViewer (..), MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser))
+import App.Components (MetricsBrowser, GraphViewer (..), MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser))
 import qualified App.Config as App
 import qualified App.State as App
 import ArbitraryInstances ()
@@ -150,7 +150,7 @@ inside outer desc getter condition =
     Just inner -> counterexample (desc ++ " did not match condition") (condition inner)
     Nothing -> counterexample ("Did not find " ++ desc ++ " in " ++ (show outer)) (property failed)
 
-inMetricsView :: (MetricsBrowserWidget m -> Property) -> App.CurrentState m -> Property
+inMetricsView :: (Maybe MetricsBrowser -> Property) -> App.CurrentState m -> Property
 inMetricsView cond target = inside target "Active metrics view" (App._Active . App.metricsView) cond
 
 isClosedMetricsBrowser :: MetricsBrowserWidget m -> Property

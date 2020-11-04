@@ -19,23 +19,20 @@
 module Events where
 
 import App.Components
-  ( GraphViewer,
-    MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser),
-    close,
-    open,
-    targeted,
-    update,
+  ( ComponentName (MetricsView),
+    GraphViewer,
     updateGraph,
   )
 import qualified App.State as App
 import qualified Brick as Brick
+import qualified Brick.Widgets.List as Brick
 import Control.Lens (traverseOf, (%~), (.~), (^.))
+import Control.Monad.Base (MonadBase (liftBase))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
 import Display.GraphWidget (GraphDisplay (NoDataDisplay), graphDisplay, graphiteRequest)
 import Events.Types
   ( AppEvent (..),
-    MetricsBrowserEvent (Modify),
     MonadEvent,
     writeEvent,
     writeEventLater,
@@ -74,7 +71,7 @@ brickEventHandler handleKeyPresses handleAppEvents = \case
   (Brick.AppEvent appEvent) -> handleAppEvents appEvent
   _unhandled -> pure . (Continue,)
 
-keyPressHandler :: (MonadEvent AppEvent n, MonadGraphite m) => (forall x. n x -> m x) -> EventHandler m Vty.Event (App.CurrentState m)
+keyPressHandler :: (MonadEvent AppEvent n, MonadGraphite m, MonadBase (Brick.EventM ComponentName) m) => (forall x. n x -> m x) -> EventHandler m Vty.Event (App.CurrentState m)
 keyPressHandler nat = \event cm ->
   case event of
     ExitKey -> return (Halt, cm)
@@ -85,7 +82,7 @@ keyPressHandler nat = \event cm ->
       newState <- cm & traverseOf (App._Active . App.metricsView) toggleMetricsBrowser
       return (Continue, newState)
     otherKeyPress -> do
-      newState <- cm & traverseOf (App._Active . App.metricsView) (handleMiscEvents ?? otherKeyPress)
+      newState <- cm & traverseOf (App._Active . App.metricsView) (handleMiscEvents otherKeyPress)
       return (Continue, newState)
   where
     selectMetric activeState =
@@ -93,21 +90,23 @@ keyPressHandler nat = \event cm ->
         & traverseOf
           App.graphData
           ( \gd ->
-              case targeted (activeState ^. App.metricsView) of
+              case (activeState ^. App.metricsView) >>= Brick.listSelectedElement of
                 Nothing -> return (gd & graphDisplay .~ NoDataDisplay)
-                Just newTargetMetric -> do
+                Just (_, newTargetMetric) -> do
                   nat (writeEvent TriggerUpdate)
                   return
                     ( gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
                     )
           )
-        <&> App.metricsView %~ close
+        <&> App.metricsView .~ Nothing
 
-    toggleMetricsBrowser (ClosedMetricsBrowser {open}) = listMetrics <&> open
-    toggleMetricsBrowser (OpenMetricsBrowser {close}) = return close
+    toggleMetricsBrowser (Just _browser) = return Nothing
+    toggleMetricsBrowser Nothing = do
+      metrics <- listMetrics
+      return $ Just (Brick.list MetricsView metrics 1)
 
-    handleMiscEvents (closed@(ClosedMetricsBrowser _)) _ = return closed
-    handleMiscEvents (OpenMetricsBrowser {update}) otherKeyPress = update (Modify otherKeyPress)
+    handleMiscEvents otherKeyPress = traverse $ \browser ->
+      liftBase (Brick.handleListEventVi Brick.handleListEvent otherKeyPress browser)
 
 appEventHandler :: (GraphViewer m, MonadGraphite n, MonadEvent AppEvent n) => (forall x. n x -> m x) -> EventHandler m AppEvent (App.CurrentState o)
 appEventHandler nat graphUpdate priorState = do

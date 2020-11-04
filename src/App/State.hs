@@ -15,7 +15,7 @@
 module App.State where
 
 import App.Components
-  ( MetricsBrowserWidget,
+  ( MetricsBrowser,
   )
 import Control.Lens.Combinators
   ( makeLenses,
@@ -29,7 +29,7 @@ newtype Error = AppGraphiteError GraphiteError
   deriving anyclass (Exception)
 
 data ActiveState (m :: * -> *) = ActiveState
-  { _metricsView :: MetricsBrowserWidget m,
+  { _metricsView :: Maybe MetricsBrowser,
     _graphData :: GraphWidget
   }
   deriving (Show)
