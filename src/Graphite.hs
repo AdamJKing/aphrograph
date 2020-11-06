@@ -44,7 +44,13 @@ with lens f = view lens >>= f
 
 asQueryParams :: GraphiteRequest -> Req.Option s
 asQueryParams RenderRequest {..} =
-  mconcat ["target" =: toText requestMetric, "from" =: requestFrom, "to" =: requestTo, "format" =: ("json" :: Text)]
+  mconcat
+    [ "target" =: toText requestMetric,
+      "from" =: requestFrom,
+      "to" =: requestTo,
+      "format" =: ("json" :: Text),
+      "tz" =: (show preferredTimeZone :: Text)
+    ]
 
 listMetricsHttp :: MonadHttp m => GraphiteUrl -> m (Vector Metric)
 listMetricsHttp (GraphiteUrl url) = makeRequest $ url /: "metrics/index.json"

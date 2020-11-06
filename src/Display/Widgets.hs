@@ -6,12 +6,11 @@
 module Display.Widgets where
 
 import App.Components
-  ( AppWidget (DefaultDisplay),
-    ComponentName (GraphView),
-    DisplayWidget (..),
-    ErrorWidget (..),
-    MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser, display),
+  ( ComponentName (GraphView),
+    MetricsBrowser (..),
   )
+import qualified App.State as App
+import qualified Brick
 import Brick.Types as Brick
   ( RenderM,
     Result,
@@ -21,10 +20,9 @@ import Brick.Types as Brick
     imageL,
   )
 import Brick.Widgets.Border as WidgetB (border)
-import Brick.Widgets.Center as Widget (center)
+import Brick.Widgets.Center as Widget (center, centerLayer)
 import Brick.Widgets.Core as Widget
   ( cached,
-    emptyWidget,
     hBox,
     hLimitPercent,
     padAll,
@@ -32,6 +30,7 @@ import Brick.Widgets.Core as Widget
     vBox,
     vLimitPercent,
   )
+import qualified Brick.Widgets.List as Brick
 import Control.Lens (set, view, views)
 import Display.GraphWidget
   ( GraphCanvasWidget (..),
@@ -53,19 +52,24 @@ class CompileWidget n w where
 class CompileLayeredWidget n w where
   compileLayered :: w -> [Brick.Widget n]
 
-instance CompileWidget ComponentName (MetricsBrowserWidget m) where
-  compile (opened@OpenMetricsBrowser {}) = display opened
-  compile (ClosedMetricsBrowser {}) = Widget.emptyWidget
+instance CompileWidget ComponentName MetricsBrowser where
+  compile (MkMetricsBrowser browser width) =
+    let hasFocus = True
+        popupSize = (width, 10)
+     in Widget.centerLayer $
+          WidgetB.border $
+            Brick.setAvailableSize popupSize $
+              Brick.renderList render hasFocus browser
+    where
+      render isActive metric =
+        let attrName = "metric" <> if isActive then "selected" else "unselcted"
+         in Brick.withAttr attrName (Brick.txt (toText metric))
 
-instance CompileLayeredWidget ComponentName (AppWidget e) where
-  compileLayered (DefaultDisplay dataDisplay mBrowser) = [compile mBrowser, compile dataDisplay]
-
-instance Exception e => CompileLayeredWidget ComponentName (DisplayWidget m e) where
-  compileLayered (DisplayWidget (Right appWidget)) = compileLayered appWidget
-  compileLayered (DisplayWidget (Left errorWidget)) = return (compile errorWidget)
-
-instance Exception e => CompileWidget n (ErrorWidget e) where
-  compile (ErrorWidget err) = Widget.str (displayException err)
+instance CompileLayeredWidget ComponentName App.CurrentState where
+  compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]
+  compileLayered (App.Active (App.ActiveState {..})) = case _metricsView of
+    Just mv -> [compile mv, compile _graphData]
+    Nothing -> [compile _graphData]
 
 instance CompileWidget ComponentName GraphWidget where
   compile GraphWidget {_graphDisplay = NoDataDisplay} = Widget.str "NoData"

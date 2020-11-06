@@ -4,6 +4,8 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
@@ -14,9 +16,7 @@
 
 module App.State where
 
-import App.Components
-  ( MetricsBrowser,
-  )
+import App.Components (MetricsBrowser)
 import Control.Lens.Combinators
   ( makeLenses,
     makePrisms,
@@ -28,18 +28,16 @@ newtype Error = AppGraphiteError GraphiteError
   deriving (Show, Generic)
   deriving anyclass (Exception)
 
-data ActiveState (m :: * -> *) = ActiveState
+data ActiveState = ActiveState
   { _metricsView :: Maybe MetricsBrowser,
     _graphData :: GraphWidget
   }
-  deriving (Show)
 
 makeLenses ''ActiveState
 
 newtype FailedState = FailedState {failure :: Error}
   deriving (Show, Generic)
 
-data CurrentState (m :: * -> *) = Failed FailedState | Active (ActiveState m)
-  deriving (Generic, Show)
+data CurrentState = Failed FailedState | Active ActiveState
 
 makePrisms ''CurrentState

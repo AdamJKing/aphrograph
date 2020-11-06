@@ -84,6 +84,7 @@ executable aphrograph
     , mmorph
     , relude
     , transformers-base
+    , time
     , vector
     , vty
   mixins:

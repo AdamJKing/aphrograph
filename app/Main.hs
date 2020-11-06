@@ -8,12 +8,9 @@
 
 module Main where
 
-import App (AppChan (..), AppM, AppSystem' (AppSystem), constructDom, runApp)
+import App (AppChan (..), AppSystem' (AppSystem), runApp)
 import qualified App.Args as App
-import App.Components
-  ( ComponentName,
-    closedMetricsBrowser,
-  )
+import App.Components (ComponentName, _unCompT)
 import qualified App.Config as App
 import App.Logging (fileWritingLogChan)
 import qualified App.State as App
@@ -29,14 +26,20 @@ import Control.Concurrent
     threadDelay,
   )
 import Control.Monad.Logger (LogLine)
-import Control.Monad.Morph (MFunctor (hoist))
+import Data.Time (getCurrentTimeZone)
 import Display.GraphWidget (GraphDisplay (NoDataDisplay), GraphWidget (..))
 import Display.Widgets (CompileLayeredWidget (compileLayered))
 import Events (EventOutcome (Continue, Halt), appEventHandler, brickEventHandler, keyPressHandler)
 import Events.Types (AppEvent (TriggerUpdate))
 import qualified Graphics.Vty as Vty
-import Graphite.Types (GraphiteRequest (RenderRequest), requestFrom, requestMetric, requestTo)
 import qualified Graphite.Types as Graphite
+  ( From (..),
+    GraphiteRequest (RenderRequest),
+    preferredTimeZone,
+    requestFrom,
+    requestMetric,
+    requestTo,
+  )
 import Prelude hiding (on)
 
 main :: IO ()
@@ -53,16 +56,19 @@ main = do
             threadDelay 30000000
             Brick.writeBChan eventQueue TriggerUpdate
 
+          tz <- getCurrentTimeZone
+
           let startState =
                 App.ActiveState
-                  { _metricsView = closedMetricsBrowser,
+                  { _metricsView = Nothing,
                     _graphData =
                       GraphWidget
                         { _graphiteRequest =
-                            RenderRequest
+                            Graphite.RenderRequest
                               { requestFrom = (Graphite.From "-24h"),
                                 requestTo = Nothing,
-                                requestMetric = "randomWalk(\"metric\")"
+                                requestMetric = "randomWalk(\"metric\")",
+                                preferredTimeZone = tz
                               },
                           _graphDisplay = NoDataDisplay
                         }
@@ -83,24 +89,27 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
    in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Chan LogLine -> AppChan AppEvent -> App.Config -> Brick.App (App.CurrentState AppM) AppEvent ComponentName
+mkApp :: Chan LogLine -> AppChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent ComponentName
 mkApp logger appCh config = Brick.App {..}
   where
-    appDraw :: App.CurrentState AppM -> [Brick.Widget ComponentName]
-    appDraw = compileLayered . constructDom
+    appDraw :: App.CurrentState -> [Brick.Widget ComponentName]
+    appDraw = compileLayered
 
-    appChooseCursor :: App.CurrentState AppM -> [Brick.CursorLocation ComponentName] -> Maybe (Brick.CursorLocation ComponentName)
+    appChooseCursor :: App.CurrentState -> [Brick.CursorLocation ComponentName] -> Maybe (Brick.CursorLocation ComponentName)
     appChooseCursor = Brick.neverShowCursor
 
-    appHandleEvent :: App.CurrentState AppM -> Brick.BrickEvent ComponentName AppEvent -> Brick.EventM ComponentName (Brick.Next (App.CurrentState AppM))
+    appHandleEvent :: App.CurrentState -> Brick.BrickEvent ComponentName AppEvent -> Brick.EventM ComponentName (Brick.Next App.CurrentState)
     appHandleEvent currentState brickEvent = do
-      (outcome, result) <- runApp logger (AppSystem config appCh) (brickEventHandler (keyPressHandler (hoist liftIO)) (appEventHandler (hoist liftIO)) brickEvent currentState)
+      (outcome, result) <-
+        _unCompT $
+          runApp logger (AppSystem config appCh) $
+            brickEventHandler keyPressHandler appEventHandler brickEvent currentState
       case outcome of
         Continue -> (Brick.continue result)
         Halt -> (Brick.halt result)
 
-    appStartEvent :: App.CurrentState AppM -> Brick.EventM ComponentName (App.CurrentState AppM)
+    appStartEvent :: App.CurrentState -> Brick.EventM ComponentName App.CurrentState
     appStartEvent = return
 
-    appAttrMap :: App.CurrentState AppM -> Brick.AttrMap
+    appAttrMap :: App.CurrentState -> Brick.AttrMap
     appAttrMap = const appTheme

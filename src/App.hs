@@ -15,24 +15,19 @@
 
 module App where
 
-import App.Components
-  ( ComponentName (GraphView),
-    GraphViewer (..),
-  )
+import App.Components (ComponentName)
 import qualified App.Config as App
 import qualified App.State as App
 import qualified Brick.BChan as Brick
-import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import Control.Concurrent (Chan)
 import Control.Concurrent.Lifted (fork)
-import Control.Lens (makeLenses, view, views)
+import Control.Lens (makeLenses, view)
 import Control.Monad.Base (MonadBase, liftBase)
 import Control.Monad.Except (MonadError (throwError))
 import Control.Monad.Logger (LogLine, LoggingT, MonadLogger, logInfo, mapLoggingT, runChanLoggingT)
 import Control.Monad.Morph (MFunctor (..))
 import Control.Monad.Trans.Control (MonadBaseControl (..))
-import Display.GraphWidget (graphDisplayWidget)
 import Events.Types
   ( AppEvent,
     MonadEvent (..),
@@ -96,11 +91,6 @@ instance MonadIO m => MonadGraphite (AppT m) where
         $(logInfo) (sformat ("Returned " % int % " metrics from graphite") (length metrics))
           >> return metrics
       Left err -> throwError (App.AppGraphiteError err)
-
-instance GraphViewer (AppT (Brick.EventM ComponentName)) where
-  updateGraph ctx newGraph = do
-    lift $ Brick.invalidateCacheEntry GraphView
-    views (App.config . App.timezone) $ graphDisplayWidget ctx newGraph
 
 instance MonadEvent AppEvent (AppT IO) where
   writeEvent ev = do

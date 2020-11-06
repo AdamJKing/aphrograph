@@ -9,7 +9,7 @@
 
 module Display.GraphWidget
   ( GraphWidget (..),
-    GraphCanvasWidget(..),
+    GraphCanvasWidget (..),
     GraphDisplay (..),
     HorizontalAxisWidget (..),
     VerticalAxisWidget (..),
@@ -63,7 +63,11 @@ import Graphics.Vty
     vertJoin,
   )
 import qualified Graphics.Vty as Vty
-import Graphite.Types as Graphite (GraphiteRequest, Time, Value)
+import Graphite.Types as Graphite
+  ( GraphiteRequest (preferredTimeZone),
+    Time,
+    Value,
+  )
 
 data HorizontalAxisWidget = HorizontalAxis [Graphite.Time] TimeZone deriving (Show, Generic)
 
@@ -82,15 +86,15 @@ data GraphDisplay
   deriving (Show, Generic)
 
 data GraphWidget = GraphWidget
-  { _graphiteRequest :: Graphite.GraphiteRequest,
+  { _graphiteRequest :: GraphiteRequest,
     _graphDisplay :: GraphDisplay
   }
   deriving (Generic, Show)
 
 makeLenses ''GraphWidget
 
-graphDisplayWidget :: GraphiteRequest -> Graph Time Value -> TimeZone -> GraphWidget
-graphDisplayWidget _graphiteRequest graph _timezone =
+graphDisplayWidget :: GraphiteRequest -> Graph Time Value -> GraphWidget
+graphDisplayWidget _graphiteRequest graph =
   GraphWidget {_graphiteRequest, _graphDisplay}
   where
     _graphDisplay
@@ -99,7 +103,7 @@ graphDisplayWidget _graphiteRequest graph _timezone =
         GraphDisplay
           (GraphCanvas graph)
           (VerticalAxis (verticalAxis graph))
-          (HorizontalAxis (horizontalAxis graph) _timezone)
+          (HorizontalAxis (horizontalAxis graph) (preferredTimeZone _graphiteRequest))
 
 drawGraphImage :: Graph Time Value -> (Int, Int) -> Vty.Image
 drawGraphImage graph (width, height) =

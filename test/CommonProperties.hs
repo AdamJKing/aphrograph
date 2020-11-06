@@ -29,13 +29,11 @@ module CommonProperties
     runFakeChan,
     inside,
     is,
-    isClosedMetricsBrowser,
-    isOpenMetricsBrowser,
     inMetricsView,
   )
 where
 
-import App.Components (MetricsBrowser, GraphViewer (..), MetricsBrowserWidget (ClosedMetricsBrowser, OpenMetricsBrowser))
+import App.Components (GraphViewer (..), MetricsBrowser)
 import qualified App.Config as App
 import qualified App.State as App
 import ArbitraryInstances ()
@@ -44,7 +42,6 @@ import Control.Lens.TH (makeLenses)
 import Control.Monad.Base (MonadBase (..))
 import Control.Monad.Except (MonadError, liftEither)
 import Control.Monad.Trans.Control (MonadBaseControl (..))
-import Data.Time (utc)
 import Display.GraphWidget (graphDisplayWidget)
 import Events.Types (MonadEvent (..))
 import Graphite.Types
@@ -66,9 +63,9 @@ import Test.Tools (Lifted (..))
 
 range :: (Ord a, Arbitrary a) => Gen (a, a)
 range = do
-  lower <- liftGen arbitrary
-  upper <- liftGen arbitrary `suchThat` (> lower)
-  return (lower, upper)
+  a <- arbitrary
+  b <- arbitrary `suchThat` (/= a)
+  return (min a b, max a b)
 
 daysFrom :: Word16 -> Time -> [Time]
 daysFrom n = take (fromIntegral n + 1) . iterate (+ 86400)
@@ -123,7 +120,7 @@ instance MonadGraphite TestM where
   getMetrics _ = liftGen arbitrary
 
 instance GraphViewer TestM where
-  updateGraph ctx newGraph = return (graphDisplayWidget ctx newGraph utc)
+  updateGraph ctx newGraph = return $ graphDisplayWidget ctx newGraph
 
 assertAll :: (Foldable t, Monad m) => (a -> Bool) -> t a -> PropertyM m ()
 assertAll predicate = assert . all predicate
@@ -144,23 +141,11 @@ is target (desc, prism) = case matching prism target of
   Right _ -> property succeeded
   Left unexpected -> counterexample (show unexpected ++ " was not a " ++ desc) (property failed)
 
-inside :: Show a => a -> String -> Getting (First t) a t -> (t -> Property) -> Property
+inside :: a -> String -> Getting (First t) a t -> (t -> Property) -> Property
 inside outer desc getter condition =
   case outer ^? getter of
     Just inner -> counterexample (desc ++ " did not match condition") (condition inner)
-    Nothing -> counterexample ("Did not find " ++ desc ++ " in " ++ (show outer)) (property failed)
+    Nothing -> counterexample ("Did not find " ++ desc) (property failed)
 
-inMetricsView :: (Maybe MetricsBrowser -> Property) -> App.CurrentState m -> Property
+inMetricsView :: (Maybe MetricsBrowser -> Property) -> App.CurrentState -> Property
 inMetricsView cond target = inside target "Active metrics view" (App._Active . App.metricsView) cond
-
-isClosedMetricsBrowser :: MetricsBrowserWidget m -> Property
-isClosedMetricsBrowser =
-  counterexample "metrics browser was open" . \case
-    (OpenMetricsBrowser {}) -> failed
-    (ClosedMetricsBrowser {}) -> succeeded
-
-isOpenMetricsBrowser :: MetricsBrowserWidget m -> Property
-isOpenMetricsBrowser =
-  counterexample "metrics browser was closed" . \case
-    (OpenMetricsBrowser {}) -> succeeded
-    (ClosedMetricsBrowser {}) -> failed

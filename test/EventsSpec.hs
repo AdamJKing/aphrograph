@@ -7,14 +7,13 @@ module EventsSpec
   )
 where
 
-import Test.Hspec (Spec, describe, pendingWith)
-import Test.Hspec.QuickCheck (prop)
+import Test.Hspec (Spec, describe, it, pendingWith)
 
 spec :: Spec
 spec = do
-  prop "pressing (m) opens the browser when closed" $ pendingWith "waiting for keypress tests"
-  prop "pressing (m) closes the browser when open" $ pendingWith "waiting for keypress tests"
+  it "pressing (m) opens the browser when closed" $ pendingWith "waiting for keypress tests"
+  it "pressing (m) closes the browser when open" $ pendingWith "waiting for keypress tests"
 
   describe "pressing Enter in metrics view" $ do
-    prop "selects the metric under the cursor as the current metric when metrics are available" $ pendingWith "waiting for keypress tests"
-    prop "when there are no metrics available, the result is the no-data-display" $ pendingWith "waiting for keypress tests"
+    it "selects the metric under the cursor as the current metric when metrics are available" $ pendingWith "waiting for keypress tests"
+    it "when there are no metrics available, the result is the no-data-display" $ pendingWith "waiting for keypress tests"

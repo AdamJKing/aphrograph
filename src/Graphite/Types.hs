@@ -48,7 +48,8 @@ newtype To = To Text
 data GraphiteRequest = RenderRequest
   { requestFrom :: From,
     requestTo :: Maybe To,
-    requestMetric :: Metric
+    requestMetric :: Metric,
+    preferredTimeZone :: TimeZone
   }
   deriving (Eq, Show, Generic)
 

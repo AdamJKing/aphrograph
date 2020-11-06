@@ -15,4 +15,5 @@
 * Fix command line input (defaulting to 24h in main?)
 * Investigate weird label cropping when using day labels (??? in from section)
 * Figure out a better solution for the EventM/IO ugliness
-
+* No pending tests
+* Slim down executable dependencies

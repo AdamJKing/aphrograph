@@ -3,14 +3,27 @@
 
 module LabelsSpec where
 
-import CommonProperties
-import Data.Decimal
-import Data.Fixed
-import Data.Time.LocalTime
+import CommonProperties (daysFrom)
+import Data.Decimal (Decimal)
+import Data.Fixed (mod')
+import Data.Time (utc)
 import Display.Labels
-import Test.Hspec as HS
-import Test.Hspec.QuickCheck
+  ( TimeStep (Day, FiveMinute, Hour, Millisecond, Minute, Second),
+    asTime,
+    determineStepSize,
+    generateLabelsContinuous,
+    generateLabelsTime,
+  )
+import Test.Hspec as HS (Spec, describe, it, shouldBe)
+import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck
+  ( Arbitrary (arbitrary),
+    Positive (Positive),
+    choose,
+    forAll,
+    suchThat,
+    (===),
+  )
 
 spec :: HS.Spec
 spec = describe "Labels" $ do
