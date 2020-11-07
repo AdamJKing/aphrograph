@@ -60,7 +60,7 @@ main = do
 
           let startState =
                 App.ActiveState
-                  { _metricsView = Nothing,
+                  { _dialogue = Nothing,
                     _graphData =
                       GraphWidget
                         { _graphiteRequest =

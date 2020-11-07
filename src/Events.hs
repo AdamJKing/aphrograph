@@ -24,11 +24,12 @@ import App.Components
     ComponentM,
     GraphViewer (..),
     MetricsBrowser,
+    TimeDialogue,
     updateGraph,
   )
 import qualified App.State as App
 import qualified Brick as Brick
-import Control.Lens (traverseOf, (%~), (.~), (^.))
+import Control.Lens (traverseOf, (%~), (.~), (^.), (^?), _Just, _Left)
 import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
@@ -81,10 +82,10 @@ keyPressHandler event cm =
       newState <- cm & traverseOf App._Active selectMetric
       return (Continue, newState)
     KeyDown 'm' -> do
-      newState <- cm & traverseOf (App._Active . App.metricsView) toggleMetricsBrowser
+      newState <- cm & traverseOf (App._Active . App.dialogue) toggleMetricsBrowser
       return (Continue, newState)
     otherKeyPress -> do
-      newState <- cm & traverseOf (App._Active . App.metricsView) (handleMiscEvents otherKeyPress)
+      newState <- cm & traverseOf (App._Active . App.dialogue) (handleMiscEvents otherKeyPress)
       return (Continue, newState)
   where
     selectMetric :: App.ActiveState -> AppT ComponentM App.ActiveState
@@ -93,7 +94,7 @@ keyPressHandler event cm =
         & traverseOf
           App.graphData
           ( \gd ->
-              case (activeState ^. App.metricsView) >>= selected of
+              case (activeState ^? App.dialogue . _Just . _Left) >>= selected of
                 Nothing -> return (gd & graphDisplay .~ NoDataDisplay)
                 Just newTargetMetric -> do
                   hoist liftIO (writeEvent TriggerUpdate)
@@ -101,16 +102,16 @@ keyPressHandler event cm =
                     ( gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
                     )
           )
-        <&> App.metricsView .~ Nothing
+        <&> App.dialogue .~ Nothing
 
-    toggleMetricsBrowser :: MonadIO m => Maybe a -> AppT m (Maybe MetricsBrowser)
-    toggleMetricsBrowser (Just _browser) = return Nothing
-    toggleMetricsBrowser Nothing = do
+    toggleMetricsBrowser :: MonadIO m => Maybe (Either MetricsBrowser TimeDialogue) -> AppT m (Maybe (Either MetricsBrowser TimeDialogue))
+    toggleMetricsBrowser (Just (Left _browser)) = return Nothing
+    toggleMetricsBrowser _browserNotOpen = do
       metrics <- listMetrics
-      return $ Just (open metrics)
+      return $ Just $ Left (open metrics)
 
-    handleMiscEvents :: Vty.Event -> Maybe MetricsBrowser -> AppT ComponentM (Maybe MetricsBrowser)
-    handleMiscEvents otherKeyPress = traverse (lift . scroll otherKeyPress)
+    handleMiscEvents :: Vty.Event -> Maybe (Either MetricsBrowser TimeDialogue) -> AppT ComponentM (Maybe (Either MetricsBrowser TimeDialogue))
+    handleMiscEvents otherKeyPress = traverseOf (_Just . _Left) (lift . scroll otherKeyPress)
 
 appEventHandler :: EventHandler (AppT ComponentM) AppEvent App.CurrentState
 appEventHandler graphUpdate priorState = do

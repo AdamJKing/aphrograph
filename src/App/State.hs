@@ -16,7 +16,7 @@
 
 module App.State where
 
-import App.Components (MetricsBrowser)
+import App.Components (TimeDialogue, MetricsBrowser)
 import Control.Lens.Combinators
   ( makeLenses,
     makePrisms,
@@ -29,7 +29,7 @@ newtype Error = AppGraphiteError GraphiteError
   deriving anyclass (Exception)
 
 data ActiveState = ActiveState
-  { _metricsView :: Maybe MetricsBrowser,
+  { _dialogue :: Maybe (Either MetricsBrowser TimeDialogue),
     _graphData :: GraphWidget
   }
 

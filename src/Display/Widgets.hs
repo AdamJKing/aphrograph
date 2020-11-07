@@ -8,6 +8,7 @@ module Display.Widgets where
 import App.Components
   ( ComponentName (GraphView),
     MetricsBrowser (..),
+    TimeDialogue,
   )
 import qualified App.State as App
 import qualified Brick
@@ -23,6 +24,7 @@ import Brick.Widgets.Border as WidgetB (border)
 import Brick.Widgets.Center as Widget (center, centerLayer)
 import Brick.Widgets.Core as Widget
   ( cached,
+    emptyWidget,
     hBox,
     hLimitPercent,
     padAll,
@@ -65,10 +67,14 @@ instance CompileWidget ComponentName MetricsBrowser where
         let attrName = "metric" <> if isActive then "selected" else "unselcted"
          in Brick.withAttr attrName (Brick.txt (toText metric))
 
+instance CompileWidget ComponentName TimeDialogue where
+  compile _ = Widget.emptyWidget
+
 instance CompileLayeredWidget ComponentName App.CurrentState where
   compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]
-  compileLayered (App.Active (App.ActiveState {..})) = case _metricsView of
-    Just mv -> [compile mv, compile _graphData]
+  compileLayered (App.Active (App.ActiveState {..})) = case _dialogue of
+    Just (Right td) -> [compile td, compile _graphData]
+    Just (Left mv) -> [compile mv, compile _graphData]
     Nothing -> [compile _graphData]
 
 instance CompileWidget ComponentName GraphWidget where

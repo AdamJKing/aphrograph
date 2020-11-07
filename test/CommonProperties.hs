@@ -29,11 +29,10 @@ module CommonProperties
     runFakeChan,
     inside,
     is,
-    inMetricsView,
   )
 where
 
-import App.Components (GraphViewer (..), MetricsBrowser)
+import App.Components (GraphViewer (..))
 import qualified App.Config as App
 import qualified App.State as App
 import ArbitraryInstances ()
@@ -146,6 +145,3 @@ inside outer desc getter condition =
   case outer ^? getter of
     Just inner -> counterexample (desc ++ " did not match condition") (condition inner)
     Nothing -> counterexample ("Did not find " ++ desc) (property failed)
-
-inMetricsView :: (Maybe MetricsBrowser -> Property) -> App.CurrentState -> Property
-inMetricsView cond target = inside target "Active metrics view" (App._Active . App.metricsView) cond

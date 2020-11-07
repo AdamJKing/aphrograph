@@ -13,6 +13,7 @@ module App.Components
     MetricsBrowser (..),
     Browsable (..),
     GraphViewer (..),
+    TimeDialogue (..),
   )
 where
 
@@ -68,3 +69,5 @@ instance Browsable MetricsBrowser ComponentM where
     return (MkMetricsBrowser updated width)
 
   selected (MkMetricsBrowser browser _) = snd <$> Brick.listSelectedElement browser
+
+data TimeDialogue = TimeDialogue
