@@ -22,6 +22,7 @@ import App (AppT)
 import App.Components
   ( Browsable (..),
     ComponentM,
+    Dialogue (..),
     GraphViewer (..),
     MetricsBrowser,
     TimeDialogue,
@@ -29,10 +30,13 @@ import App.Components
     timeDialogue,
     updateDialogue,
     updateGraph,
+    _Closed,
+    _OpenOnMetrics,
+    _OpenOnTime,
   )
 import qualified App.State as App
 import qualified Brick as Brick
-import Control.Lens (over, traverseOf, (%~), (.~), (^.), (^?), _Just, _Left)
+import Control.Lens (Lens', inside, Lens, Prism', outside, over, prism, set, traverseOf, view, withPrism, (%~), (.~), (^.), (^?), _Just, _Left)
 import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
@@ -98,7 +102,7 @@ keyPressHandler event cm =
         & traverseOf
           App.graphData
           ( \gd ->
-              case (activeState ^? App.dialogue . _Just . _Left) >>= selected of
+              case (activeState ^? App.dialogue . _OpenOnMetrics) >>= selected of
                 Nothing -> return (gd & graphDisplay .~ NoDataDisplay)
                 Just newTargetMetric -> do
                   hoist liftIO (writeEvent TriggerUpdate)
@@ -106,21 +110,28 @@ keyPressHandler event cm =
                     ( gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
                     )
           )
-        <&> App.dialogue .~ Nothing
+        <&> App.dialogue .~ Closed
 
-    toggleMetricsBrowser :: MonadIO m => Maybe (Either MetricsBrowser TimeDialogue) -> AppT m (Maybe (Either MetricsBrowser TimeDialogue))
-    toggleMetricsBrowser (Just (Left _browser)) = return Nothing
-    toggleMetricsBrowser _browserNotOpen = do
+    toggleMetricsBrowser :: MonadIO m => Dialogue -> AppT m Dialogue
+    toggleMetricsBrowser (OpenOnMetrics _) = return Closed
+    toggleMetricsBrowser (OpenOnTime _) = toggleMetricsBrowser Closed
+    toggleMetricsBrowser Closed = do
       metrics <- listMetrics
-      return $ Just $ Left (open metrics)
+      return $ OpenOnMetrics $ (open metrics)
 
     toggleTimeDialogue :: App.ActiveState -> App.ActiveState
-    toggleTimeDialogue active =
-      case active ^. App.dialogue of
-        (Just (Right _openDialogue)) -> active & App.dialogue .~ Nothing
-        _otherState ->
-          let previous = active ^. (App.componentState . chosenTimeOffset)
-           in active & App.dialogue .~ (Just $ Right $ timeDialogue previous)
+    toggleTimeDialogue = _
+      where
+        closeTimeDialogue = outside _OpenOnTime .~ \_ -> _
+
+        openTimeDialogue = do
+          previous <- view (App.componentState . chosenTimeOffset)
+          set App.dialogue (OpenOnTime (timeDialogue previous))
+
+    -- case (active ^. App.dialogue) of
+    -- (OpenOnTime _) -> Closed
+    -- (OpenOnMetrics _) -> toggleTimeDialogue Closed
+    -- Closed ->
 
     handleMiscEvents :: Vty.Event -> Maybe (Either MetricsBrowser TimeDialogue) -> AppT ComponentM (Maybe (Either MetricsBrowser TimeDialogue))
     handleMiscEvents _ Nothing = return Nothing

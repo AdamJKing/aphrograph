@@ -7,6 +7,7 @@ module Display.Widgets where
 
 import App.Components
   ( ComponentName (GraphView),
+    Dialogue (..),
     MetricsBrowser (..),
     TimeDialogue (OpenDialogue),
   )
@@ -74,9 +75,9 @@ instance CompileWidget ComponentName TimeDialogue where
 instance CompileLayeredWidget ComponentName App.CurrentState where
   compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]
   compileLayered (App.Active (App.ActiveState {..})) = case _dialogue of
-    Just (Right td) -> [compile td, compile _graphData]
-    Just (Left mv) -> [compile mv, compile _graphData]
-    Nothing -> [compile _graphData]
+    (OpenOnTime td) -> [compile td, compile _graphData]
+    (OpenOnMetrics mv) -> [compile mv, compile _graphData]
+    Closed -> [compile _graphData]
 
 instance CompileWidget ComponentName GraphWidget where
   compile GraphWidget {_graphDisplay = NoDataDisplay} = Widget.str "NoData"

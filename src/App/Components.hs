@@ -21,6 +21,10 @@ module App.Components
     chosenMetric,
     chosenTimeOffset,
     updateDialogue,
+    Dialogue (..),
+    _OpenOnMetrics,
+    _OpenOnTime,
+    _Closed,
   )
 where
 
@@ -29,7 +33,7 @@ import Brick.Widgets.Dialog (Dialog)
 import qualified Brick.Widgets.Dialog as Brick
 import qualified Brick.Widgets.List as BWL
 import qualified Brick.Widgets.List as Brick
-import Control.Lens (makeLenses)
+import Control.Lens (makeLenses, makePrisms)
 import Data.Semigroup (Max (Max))
 import Data.Vector (Vector)
 import Display.Graph (Graph)
@@ -108,3 +112,7 @@ data ComponentState = ComponentState
   }
 
 makeLenses ''ComponentState
+
+data Dialogue = Closed | OpenOnMetrics MetricsBrowser | OpenOnTime TimeDialogue
+
+makePrisms ''Dialogue

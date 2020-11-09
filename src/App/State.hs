@@ -18,9 +18,8 @@ module App.State where
 
 import App.Components
   ( ComponentState (ComponentState),
-    MetricsBrowser,
+    Dialogue (Closed),
     QuickOffset (TwentyFourHours),
-    TimeDialogue,
     _chosenMetric,
     _chosenTimeOffset,
   )
@@ -37,7 +36,7 @@ newtype Error = AppGraphiteError GraphiteError
   deriving anyclass (Exception)
 
 data ActiveState = ActiveState
-  { _dialogue :: Maybe (Either MetricsBrowser TimeDialogue),
+  { _dialogue :: Dialogue,
     _graphData :: GraphWidget,
     _componentState :: ComponentState
   }
@@ -54,7 +53,7 @@ makePrisms ''CurrentState
 defaultState :: TimeZone -> ActiveState
 defaultState userTz =
   ActiveState
-    { _dialogue = Nothing,
+    { _dialogue = Closed,
       _componentState =
         ComponentState
           { _chosenTimeOffset = TwentyFourHours,
