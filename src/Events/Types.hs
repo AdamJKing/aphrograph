@@ -5,13 +5,10 @@
 module Events.Types where
 
 import Display.Graph (Graph)
-import qualified Graphics.Vty as Vty
 import Graphite.Types as Graphite (Time, Value)
 
 data AppEvent = TriggerUpdate | GraphUpdate (Graph Time Value)
   deriving (Show, Eq)
-
-data MetricsBrowserEvent = Modify Vty.Event
 
 data family Outcome (m :: * -> *) s
 

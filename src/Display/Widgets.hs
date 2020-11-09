@@ -8,7 +8,7 @@ module Display.Widgets where
 import App.Components
   ( ComponentName (GraphView),
     MetricsBrowser (..),
-    TimeDialogue,
+    TimeDialogue (OpenDialogue),
   )
 import qualified App.State as App
 import qualified Brick
@@ -32,6 +32,7 @@ import Brick.Widgets.Core as Widget
     vBox,
     vLimitPercent,
   )
+import qualified Brick.Widgets.Dialog as Widget
 import qualified Brick.Widgets.List as Brick
 import Control.Lens (set, view, views)
 import Display.GraphWidget
@@ -68,7 +69,7 @@ instance CompileWidget ComponentName MetricsBrowser where
          in Brick.withAttr attrName (Brick.txt (toText metric))
 
 instance CompileWidget ComponentName TimeDialogue where
-  compile _ = Widget.emptyWidget
+  compile (OpenDialogue dialogue) = Widget.renderDialog dialogue Widget.emptyWidget
 
 instance CompileLayeredWidget ComponentName App.CurrentState where
   compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]

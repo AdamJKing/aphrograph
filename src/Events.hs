@@ -25,11 +25,14 @@ import App.Components
     GraphViewer (..),
     MetricsBrowser,
     TimeDialogue,
+    chosenTimeOffset,
+    timeDialogue,
+    updateDialogue,
     updateGraph,
   )
 import qualified App.State as App
 import qualified Brick as Brick
-import Control.Lens (traverseOf, (%~), (.~), (^.), (^?), _Just, _Left)
+import Control.Lens (over, traverseOf, (%~), (.~), (^.), (^?), _Just, _Left)
 import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
@@ -84,6 +87,7 @@ keyPressHandler event cm =
     KeyDown 'm' -> do
       newState <- cm & traverseOf (App._Active . App.dialogue) toggleMetricsBrowser
       return (Continue, newState)
+    KeyDown 't' -> return (Continue, cm & over App._Active toggleTimeDialogue)
     otherKeyPress -> do
       newState <- cm & traverseOf (App._Active . App.dialogue) (handleMiscEvents otherKeyPress)
       return (Continue, newState)
@@ -110,8 +114,21 @@ keyPressHandler event cm =
       metrics <- listMetrics
       return $ Just $ Left (open metrics)
 
+    toggleTimeDialogue :: App.ActiveState -> App.ActiveState
+    toggleTimeDialogue active =
+      case active ^. App.dialogue of
+        (Just (Right _openDialogue)) -> active & App.dialogue .~ Nothing
+        _otherState ->
+          let previous = active ^. (App.componentState . chosenTimeOffset)
+           in active & App.dialogue .~ (Just $ Right $ timeDialogue previous)
+
     handleMiscEvents :: Vty.Event -> Maybe (Either MetricsBrowser TimeDialogue) -> AppT ComponentM (Maybe (Either MetricsBrowser TimeDialogue))
-    handleMiscEvents otherKeyPress = traverseOf (_Just . _Left) (lift . scroll otherKeyPress)
+    handleMiscEvents _ Nothing = return Nothing
+    handleMiscEvents otherKeyPress (Just dialogueState) =
+      lift $
+        Just <$> case dialogueState of
+          Right td -> Right <$> updateDialogue otherKeyPress td
+          Left mv -> Left <$> scroll otherKeyPress mv
 
 appEventHandler :: EventHandler (AppT ComponentM) AppEvent App.CurrentState
 appEventHandler graphUpdate priorState = do

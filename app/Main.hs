@@ -27,19 +27,10 @@ import Control.Concurrent
   )
 import Control.Monad.Logger (LogLine)
 import Data.Time (getCurrentTimeZone)
-import Display.GraphWidget (GraphDisplay (NoDataDisplay), GraphWidget (..))
 import Display.Widgets (CompileLayeredWidget (compileLayered))
 import Events (EventOutcome (Continue, Halt), appEventHandler, brickEventHandler, keyPressHandler)
 import Events.Types (AppEvent (TriggerUpdate))
 import qualified Graphics.Vty as Vty
-import qualified Graphite.Types as Graphite
-  ( From (..),
-    GraphiteRequest (RenderRequest),
-    preferredTimeZone,
-    requestFrom,
-    requestMetric,
-    requestTo,
-  )
 import Prelude hiding (on)
 
 main :: IO ()
@@ -56,23 +47,7 @@ main = do
             threadDelay 30000000
             Brick.writeBChan eventQueue TriggerUpdate
 
-          tz <- getCurrentTimeZone
-
-          let startState =
-                App.ActiveState
-                  { _dialogue = Nothing,
-                    _graphData =
-                      GraphWidget
-                        { _graphiteRequest =
-                            Graphite.RenderRequest
-                              { requestFrom = (Graphite.From "-24h"),
-                                requestTo = Nothing,
-                                requestMetric = "randomWalk(\"metric\")",
-                                preferredTimeZone = tz
-                              },
-                          _graphDisplay = NoDataDisplay
-                        }
-                  }
+          startState <- App.defaultState <$> getCurrentTimeZone
 
           initialVty <- getVty
 
