@@ -18,7 +18,7 @@ module App.State where
 
 import App.Components
   ( ComponentState (ComponentState),
-    Dialogue (Closed),
+    Dialogue (NotOpen),
     QuickOffset (TwentyFourHours),
     _chosenMetric,
     _chosenTimeOffset,
@@ -53,7 +53,7 @@ makePrisms ''CurrentState
 defaultState :: TimeZone -> ActiveState
 defaultState userTz =
   ActiveState
-    { _dialogue = Closed,
+    { _dialogue = NotOpen,
       _componentState =
         ComponentState
           { _chosenTimeOffset = TwentyFourHours,

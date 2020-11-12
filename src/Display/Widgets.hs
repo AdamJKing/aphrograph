@@ -9,7 +9,7 @@ import App.Components
   ( ComponentName (GraphView),
     Dialogue (..),
     MetricsBrowser (..),
-    TimeDialogue (OpenDialogue),
+    TimeDialogue,
   )
 import qualified App.State as App
 import qualified Brick
@@ -70,14 +70,14 @@ instance CompileWidget ComponentName MetricsBrowser where
          in Brick.withAttr attrName (Brick.txt (toText metric))
 
 instance CompileWidget ComponentName TimeDialogue where
-  compile (OpenDialogue dialogue) = Widget.renderDialog dialogue Widget.emptyWidget
+  compile = renderTimeDialogue
 
 instance CompileLayeredWidget ComponentName App.CurrentState where
   compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]
   compileLayered (App.Active (App.ActiveState {..})) = case _dialogue of
     (OpenOnTime td) -> [compile td, compile _graphData]
     (OpenOnMetrics mv) -> [compile mv, compile _graphData]
-    Closed -> [compile _graphData]
+    NotOpen -> [compile _graphData]
 
 instance CompileWidget ComponentName GraphWidget where
   compile GraphWidget {_graphDisplay = NoDataDisplay} = Widget.str "NoData"

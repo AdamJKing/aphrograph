@@ -18,6 +18,7 @@ library
       App.State
       Display.Graph
       Display.GraphWidget
+      Display.TimeDialogueWidget
       Display.Labels
       Display.Projection
       Display.Projection.Scalable

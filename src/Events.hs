@@ -36,7 +36,7 @@ import App.Components
   )
 import qualified App.State as App
 import qualified Brick as Brick
-import Control.Lens (Lens', inside, Lens, Prism', outside, over, prism, set, traverseOf, view, withPrism, (%~), (.~), (^.), (^?), _Just, _Left)
+import Control.Lens (Lens, Lens', Prism', inside, outside, over, prism, set, traverseOf, view, withPrism, (%~), (.~), (^.), (^?), _Just, _Left)
 import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
@@ -122,16 +122,11 @@ keyPressHandler event cm =
     toggleTimeDialogue :: App.ActiveState -> App.ActiveState
     toggleTimeDialogue = _
       where
-        closeTimeDialogue = outside _OpenOnTime .~ \_ -> _
+        closeTimeDialogue = _
 
         openTimeDialogue = do
           previous <- view (App.componentState . chosenTimeOffset)
           set App.dialogue (OpenOnTime (timeDialogue previous))
-
-    -- case (active ^. App.dialogue) of
-    -- (OpenOnTime _) -> Closed
-    -- (OpenOnMetrics _) -> toggleTimeDialogue Closed
-    -- Closed ->
 
     handleMiscEvents :: Vty.Event -> Maybe (Either MetricsBrowser TimeDialogue) -> AppT ComponentM (Maybe (Either MetricsBrowser TimeDialogue))
     handleMiscEvents _ Nothing = return Nothing
