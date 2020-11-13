@@ -17,8 +17,9 @@
 module App.State where
 
 import App.Components
-  ( ComponentState (ComponentState),
-    Dialogue (NotOpen),
+  ( ComponentName,
+    ComponentState (ComponentState),
+    Dialogue (Closed),
     QuickOffset (TwentyFourHours),
     _chosenMetric,
     _chosenTimeOffset,
@@ -29,14 +30,15 @@ import Control.Lens.Combinators
   )
 import Data.Time (TimeZone)
 import Display.GraphWidget (GraphDisplay (NoDataDisplay), GraphWidget (..))
+import Display.TimeDialogueWidget (TimeDialogueState (TimeDialogueState))
 import Graphite.Types as Graphite (From (..), GraphiteError, GraphiteRequest (..))
 
 newtype Error = AppGraphiteError GraphiteError
   deriving (Show, Generic)
   deriving anyclass (Exception)
 
-data ActiveState = ActiveState
-  { _dialogue :: Dialogue,
+data ActiveState e = ActiveState
+  { _dialogue :: Dialogue ComponentName e,
     _graphData :: GraphWidget,
     _componentState :: ComponentState
   }
@@ -46,24 +48,24 @@ makeLenses ''ActiveState
 newtype FailedState = FailedState {failure :: Error}
   deriving (Show, Generic)
 
-data CurrentState = Failed FailedState | Active ActiveState
+data CurrentState e = Failed FailedState | Active (ActiveState e)
 
 makePrisms ''CurrentState
 
-defaultState :: TimeZone -> ActiveState
+defaultState :: TimeZone -> ActiveState e
 defaultState userTz =
   ActiveState
-    { _dialogue = NotOpen,
+    { _dialogue = Closed,
       _componentState =
         ComponentState
-          { _chosenTimeOffset = TwentyFourHours,
+          { _chosenTimeOffset = TimeDialogueState TwentyFourHours,
             _chosenMetric = ""
           },
       _graphData =
         GraphWidget
           { _graphiteRequest =
               Graphite.RenderRequest
-                { requestFrom = (Graphite.From "-24h"),
+                { requestFrom = Graphite.From "-24h",
                   requestTo = Nothing,
                   requestMetric = "randomWalk(\"metric\")",
                   preferredTimeZone = userTz

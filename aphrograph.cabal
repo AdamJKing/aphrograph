@@ -57,10 +57,12 @@ library
     , optparse-simple
     , relude
     , req
+    , open-union
     , text
     , time
     , transformers
     , transformers-base
+    , type-fun
     , vector
     , vty
   mixins:

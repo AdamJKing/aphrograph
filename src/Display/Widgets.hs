@@ -6,7 +6,8 @@
 module Display.Widgets where
 
 import App.Components
-  ( ComponentName (GraphView),
+  ( ComponentName,
+    ComponentName' (GraphView),
     Dialogue (..),
     MetricsBrowser (..),
     TimeDialogue,
@@ -25,7 +26,6 @@ import Brick.Widgets.Border as WidgetB (border)
 import Brick.Widgets.Center as Widget (center, centerLayer)
 import Brick.Widgets.Core as Widget
   ( cached,
-    emptyWidget,
     hBox,
     hLimitPercent,
     padAll,
@@ -33,9 +33,9 @@ import Brick.Widgets.Core as Widget
     vBox,
     vLimitPercent,
   )
-import qualified Brick.Widgets.Dialog as Widget
 import qualified Brick.Widgets.List as Brick
 import Control.Lens (set, view, views)
+import Data.OpenUnion (liftUnion)
 import Display.GraphWidget
   ( GraphCanvasWidget (..),
     GraphDisplay (..),
@@ -48,6 +48,7 @@ import Display.GraphWidget
     drawVerticalAxisImage,
     heightAndWidthL,
   )
+import Display.TimeDialogueWidget (renderTimeDialogue)
 import qualified Graphics.Vty as Vty
 
 class CompileWidget n w where
@@ -69,21 +70,21 @@ instance CompileWidget ComponentName MetricsBrowser where
         let attrName = "metric" <> if isActive then "selected" else "unselcted"
          in Brick.withAttr attrName (Brick.txt (toText metric))
 
-instance CompileWidget ComponentName TimeDialogue where
+instance CompileWidget ComponentName (TimeDialogue ComponentName e) where
   compile = renderTimeDialogue
 
-instance CompileLayeredWidget ComponentName App.CurrentState where
+instance CompileLayeredWidget ComponentName (App.CurrentState e) where
   compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]
-  compileLayered (App.Active (App.ActiveState {..})) = case _dialogue of
+  compileLayered (App.Active App.ActiveState {..}) = case _dialogue of
     (OpenOnTime td) -> [compile td, compile _graphData]
     (OpenOnMetrics mv) -> [compile mv, compile _graphData]
-    NotOpen -> [compile _graphData]
+    Closed -> [compile _graphData]
 
 instance CompileWidget ComponentName GraphWidget where
   compile GraphWidget {_graphDisplay = NoDataDisplay} = Widget.str "NoData"
   compile GraphWidget {_graphDisplay = LoadingDataDisplay} = Widget.center $ WidgetB.border $ Widget.padAll 1 $ Widget.str "Loading..."
   compile GraphWidget {_graphDisplay = (GraphDisplay graphCanvas verticalAxis' horizontalAxis')} =
-    cached GraphView $ arrange (compile graphCanvas) (compile verticalAxis') (compile horizontalAxis')
+    cached (liftUnion GraphView) $ arrange (compile graphCanvas) (compile verticalAxis') (compile horizontalAxis')
     where
       arrange g v h =
         Widget.vBox

@@ -3,18 +3,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE InstanceSigs #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Events where
 
@@ -24,23 +17,18 @@ import App.Components
     ComponentM,
     Dialogue (..),
     GraphViewer (..),
-    MetricsBrowser,
-    TimeDialogue,
     chosenTimeOffset,
-    timeDialogue,
-    updateDialogue,
     updateGraph,
-    _Closed,
     _OpenOnMetrics,
-    _OpenOnTime,
   )
 import qualified App.State as App
-import qualified Brick as Brick
-import Control.Lens (Lens, Lens', Prism', inside, outside, over, prism, set, traverseOf, view, withPrism, (%~), (.~), (^.), (^?), _Just, _Left)
+import qualified Brick
+import Control.Lens (over, traverseOf, view, (%~), (.~), (^.), (^?))
 import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
 import Display.GraphWidget (GraphDisplay (NoDataDisplay), graphDisplay, graphiteRequest)
+import Display.TimeDialogueWidget (timeDialogue)
 import Events.Types
   ( AppEvent (..),
     MonadEvent,
@@ -81,7 +69,7 @@ brickEventHandler handleKeyPresses handleAppEvents = \case
   (Brick.AppEvent appEvent) -> handleAppEvents appEvent
   _unhandled -> pure . (Continue,)
 
-keyPressHandler :: EventHandler (AppT ComponentM) Vty.Event App.CurrentState
+keyPressHandler :: EventHandler (AppT ComponentM) Vty.Event (App.CurrentState e)
 keyPressHandler event cm =
   case event of
     ExitKey -> return (Halt, cm)
@@ -96,7 +84,7 @@ keyPressHandler event cm =
       newState <- cm & traverseOf (App._Active . App.dialogue) (handleMiscEvents otherKeyPress)
       return (Continue, newState)
   where
-    selectMetric :: App.ActiveState -> AppT ComponentM App.ActiveState
+    selectMetric :: App.ActiveState e -> AppT ComponentM (App.ActiveState e)
     selectMetric activeState =
       activeState
         & traverseOf
@@ -112,31 +100,22 @@ keyPressHandler event cm =
           )
         <&> App.dialogue .~ Closed
 
-    toggleMetricsBrowser :: MonadIO m => Dialogue -> AppT m Dialogue
+    toggleMetricsBrowser :: MonadIO m => Dialogue n e -> AppT m (Dialogue n e)
     toggleMetricsBrowser (OpenOnMetrics _) = return Closed
     toggleMetricsBrowser (OpenOnTime _) = toggleMetricsBrowser Closed
-    toggleMetricsBrowser Closed = do
-      metrics <- listMetrics
-      return $ OpenOnMetrics $ (open metrics)
+    toggleMetricsBrowser Closed = OpenOnMetrics . open <$> listMetrics
 
-    toggleTimeDialogue :: App.ActiveState -> App.ActiveState
-    toggleTimeDialogue = _
-      where
-        closeTimeDialogue = _
+    toggleTimeDialogue :: App.ActiveState e -> App.ActiveState e
+    toggleTimeDialogue = do
+      previous <- view (App.componentState . chosenTimeOffset)
+      over App.dialogue $ \case
+        (OpenOnTime _) -> Closed
+        _dialogueClosed -> (OpenOnTime (timeDialogue previous))
 
-        openTimeDialogue = do
-          previous <- view (App.componentState . chosenTimeOffset)
-          set App.dialogue (OpenOnTime (timeDialogue previous))
+    handleMiscEvents :: Vty.Event -> Dialogue n e -> AppT ComponentM (Dialogue n e)
+    handleMiscEvents otherKeyPress = traverseOf _OpenOnMetrics (lift . scroll otherKeyPress)
 
-    handleMiscEvents :: Vty.Event -> Maybe (Either MetricsBrowser TimeDialogue) -> AppT ComponentM (Maybe (Either MetricsBrowser TimeDialogue))
-    handleMiscEvents _ Nothing = return Nothing
-    handleMiscEvents otherKeyPress (Just dialogueState) =
-      lift $
-        Just <$> case dialogueState of
-          Right td -> Right <$> updateDialogue otherKeyPress td
-          Left mv -> Left <$> scroll otherKeyPress mv
-
-appEventHandler :: EventHandler (AppT ComponentM) AppEvent App.CurrentState
+appEventHandler :: EventHandler (AppT ComponentM) AppEvent (App.CurrentState e)
 appEventHandler graphUpdate priorState = do
   updated <- update priorState
   return (Continue, updated)
@@ -145,14 +124,14 @@ appEventHandler graphUpdate priorState = do
       case graphUpdate of
         (GraphUpdate newGraph) ->
           lift (updateGraph (gw ^. graphiteRequest) newGraph)
-        TriggerUpdate -> hoist liftIO $ (refresh (gw ^. graphiteRequest) $> gw)
+        TriggerUpdate -> hoist liftIO (refresh (gw ^. graphiteRequest) $> gw)
 
 refresh :: (MonadGraphite m, MonadEvent AppEvent m) => GraphiteRequest -> m ()
 refresh req = writeEventLater (GraphUpdate <$> fetchGraph req)
 
 fetchGraph :: MonadGraphite m => GraphiteRequest -> m (Graph Time Value)
 fetchGraph request = do
-  datapoints <- getMetrics $ request
+  datapoints <- getMetrics request
   return (toGraph datapoints)
   where
     toGraph = Graph.mkGraph . fmap Graph.extract

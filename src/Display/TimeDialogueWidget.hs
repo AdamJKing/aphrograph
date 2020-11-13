@@ -1,9 +1,28 @@
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeOperators #-}
 
-module Display.TimeDialogueWidget (QuickOffset (..), TimeDialogue, renderTimeDialogue) where
+module Display.TimeDialogueWidget
+  ( QuickOffset (..),
+    TimeDialogueState (TimeDialogueState),
+    TimeDialogue,
+    renderTimeDialogue,
+    TimeFieldName,
+    timeDialogue,
+    updateDialogue,
+  )
+where
 
 import Brick
-  ( Padding (Pad),
+  ( BrickEvent,
+    EventM,
+    Padding (Pad),
     Widget,
     fill,
     hLimit,
@@ -14,12 +33,15 @@ import Brick
   )
 import Brick.Forms as Brick
   ( Form,
+    handleFormEvent,
     newForm,
     radioField,
     renderForm,
     (@@=),
   )
-import Control.Lens (makeLenses)
+import Control.Lens (makeLenses, over, _2)
+import Data.OpenUnion (Union, liftUnion)
+import TypeFun.Data.List (Elem)
 
 data QuickOffset = FifteenMins | OneHour | TwelveHours | TwentyFourHours | SevenDays
   deriving (Eq, Enum)
@@ -27,46 +49,34 @@ data QuickOffset = FifteenMins | OneHour | TwelveHours | TwentyFourHours | Seven
 data TimeFieldName = FifteenMinsField | OneHourField | TwelveHoursField | TwentyFourHoursField | SevenDaysField
   deriving (Eq, Ord, Show)
 
-data Field
-
-data TimeDialogue n e = TimeDialogue (TimeFieldName -> n) (Brick.Form QuickOffset e TimeFieldName)
-
--- timeDialogue :: QuickOffset -> TimeDialogue
--- timeDialogue default' =
---   let title = "Time Picker"
---       options = do
---         option <- [toEnum 0 ..]
---         return (nameOffset option, option)
---    in OpenDialogue $ Brick.dialog (Just title) (Just (fromEnum default', options)) 25
---   where
---     nameOffset FifteenMins = "-15m"
---     nameOffset OneHour = "-1h"
---     nameOffset TwelveHours = "-12h"
---     nameOffset TwentyFourHours = "-24h"
---     nameOffset SevenDays = "-7d"
-
--- updateDialogue :: Vty.Event -> TimeDialogue -> Brick.EventM n TimeDialogue
--- updateDialogue ev (OpenDialogue dialogue) = OpenDialogue <$> (CompM $ Brick.handleDialogEvent ev dialogue)
-
--- getTimeSelection :: Dialogue Open -> Maybe QuickOffset
--- getTimeSelection (OpenOnMetrics _) = _
--- getTimeSelection (OpenOnTime _) = _
-
-data TimeDialogueState = TimeDialogueState
+newtype TimeDialogueState = TimeDialogueState
   { _chosenOffset :: QuickOffset
   }
 
 makeLenses ''TimeDialogueState
 
-timeDialogue :: TimeDialogueState -> Form TimeDialogueState e TimeFieldName
-timeDialogue =
-  let label s w =
-        padBottom (Pad 1) $
-          (vLimit 1 $ hLimit 15 $ str s <+> fill ' ') <+> w
-   in Brick.newForm
-        [ label "Quick Offset" @@= radioField chosenOffset [(FifteenMins, FifteenMinsField, "-15m")]
-        ]
+data TimeDialogue n e where
+  TimeDialogue ::
+    forall (ns :: [Type]) e.
+    Elem TimeFieldName ns =>
+    Brick.Form TimeDialogueState e (Union ns) ->
+    TimeDialogue (Union ns) e
 
-renderTimeDialogue :: TimeDialogue n e -> Brick.Widget n
-renderTimeDialogue (TimeDialogue _ dialogue) = Brick.renderForm dialogue
+updateDialogue :: Eq (Union ns) => BrickEvent (Union ns) e -> TimeDialogue (Union ns) e -> Brick.EventM (Union ns) (TimeDialogue (Union ns) e)
+updateDialogue keyPress (TimeDialogue dialogue) = TimeDialogue <$> Brick.handleFormEvent keyPress dialogue
 
+timeDialogue :: (Ord (Union ns), Eq (Union ns), Elem TimeFieldName ns, Show (Union ns)) => TimeDialogueState -> TimeDialogue (Union ns) e
+timeDialogue = TimeDialogue . form
+  where
+    form =
+      let label s w = padBottom (Pad 1) $ vLimit 1 (hLimit 15 $ str s) <+> fill ' ' <+> w
+          radioFields = unionise [(FifteenMins, FifteenMinsField, "-15m")]
+       in Brick.newForm
+            [ label "Quick Offset" @@= radioField chosenOffset radioFields
+            ]
+
+unionise :: Elem TimeFieldName ns => [(a, TimeFieldName, s)] -> [(a, Union ns, s)]
+unionise = map (over _2 liftUnion)
+
+renderTimeDialogue :: Eq (Union ns) => TimeDialogue (Union ns) e -> Brick.Widget (Union ns)
+renderTimeDialogue (TimeDialogue dialogue) = Brick.renderForm dialogue

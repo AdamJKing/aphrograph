@@ -4,7 +4,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Main where
 
@@ -64,27 +63,27 @@ appTheme =
       unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
    in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
 
-mkApp :: Chan LogLine -> AppChan AppEvent -> App.Config -> Brick.App App.CurrentState AppEvent ComponentName
+mkApp :: Chan LogLine -> AppChan AppEvent -> App.Config -> Brick.App (App.CurrentState AppEvent) AppEvent ComponentName
 mkApp logger appCh config = Brick.App {..}
   where
-    appDraw :: App.CurrentState -> [Brick.Widget ComponentName]
+    appDraw :: App.CurrentState AppEvent -> [Brick.Widget ComponentName]
     appDraw = compileLayered
 
-    appChooseCursor :: App.CurrentState -> [Brick.CursorLocation ComponentName] -> Maybe (Brick.CursorLocation ComponentName)
+    appChooseCursor :: App.CurrentState AppEvent -> [Brick.CursorLocation ComponentName] -> Maybe (Brick.CursorLocation ComponentName)
     appChooseCursor = Brick.neverShowCursor
 
-    appHandleEvent :: App.CurrentState -> Brick.BrickEvent ComponentName AppEvent -> Brick.EventM ComponentName (Brick.Next App.CurrentState)
+    appHandleEvent :: App.CurrentState AppEvent -> Brick.BrickEvent ComponentName AppEvent -> Brick.EventM ComponentName (Brick.Next (App.CurrentState AppEvent))
     appHandleEvent currentState brickEvent = do
       (outcome, result) <-
         _unCompT $
           runApp logger (AppSystem config appCh) $
             brickEventHandler keyPressHandler appEventHandler brickEvent currentState
       case outcome of
-        Continue -> (Brick.continue result)
-        Halt -> (Brick.halt result)
+        Continue -> Brick.continue result
+        Halt -> Brick.halt result
 
-    appStartEvent :: App.CurrentState -> Brick.EventM ComponentName App.CurrentState
+    appStartEvent :: App.CurrentState AppEvent -> Brick.EventM ComponentName (App.CurrentState AppEvent)
     appStartEvent = return
 
-    appAttrMap :: App.CurrentState -> Brick.AttrMap
+    appAttrMap :: App.CurrentState AppEvent -> Brick.AttrMap
     appAttrMap = const appTheme
