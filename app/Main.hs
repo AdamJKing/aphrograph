@@ -15,6 +15,7 @@ import App.Logging (fileWritingLogChan)
 import qualified App.State as App
 import qualified Brick.AttrMap as Brick
 import qualified Brick.BChan as Brick
+import Brick.Forms (focusedFormInputAttr)
 import qualified Brick.Main as Brick
 import qualified Brick.Types as Brick
 import Brick.Util (on)
@@ -59,9 +60,12 @@ getVty = liftIO (Vty.userConfig >>= Vty.mkVty)
 
 appTheme :: Brick.AttrMap
 appTheme =
-  let selectedTheme = ("metric" <> "selected", Vty.black `on` Vty.blue)
-      unselectedTheme = ("metric" <> "unselected", Vty.blue `on` Vty.black)
-   in Brick.attrMap Vty.defAttr [selectedTheme, unselectedTheme]
+  Brick.attrMap
+    Vty.defAttr
+    [ ("metric" <> "selected", Vty.black `on` Vty.blue),
+      ("metric" <> "unselected", Vty.blue `on` Vty.black),
+      (focusedFormInputAttr, Vty.black `on` Vty.blue)
+    ]
 
 mkApp :: Chan LogLine -> AppChan AppEvent -> App.Config -> Brick.App (App.CurrentState AppEvent) AppEvent ComponentName
 mkApp logger appCh config = Brick.App {..}

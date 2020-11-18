@@ -39,14 +39,14 @@ import Brick.Forms as Brick
     renderForm,
     (@@=),
   )
-import Control.Lens (makeLenses, over, _2)
+import Control.Lens (makeLenses)
 import Data.OpenUnion (Union, liftUnion)
 import TypeFun.Data.List (Elem)
 
 data QuickOffset = FifteenMins | OneHour | TwelveHours | TwentyFourHours | SevenDays
-  deriving (Eq, Enum)
+  deriving (Eq, Enum, Ord, Show)
 
-data TimeFieldName = FifteenMinsField | OneHourField | TwelveHoursField | TwentyFourHoursField | SevenDaysField
+newtype TimeFieldName = Field QuickOffset
   deriving (Eq, Ord, Show)
 
 newtype TimeDialogueState = TimeDialogueState
@@ -70,13 +70,22 @@ timeDialogue = TimeDialogue . form
   where
     form =
       let label s w = padBottom (Pad 1) $ vLimit 1 (hLimit 15 $ str s) <+> fill ' ' <+> w
-          radioFields = unionise [(FifteenMins, FifteenMinsField, "-15m")]
+          radioFields =
+            addField
+              [ (FifteenMins, "-15m"),
+                (OneHour, "-1h"),
+                (TwelveHours, "-12h"),
+                (TwentyFourHours, "-24h"),
+                (SevenDays, "-7d")
+              ]
        in Brick.newForm
             [ label "Quick Offset" @@= radioField chosenOffset radioFields
             ]
 
-unionise :: Elem TimeFieldName ns => [(a, TimeFieldName, s)] -> [(a, Union ns, s)]
-unionise = map (over _2 liftUnion)
+addField :: Elem TimeFieldName ns => [(QuickOffset, s)] -> [(QuickOffset, Union ns, s)]
+addField values = do
+  (value, label) <- values
+  return (value, liftUnion (Field value), label)
 
 renderTimeDialogue :: Eq (Union ns) => TimeDialogue (Union ns) e -> Brick.Widget (Union ns)
 renderTimeDialogue (TimeDialogue dialogue) = Brick.renderForm dialogue
