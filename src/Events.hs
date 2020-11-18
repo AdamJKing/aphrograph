@@ -89,13 +89,13 @@ keyPressHandler event cm =
   where
     selectMetric :: App.ActiveState e -> AppT ComponentM (App.ActiveState e)
     selectMetric activeState =
-      activeState
-        & traverseOf
-          App.graphData
-          ( \gd ->
-              case activeState ^? App.dialogue . _OpenOnMetrics of
-                Nothing -> return gd
-                Just mb ->
+      case activeState ^? App.dialogue . _OpenOnMetrics of
+        Nothing -> return activeState
+        Just mb ->
+          activeState
+            & traverseOf
+              App.graphData
+              ( \gd ->
                   case selected mb of
                     Nothing -> return (gd & graphDisplay .~ NoDataDisplay)
                     Just newTargetMetric -> do
@@ -103,8 +103,8 @@ keyPressHandler event cm =
                       return
                         ( gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
                         )
-          )
-        <&> App.dialogue .~ Closed
+              )
+            <&> App.dialogue .~ Closed
 
     toggleMetricsBrowser :: MonadIO m => Dialogue n e -> AppT m (Dialogue n e)
     toggleMetricsBrowser (OpenOnMetrics _) = return Closed
