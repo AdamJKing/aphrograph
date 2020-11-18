@@ -17,3 +17,4 @@
 * Figure out a better solution for the EventM/IO ugliness
 * No pending tests
 * Slim down executable dependencies
+* Remember where we were on metrics view

@@ -15,11 +15,10 @@
 
 module App where
 
-import App.Components (ComponentName)
+import App.Components (ComponentM)
 import qualified App.Config as App
 import qualified App.State as App
 import qualified Brick.BChan as Brick
-import qualified Brick.Types as Brick
 import Control.Concurrent (Chan)
 import Control.Concurrent.Lifted (fork)
 import Control.Lens (makeLenses, view)
@@ -99,4 +98,4 @@ instance MonadEvent AppEvent (AppT IO) where
 
   writeEventLater eventAction = void $ fork (eventAction >>= writeEvent)
 
-type AppM = AppT (Brick.EventM ComponentName)
+type AppM = AppT ComponentM
