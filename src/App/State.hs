@@ -14,7 +14,18 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module App.State where
+module App.State
+  ( ActiveState (..),
+    FailedState (..),
+    Error (..),
+    CurrentState (..),
+    dialogue,
+    _Active,
+    graphData,
+    componentState,
+    defaultState,
+  )
+where
 
 import App.Components
   ( ComponentName,

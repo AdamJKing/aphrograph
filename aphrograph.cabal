@@ -109,7 +109,6 @@ test-suite aphrograph-test
       Display.WidgetsSpec
       DisplaySpec
       EventsSpec
-      GraphiteMock
       GraphiteSpec
       LabelsSpec
       NormalisationSpec

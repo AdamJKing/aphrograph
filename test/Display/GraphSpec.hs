@@ -9,14 +9,32 @@ module Display.GraphSpec
 where
 
 import ArbitraryInstances ()
-import CommonProperties
+import CommonProperties (range)
 import Data.List.NonEmpty ((<|))
 import qualified Data.List.NonEmpty as NE
 import Display.Graph as Graph
-import Graphite.Types
-import Test.Hspec as HS
-import Test.Hspec.QuickCheck
+  ( Graphable (extract),
+    assocs,
+    boundsX,
+    boundsY,
+    mkGraph,
+  )
+import Graphite.Types (DataPoint (time, value))
+import Test.Hspec as HS (Spec, describe, shouldBe)
+import Test.Hspec.QuickCheck (prop)
 import Test.QuickCheck
+  ( Arbitrary (arbitrary),
+    Gen,
+    Positive (Positive),
+    choose,
+    counterexample,
+    forAll,
+    getInfiniteList,
+    shuffle,
+    sized,
+    vectorOf,
+    (===),
+  )
 
 nonEmptyListOf :: Gen a -> Gen (NonEmpty a)
 nonEmptyListOf gen = sized $ \i ->
@@ -38,7 +56,7 @@ spec = describe "Graph" $ do
       (lower, upper) <- range @Integer
       xs' <- nonEmptyListOf (choose (lower, upper))
       let xs = toList . NE.sort . NE.nub $ (lower <| upper <| xs')
-      ys <- vector @[Integer] (length xs)
+      ys <- getInfiniteList @Integer <$> arbitrary
       graph <- Graph.mkGraph <$> shuffle (xs `zip` ys)
       return $ counterexample (show xs) (boundsX graph `shouldBe` (lower, upper))
   describe "boundsY"
@@ -47,7 +65,7 @@ spec = describe "Graph" $ do
       (lower, upper) <- range @Integer
       ys' <- nonEmptyListOf (choose (lower, upper))
       let ys = toList . NE.sort . NE.nub $ (lower <| upper <| ys')
-      xs <- vector @[Integer] (length ys)
+      xs <- getInfiniteList @Integer <$> arbitrary
       graph <- Graph.mkGraph <$> shuffle (xs `zip` ys)
       return (boundsY graph `shouldBe` (lower, upper))
   describe "mkGraph"

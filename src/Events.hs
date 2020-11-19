@@ -8,7 +8,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Events where
+module Events
+  ( EventOutcome (..),
+    keyPressHandler,
+    brickEventHandler,
+    appEventHandler,
+  )
+where
 
 import App (AppM, AppT)
 import App.Components
@@ -33,7 +39,6 @@ import Display.GraphWidget (GraphDisplay (NoDataDisplay), graphDisplay, graphite
 import Display.TimeDialogueWidget (timeDialogue, yieldTimeValue)
 import Events.Types
   ( AppEvent (..),
-    MonadEvent,
     writeEvent,
     writeEventLater,
   )
@@ -158,8 +163,7 @@ appEventHandler graphUpdate priorState = do
           lift (updateGraph (gw ^. graphiteRequest) newGraph)
         TriggerUpdate -> hoist liftIO (refresh (gw ^. graphiteRequest) $> gw)
 
-refresh :: (MonadGraphite m, MonadEvent AppEvent m) => GraphiteRequest -> m ()
-refresh req = writeEventLater (GraphUpdate <$> fetchGraph req)
+    refresh req = writeEventLater (GraphUpdate <$> fetchGraph req)
 
 fetchGraph :: MonadGraphite m => GraphiteRequest -> m (Graph Time Value)
 fetchGraph request = do

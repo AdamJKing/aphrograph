@@ -12,7 +12,6 @@ import App.Components
     MetricsBrowser (..),
     TimeDialogue,
   )
-import qualified App.State as App
 import qualified Brick
 import Brick.Types as Brick
   ( RenderM,
@@ -50,6 +49,7 @@ import Display.GraphWidget
   )
 import Display.TimeDialogueWidget (renderTimeDialogue)
 import qualified Graphics.Vty as Vty
+import qualified App.State as App
 
 class CompileWidget n w where
   compile :: w -> Brick.Widget n
