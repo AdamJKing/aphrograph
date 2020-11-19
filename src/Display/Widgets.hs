@@ -12,6 +12,7 @@ import App.Components
     MetricsBrowser (..),
     TimeDialogue,
   )
+import qualified App.State as App
 import qualified Brick
 import Brick.Types as Brick
   ( RenderM,
@@ -49,7 +50,6 @@ import Display.GraphWidget
   )
 import Display.TimeDialogueWidget (renderTimeDialogue)
 import qualified Graphics.Vty as Vty
-import qualified App.State as App
 
 class CompileWidget n w where
   compile :: w -> Brick.Widget n
@@ -71,7 +71,12 @@ instance CompileWidget ComponentName MetricsBrowser where
          in Brick.withAttr attrName (Brick.txt (toText metric))
 
 instance CompileWidget ComponentName (TimeDialogue ComponentName e) where
-  compile = renderTimeDialogue
+  compile td =
+    let popupSize = (25, 25)
+     in Widget.centerLayer $
+          WidgetB.border $
+            Widget.padAll 2 $
+              Brick.setAvailableSize popupSize $ renderTimeDialogue td
 
 instance CompileLayeredWidget ComponentName (App.CurrentState e) where
   compileLayered (App.Failed (App.FailedState err)) = [Widget.str (displayException err)]

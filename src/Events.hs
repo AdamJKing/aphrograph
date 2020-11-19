@@ -31,7 +31,7 @@ import App.Components
   )
 import qualified App.State as App
 import qualified Brick
-import Control.Lens (over, traverseOf, view, (%~), (.~), (^.), (^?))
+import Control.Lens (outside, over, traverseOf, view, (%~), (.~), (^.))
 import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
@@ -83,17 +83,7 @@ keyPressHandler event cm =
   case event of
     ExitKey -> return (Halt, cm)
     EnterKey -> do
-      newState <-
-        cm
-          & traverseOf
-            App._Active
-            ( \active ->
-                case active ^. App.dialogue of
-                  (OpenOnMetrics _) -> selectMetric active
-                  (OpenOnTime _) -> selectTime active
-                  Closed -> return active
-            )
-
+      newState <- cm & traverseOf App._Active shutDialogue
       return (Continue, newState)
     KeyDown 'm' -> do
       newState <- cm & traverseOf (App._Active . App.dialogue) toggleMetricsBrowser
@@ -103,39 +93,29 @@ keyPressHandler event cm =
       newState <- cm & traverseOf (App._Active . App.dialogue) (handleMiscEvents otherKeyPress)
       return (Continue, newState)
   where
-    selectMetric :: App.ActiveState e -> AppT ComponentM (App.ActiveState e)
-    selectMetric activeState =
-      case activeState ^? App.dialogue . _OpenOnMetrics of
-        Nothing -> return activeState
-        Just mb ->
-          activeState
-            & traverseOf
-              App.graphData
-              ( \gd ->
-                  case selected mb of
-                    Nothing -> return (gd & graphDisplay .~ NoDataDisplay)
-                    Just newTargetMetric -> do
-                      hoist liftIO (writeEvent TriggerUpdate)
-                      return
-                        ( gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
-                        )
-              )
-            <&> App.dialogue .~ Closed
+    shutDialogue :: App.ActiveState e -> AppT ComponentM (App.ActiveState e)
+    shutDialogue activeState =
+      activeState
+        & traverseOf
+          App.graphData
+          ( case activeState ^. App.dialogue of
+              (OpenOnMetrics mb) -> selectMetric mb
+              (OpenOnTime td) -> selectTime td
+              Closed -> return
+          )
+        <&> App.dialogue .~ Closed
+      where
+        selectMetric mb gd = case selected mb of
+          Nothing -> return (gd & graphDisplay .~ NoDataDisplay)
+          Just newTargetMetric -> do
+            hoist liftIO (writeEvent TriggerUpdate)
+            return $
+              gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
 
-    selectTime :: App.ActiveState e -> AppT ComponentM (App.ActiveState e)
-    selectTime activeState =
-      case activeState ^? App.dialogue . _OpenOnTime of
-        Nothing -> return activeState
-        Just td ->
-          activeState
-            & traverseOf
-              App.graphData
-              ( \gd -> do
-                  hoist liftIO (writeEvent TriggerUpdate)
-                  return
-                    (gd & graphiteRequest %~ (\req -> req {requestFrom = yieldTimeValue td}))
-              )
-            <&> App.dialogue .~ Closed
+        selectTime td gd = do
+          hoist liftIO (writeEvent TriggerUpdate)
+          return $
+            gd & graphiteRequest %~ (\req -> req {requestFrom = yieldTimeValue td})
 
     toggleMetricsBrowser :: MonadIO m => Dialogue n e -> AppT m (Dialogue n e)
     toggleMetricsBrowser (OpenOnMetrics _) = return Closed
