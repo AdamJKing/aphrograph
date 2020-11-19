@@ -9,8 +9,6 @@
     * pressing t again when open closes the dialog
 
   * relative times
-  * exact times
-  * toggle refresh (set refresh time)
 
 * Fix command line input (defaulting to 24h in main?)
 * Investigate weird label cropping when using day labels (??? in from section)
@@ -18,3 +16,6 @@
 * No pending tests
 * Slim down executable dependencies
 * Remember where we were on metrics view
+* Remove failure state since it's not being used
+* time dialogue - exact times
+* time dialogue - toggle refresh (set refresh time)

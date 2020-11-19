@@ -5,6 +5,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -16,6 +17,7 @@ module Display.TimeDialogueWidget
     TimeFieldName,
     timeDialogue,
     updateDialogue,
+    yieldTimeValue,
   )
 where
 
@@ -33,14 +35,16 @@ import Brick
   )
 import Brick.Forms as Brick
   ( Form,
+    formState,
     handleFormEvent,
     newForm,
     radioField,
     renderForm,
     (@@=),
   )
-import Control.Lens (makeLenses)
+import Control.Lens (makeLenses, (^.))
 import Data.OpenUnion (Union, liftUnion)
+import qualified Graphite.Types as Graphite
 import TypeFun.Data.List (Elem)
 
 data QuickOffset = FifteenMins | OneHour | TwelveHours | TwentyFourHours | SevenDays
@@ -71,21 +75,28 @@ timeDialogue = TimeDialogue . form
     form =
       let label s w = padBottom (Pad 1) $ vLimit 1 (hLimit 15 $ str s) <+> fill ' ' <+> w
           radioFields =
-            addField
-              [ (FifteenMins, "-15m"),
-                (OneHour, "-1h"),
-                (TwelveHours, "-12h"),
-                (TwentyFourHours, "-24h"),
-                (SevenDays, "-7d")
-              ]
+            [ (value, liftUnion (Field value), asStr value)
+              | value <-
+                  [ FifteenMins,
+                    OneHour,
+                    TwelveHours,
+                    TwentyFourHours,
+                    SevenDays
+                  ]
+            ]
        in Brick.newForm
             [ label "Quick Offset" @@= radioField chosenOffset radioFields
             ]
 
-addField :: Elem TimeFieldName ns => [(QuickOffset, s)] -> [(QuickOffset, Union ns, s)]
-addField values = do
-  (value, label) <- values
-  return (value, liftUnion (Field value), label)
-
 renderTimeDialogue :: Eq (Union ns) => TimeDialogue (Union ns) e -> Brick.Widget (Union ns)
 renderTimeDialogue (TimeDialogue dialogue) = Brick.renderForm dialogue
+
+asStr :: QuickOffset -> Text
+asStr FifteenMins = "-15m"
+asStr OneHour = "-1h"
+asStr TwelveHours = "-12h"
+asStr TwentyFourHours = "-24h"
+asStr SevenDays = "-7d"
+
+yieldTimeValue :: TimeDialogue n e -> Graphite.From
+yieldTimeValue (TimeDialogue dialogue) = Graphite.From $ asStr (formState dialogue ^. chosenOffset)

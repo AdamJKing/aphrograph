@@ -30,7 +30,7 @@ import Control.Monad.Morph (MFunctor (hoist))
 import Display.Graph (Graph)
 import qualified Display.Graph as Graph (extract, mkGraph)
 import Display.GraphWidget (GraphDisplay (NoDataDisplay), graphDisplay, graphiteRequest)
-import Display.TimeDialogueWidget (timeDialogue)
+import Display.TimeDialogueWidget (timeDialogue, yieldTimeValue)
 import Events.Types
   ( AppEvent (..),
     MonadEvent,
@@ -45,6 +45,7 @@ import Graphite.Types
     Value,
     getMetrics,
     listMetrics,
+    requestFrom,
     requestMetric,
   )
 
@@ -77,7 +78,17 @@ keyPressHandler event cm =
   case event of
     ExitKey -> return (Halt, cm)
     EnterKey -> do
-      newState <- cm & traverseOf App._Active selectMetric
+      newState <-
+        cm
+          & traverseOf
+            App._Active
+            ( \active ->
+                case active ^. App.dialogue of
+                  (OpenOnMetrics _) -> selectMetric active
+                  (OpenOnTime _) -> selectTime active
+                  Closed -> return active
+            )
+
       return (Continue, newState)
     KeyDown 'm' -> do
       newState <- cm & traverseOf (App._Active . App.dialogue) toggleMetricsBrowser
@@ -103,6 +114,21 @@ keyPressHandler event cm =
                       return
                         ( gd & graphiteRequest %~ (\gr -> gr {requestMetric = newTargetMetric})
                         )
+              )
+            <&> App.dialogue .~ Closed
+
+    selectTime :: App.ActiveState e -> AppT ComponentM (App.ActiveState e)
+    selectTime activeState =
+      case activeState ^? App.dialogue . _OpenOnTime of
+        Nothing -> return activeState
+        Just td ->
+          activeState
+            & traverseOf
+              App.graphData
+              ( \gd -> do
+                  hoist liftIO (writeEvent TriggerUpdate)
+                  return
+                    (gd & graphiteRequest %~ (\req -> req {requestFrom = yieldTimeValue td}))
               )
             <&> App.dialogue .~ Closed
 
